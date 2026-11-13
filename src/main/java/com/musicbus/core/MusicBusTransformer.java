@@ -319,7 +319,7 @@ public final class MusicBusTransformer
                                     vanilla
                             );
 
-                            // Mock output reports active playback.
+                            // Mock audio player reports active playback.
                             super.visitInsn(Opcodes.ICONST_1);
                             super.visitInsn(Opcodes.IRETURN);
 

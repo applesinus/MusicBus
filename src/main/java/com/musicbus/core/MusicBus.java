@@ -6,7 +6,6 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.function.Consumer;
 
 public final class MusicBus {
 
