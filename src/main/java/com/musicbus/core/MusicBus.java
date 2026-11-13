@@ -22,7 +22,7 @@ public final class MusicBus {
             return;
         }
 
-        MusicBusLog.log(
+        log(
             "onSoundOptionsScreen invoked. Screen loader: "
             + screen.getClass().getClassLoader()
         );
@@ -41,11 +41,6 @@ public final class MusicBus {
                 log("ERROR: OptionsList not found.");
                 return;
             }
-
-            Consumer<Boolean> callback = value -> {
-                enabled = value;
-                MusicBusLog.log("TOGGLE CLICKED! Enabled: " + enabled);
-            };
 
             // Создаём штатный Minecraft OptionInstance<Boolean>
             Method createBoolean = null;
@@ -70,9 +65,10 @@ public final class MusicBus {
 
             Object option = createBoolean.invoke(
                     null,
-                    "options.musicbus.enabled",
-                    enabled,
-                    callback
+                    "MusicBus",
+                    MusicBusManager.isEnabled(),
+                    (java.util.function.Consumer<Boolean>)
+                            MusicBusManager::setEnabled
             );
 
             // Создаём массив OptionInstance[]
@@ -104,7 +100,8 @@ public final class MusicBus {
             log("MusicBus toggle injected successfully.");
 
         } catch (Throwable error) {
-            MusicBusLog.error("Failed to inject toggle.", error);
+            log("Failed to inject toggle: " + error);
+            error.printStackTrace(System.err);
         }
     }
 

@@ -1,7 +1,6 @@
 package com.musicbus;
 
-import com.musicbus.core.MusicBusLog;
-import com.musicbus.core.MusicBusTransformer;
+import com.musicbus.core.MusicBusManager;
 
 import java.lang.instrument.Instrumentation;
 
@@ -15,16 +14,18 @@ public final class MusicBusAgent {
             String agentArgs,
             Instrumentation inst
     ) {
+
         instrumentation = inst;
 
-        MusicBusLog.log("Agent loaded.");
-        MusicBusLog.log("Java: " + System.getProperty("java.version"));
-        MusicBusLog.log("System ClassLoader: "
-        + ClassLoader.getSystemClassLoader());
+        log("=================================");
+        log("MusicBus Java Agent loaded!");
+        log("Version: 0.1.0");
+        log("Java: " + System.getProperty("java.version"));
+        log("OS: " + System.getProperty("os.name"));
+        log("=================================");
 
-        //inst.addTransformer(new MusicBusTransformer(), false);
-
-        MusicBusLog.log("Transformer registered.");
+        // Initialize the central MusicBus manager.
+        MusicBusManager.initialize(inst);
 
         Runtime.getRuntime().addShutdownHook(
                 new Thread(
