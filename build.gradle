@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.musicbus'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.ow2.asm:asm:9.9'
+    implementation 'org.ow2.asm:asm-commons:9.9'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+jar {
+    archiveClassifier = ''
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+
+    manifest {
+        attributes(
+            'Premain-Class': 'com.musicbus.MusicBusAgent',
+            'Can-Retransform-Classes': 'false',
+            'Can-Redefine-Classes': 'false'
+        )
+    }
+}
