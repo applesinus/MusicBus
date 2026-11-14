@@ -17,9 +17,14 @@ public final class MusicBusAgent {
 
         instrumentation = inst;
 
+        String version = MusicBusAgent.class.getPackage().getImplementationVersion();
+        if (version == null) {
+            version = "DEV-MODE"; 
+        }
+
         log("=================================");
         log("MusicBus Java Agent loaded!");
-        log("Version: 0.1.0");
+        log("Version: " + version);
         log("Java: " + System.getProperty("java.version"));
         log("OS: " + System.getProperty("os.name"));
         log("=================================");
