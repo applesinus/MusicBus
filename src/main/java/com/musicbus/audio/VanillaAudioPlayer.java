@@ -232,14 +232,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     }
 
     @Override
-    public void pause(UUID sessionId) {
-
-        throw unsupported(
-                "Individual vanilla SoundInstance pause"
-        );
-    }
-
-    @Override
     public void resume(PlaybackSession.Snapshot session) {
 
         if (session == null) {
@@ -303,54 +295,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
                     error
             );
         }
-    }
-
-    // --------------------------------------------------
-    // Playback controls
-    // --------------------------------------------------
-
-    @Override
-    public void seek(
-            UUID sessionId,
-            double positionSeconds
-    ) {
-
-        throw unsupported(
-                "Vanilla playback seeking"
-        );
-    }
-
-    @Override
-    public void setVolume(
-            UUID sessionId,
-            float volume
-    ) {
-
-        throw unsupported(
-                "Individual vanilla channel volume control"
-        );
-    }
-
-    @Override
-    public void setPitch(
-            UUID sessionId,
-            float pitch
-    ) {
-
-        throw unsupported(
-                "Individual vanilla channel pitch control"
-        );
-    }
-
-    @Override
-    public void setLooping(
-            UUID sessionId,
-            boolean looping
-    ) {
-
-        throw unsupported(
-                "Individual vanilla channel looping control"
-        );
     }
 
     // --------------------------------------------------

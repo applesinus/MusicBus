@@ -9,7 +9,7 @@ import java.util.UUID;
  * Simulates audio playback using a monotonic wall-clock timer
  * without producing actual sound.
  */
-public final class MockAudioPlayer implements AudioPlayer {
+public final class MockAudioPlayer implements BusedAudioPlayer {
 
     private PlaybackSession.Snapshot currentSession;
     private long anchorNanos;

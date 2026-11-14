@@ -1,7 +1,7 @@
-
 package com.musicbus.core;
 
 import com.musicbus.audio.AudioPlayer;
+import com.musicbus.audio.BusedAudioPlayer;
 import com.musicbus.audio.MockAudioPlayer;
 import com.musicbus.audio.OggResourceResolver;
 import com.musicbus.audio.PlaybackSession;
@@ -52,7 +52,7 @@ public final class MusicBusManager {
     private static volatile Method calculateVolumeMethod;
     private static volatile Object musicSoundSource;
 
-    private static AudioPlayer BusedPlayer;
+    private static BusedAudioPlayer BusedPlayer;
     private static VanillaAudioPlayer vanillaPlayer;
 
     private static PlaybackSession currentSession;
@@ -128,7 +128,7 @@ public final class MusicBusManager {
         }
     }
 
-    private static AudioPlayer createBusedPlayer() {
+    private static BusedAudioPlayer createBusedPlayer() {
         // TODO: change to the real player
         return new MockAudioPlayer();
     }
@@ -144,7 +144,7 @@ public final class MusicBusManager {
         }
     }
 
-    public static AudioPlayer getBusedPlayer() {
+    public static BusedAudioPlayer getBusedPlayer() {
         return BusedPlayer;
     }
 

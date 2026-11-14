@@ -56,38 +56,9 @@ public interface AudioPlayer extends AutoCloseable {
     void stop(UUID sessionId);
 
     /**
-     * Pauses the specified audio player playback.
-     */
-    void pause(UUID sessionId);
-
-    /**
      * Resumes playback using the supplied session snapshot.
      */
     void resume(PlaybackSession.Snapshot session);
-
-    // --------------------------------------------------
-    // Playback controls
-    // --------------------------------------------------
-
-    /**
-     * Changes the current playback position.
-     */
-    void seek(UUID sessionId, double positionSeconds);
-
-    /**
-     * Changes playback volume.
-     */
-    void setVolume(UUID sessionId, float volume);
-
-    /**
-     * Changes playback pitch.
-     */
-    void setPitch(UUID sessionId, float pitch);
-
-    /**
-     * Changes looping behavior.
-     */
-    void setLooping(UUID sessionId, boolean looping);
 
     // --------------------------------------------------
     // Playback state
