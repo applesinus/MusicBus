@@ -23,7 +23,7 @@ public final class MusicBusManager {
     private static final Object STATE_LOCK = new Object();
     private static final Object TRANSITION_LOCK = new Object();
 
-    private static final ThreadLocal<Boolean> BACKEND_TRANSITION =
+    private static final ThreadLocal<Boolean> AUDIO_PLAYER_TRANSITION =
             ThreadLocal.withInitial(() -> false);
 
     private static final Map<Object, PlaybackSession> SESSIONS =
@@ -68,12 +68,12 @@ public final class MusicBusManager {
                 mockPlayer = createMockPlayer();
 
                 if (!vanillaPlayer.isAvailable()) {
-                    log("WARNING: Vanilla backend unavailable.");
+                    log("WARNING: Vanilla audio player unavailable.");
                 }
 
                 if (!mockPlayer.isAvailable()) {
                     throw new IllegalStateException(
-                            "Mock backend unavailable"
+                            "Mock audio player unavailable"
                     );
                 }
 
@@ -86,8 +86,8 @@ public final class MusicBusManager {
 
                 initialized = true;
 
-                log("Vanilla backend initialized.");
-                log("Mock backend initialized.");
+                log("Vanilla audio player initialized.");
+                log("Mock audio player initialized.");
                 log("Configuration loaded: enabled=" + enabled);
                 log("Configuration path: "
                         + MusicBusConfig.getLocation());
@@ -153,7 +153,7 @@ public final class MusicBusManager {
                     : disableMusicBus();
 
             if (!successful) {
-                log("WARNING: Backend transition failed.");
+                log("WARNING: Audio Player transition failed.");
                 return;
             }
 
@@ -172,7 +172,7 @@ public final class MusicBusManager {
     }
 
     // --------------------------------------------------
-    // Backend switching
+    // Audio Player switching
     // --------------------------------------------------
 
     private static boolean enableMusicBus() {
@@ -224,7 +224,7 @@ public final class MusicBusManager {
              */
             PlaybackSession targetSession = session;
 
-            duringBackendTransition(
+            duringAudioPlayerTransition(
                     () -> vanillaPlayer.stop(targetSession.getId())
             );
 
@@ -233,7 +233,7 @@ public final class MusicBusManager {
 
             if (!mockPlayer.supports(snapshot)) {
                 throw new IllegalStateException(
-                        "Mock backend does not support session"
+                        "Mock audio player does not support session"
                 );
             }
 
@@ -241,7 +241,7 @@ public final class MusicBusManager {
 
             if (!mockPlayer.isActive(session.getId())) {
                 throw new IllegalStateException(
-                        "Mock backend did not activate session"
+                        "Mock audio player did not activate session"
                 );
             }
 
@@ -278,7 +278,7 @@ public final class MusicBusManager {
 
                         PlaybackSession targetSession = session;
 
-                        duringBackendTransition(
+                        duringAudioPlayerTransition(
                                 () -> vanillaPlayer.play(
                                         targetSession.snapshot()
                                 )
@@ -317,7 +317,7 @@ public final class MusicBusManager {
 
             enabled = false;
 
-            log("No active mock session. Vanilla backend restored.");
+            log("No active mock session. Vanilla audio player restored.");
 
             return true;
         }
@@ -328,7 +328,7 @@ public final class MusicBusManager {
         try {
 
             /*
-             * Detach MockBackend without stopping the logical session.
+             * Detach MockAudioPlayer without stopping the logical session.
              */
             mockPlayer.stop(session.getId());
 
@@ -347,7 +347,7 @@ public final class MusicBusManager {
              */
             session.seek(0.0);
 
-            duringBackendTransition(
+            duringAudioPlayerTransition(
                     () -> vanillaPlayer.play(session.snapshot())
             );
 
@@ -362,7 +362,7 @@ public final class MusicBusManager {
                     + error);
 
             /*
-             * Restore MockBackend if vanilla handoff failed.
+             * Restore MockAudioPlayer if vanilla handoff failed.
              */
             try {
 
@@ -374,7 +374,7 @@ public final class MusicBusManager {
 
                 enabled = true;
 
-                log("Mock backend successfully restored.");
+                log("Mock audio player successfully restored.");
 
             } catch (Exception rollbackError) {
 
@@ -404,7 +404,7 @@ public final class MusicBusManager {
             return false;
         }
 
-        if (isBackendTransition()) {
+        if (isAudioPlayerTransition()) {
             return false;
         }
 
@@ -475,7 +475,7 @@ public final class MusicBusManager {
     /**
      * Called from SoundEngine.isActive().
      *
-     * Returns true only when MockBackend owns this instance
+     * Returns true only when MockAudioPlayer owns this instance
      * and confirms that playback is active.
      */
     public static boolean isMockActive(Object instance) {
@@ -512,7 +512,7 @@ public final class MusicBusManager {
             return false;
         }
 
-        if (isBackendTransition()) {
+        if (isAudioPlayerTransition()) {
             return false;
         }
 
@@ -759,20 +759,20 @@ public final class MusicBusManager {
     }
 
     // --------------------------------------------------
-    // Backend transition guard
+    // Audio Player transition guard
     // --------------------------------------------------
 
-    private static boolean isBackendTransition() {
-        return Boolean.TRUE.equals(BACKEND_TRANSITION.get());
+    private static boolean isAudioPlayerTransition() {
+        return Boolean.TRUE.equals(AUDIO_PLAYER_TRANSITION.get());
     }
 
-    private static void duringBackendTransition(
+    private static void duringAudioPlayerTransition(
             CheckedRunnable action
     ) throws Exception {
 
-        boolean previous = BACKEND_TRANSITION.get();
+        boolean previous = AUDIO_PLAYER_TRANSITION.get();
 
-        BACKEND_TRANSITION.set(true);
+        AUDIO_PLAYER_TRANSITION.set(true);
 
         try {
 
@@ -780,7 +780,7 @@ public final class MusicBusManager {
 
         } finally {
 
-            BACKEND_TRANSITION.set(previous);
+            AUDIO_PLAYER_TRANSITION.set(previous);
         }
     }
 

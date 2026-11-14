@@ -1,4 +1,3 @@
-
 package com.musicbus.audio;
 
 import java.lang.reflect.Field;
@@ -32,7 +31,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     private static final String MUSIC_SOURCE = "MUSIC";
 
     // --------------------------------------------------
-    // Backend identity
+    // Audio Player identity
     // --------------------------------------------------
 
     @Override
@@ -699,7 +698,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     private static void log(String message) {
 
         System.out.println(
-                "[MusicBus] [VanillaBackend] " + message
+                "[MusicBus] [VanillaAudioPlayer] " + message
         );
     }
 }
