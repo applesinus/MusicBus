@@ -1,9 +1,8 @@
 package com.musicbus.audio;
 
 import com.musicbus.core.MusicBusManager;
+import com.musicbus.core.MinecraftReflection;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -29,11 +28,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     private static final String MUSIC_SOURCE = "MUSIC";
     private static final long QUERY_TIMEOUT_MS = 50L;
 
-    private static volatile Field soundEngineField;
-    private static volatile Field executorField;
-    private static volatile Field instanceToChannelField;
-    private static volatile Field channelHandleChannelField;
-
     // --------------------------------------------------
     // Audio Player identity
     // --------------------------------------------------
@@ -47,7 +41,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     public boolean isAvailable() {
 
         try {
-            return getSoundManager() != null;
+            return MinecraftReflection.getSoundManager() != null;
         } catch (Exception ignored) {
             return false;
         }
@@ -163,7 +157,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
                 entry.lastChannel = null;
             }
 
-            invokeSoundManager(
+            MinecraftReflection.invokeSoundManager(
                     "play",
                     entry.soundInstance
             );
@@ -205,7 +199,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
                 }
             }
 
-            invokeSoundManager(
+            MinecraftReflection.invokeSoundManager(
                     "stop",
                     entry.soundInstance
             );
@@ -275,7 +269,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             MusicBusManager.setPendingResumeSeconds(targetPosition);
 
             try {
-                invokeSoundManager(
+                MinecraftReflection.invokeSoundManager(
                         "play",
                         entry.soundInstance
                 );
@@ -314,7 +308,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         try {
 
-            boolean active = invokeSoundManagerBoolean(
+            boolean active = MinecraftReflection.invokeSoundManagerBoolean(
                     "isActive",
                     entry.soundInstance
             );
@@ -385,8 +379,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         try {
 
-            Object soundManager = getSoundManager();
-            Object soundEngine = getSoundEngine(soundManager);
+            Object soundEngine = MinecraftReflection.getSoundEngine();
 
             if (soundEngine == null) {
                 return null;
@@ -533,85 +526,9 @@ public final class VanillaAudioPlayer implements AudioPlayer {
         }
     }
 
+        // --------------------------------------------------
+    // Minecraft object access
     // --------------------------------------------------
-    // Minecraft reflection adapter
-    // --------------------------------------------------
-
-    private static Object getMinecraftInstance()
-            throws Exception {
-
-        ClassLoader loader =
-                Thread.currentThread().getContextClassLoader();
-
-        if (loader == null) {
-            loader = VanillaAudioPlayer.class.getClassLoader();
-        }
-
-        Class<?> minecraftClass = Class.forName(
-                "net.minecraft.client.Minecraft",
-                true,
-                loader
-        );
-
-        Method method = minecraftClass.getDeclaredMethod(
-                "getInstance"
-        );
-
-        method.setAccessible(true);
-
-        return method.invoke(null);
-    }
-
-    private static Object getSoundManager()
-            throws Exception {
-
-        Object minecraft = getMinecraftInstance();
-
-        Class<?> current = minecraft.getClass();
-
-        while (current != null) {
-
-            for (Field field : current.getDeclaredFields()) {
-
-                if (field.getType().getSimpleName()
-                        .equals("SoundManager")) {
-
-                    field.setAccessible(true);
-
-                    return field.get(minecraft);
-                }
-            }
-
-            current = current.getSuperclass();
-        }
-
-        throw new IllegalStateException(
-                "Minecraft SoundManager not found"
-        );
-    }
-
-    private static Object getSoundEngine(Object soundManager)
-            throws Exception {
-
-        if (soundManager == null) {
-            return null;
-        }
-
-        Field field = soundEngineField;
-        if (field == null) {
-            field = findFieldByTypeSimpleName(
-                    soundManager.getClass(),
-                    "SoundEngine"
-            );
-            if (field == null) {
-                return null;
-            }
-            field.setAccessible(true);
-            soundEngineField = field;
-        }
-
-        return field.get(soundManager);
-    }
 
     private static Executor getSoundEngineExecutor(Object soundEngine)
             throws Exception {
@@ -620,21 +537,12 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             return null;
         }
 
-        Field field = executorField;
-        if (field == null) {
-            field = findFieldByTypeSimpleName(
-                    soundEngine.getClass(),
-                    "SoundEngineExecutor"
-            );
-            if (field == null) {
-                return null;
-            }
-            field.setAccessible(true);
-            executorField = field;
-        }
+        Object value = MinecraftReflection.findObjectByType(
+                soundEngine,
+                "SoundEngineExecutor"
+        );
 
-        Object exec = field.get(soundEngine);
-        return exec instanceof Executor executor ? executor : null;
+        return value instanceof Executor executor ? executor : null;
     }
 
     private static Map<?, ?> getInstanceToChannel(Object soundEngine)
@@ -644,21 +552,12 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             return null;
         }
 
-        Field field = instanceToChannelField;
-        if (field == null) {
-            field = findFieldByName(
-                    soundEngine.getClass(),
-                    "instanceToChannel"
-            );
-            if (field == null) {
-                return null;
-            }
-            field.setAccessible(true);
-            instanceToChannelField = field;
-        }
+        Object value = MinecraftReflection.getFieldValue(
+                soundEngine,
+                "instanceToChannel"
+        );
 
-        Object map = field.get(soundEngine);
-        return map instanceof Map<?, ?> result ? result : null;
+        return value instanceof Map<?, ?> map ? map : null;
     }
 
     private static Object getChannelFromHandle(Object handle)
@@ -668,123 +567,13 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             return null;
         }
 
-        Field field = channelHandleChannelField;
-        if (field == null) {
-            field = findFieldByName(handle.getClass(), "channel");
-            if (field == null) {
-                return null;
-            }
-            field.setAccessible(true);
-            channelHandleChannelField = field;
-        }
-
-        return field.get(handle);
-    }
-
-    private static Field findFieldByTypeSimpleName(
-            Class<?> type,
-            String simpleName
-    ) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            for (Field field : current.getDeclaredFields()) {
-
-                if (field.getType().getSimpleName().equals(simpleName)) {
-                    return field;
-                }
-            }
-
-            current = current.getSuperclass();
-        }
-
-        return null;
-    }
-
-    private static Field findFieldByName(
-            Class<?> type,
-            String name
-    ) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            try {
-                return current.getDeclaredField(name);
-            } catch (NoSuchFieldException ignored) {
-                current = current.getSuperclass();
-            }
-        }
-
-        return null;
-    }
-
-    private static Object invokeSoundManager(
-            String methodName,
-            Object instance
-    ) throws Exception {
-
-        Object soundManager = getSoundManager();
-
-        Method method = findSoundManagerMethod(
-                soundManager.getClass(),
-                methodName
+        return MinecraftReflection.getFieldValue(
+                handle,
+                "channel"
         );
-
-        if (method == null) {
-            throw new NoSuchMethodException(
-                    "SoundManager." + methodName
-            );
-        }
-
-        method.setAccessible(true);
-
-        return method.invoke(soundManager, instance);
     }
 
-    private static boolean invokeSoundManagerBoolean(
-            String methodName,
-            Object instance
-    ) throws Exception {
-
-        Object result = invokeSoundManager(
-                methodName,
-                instance
-        );
-
-        return Boolean.TRUE.equals(result);
-    }
-
-    private static Method findSoundManagerMethod(
-            Class<?> type,
-            String name
-    ) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            for (Method method : current.getDeclaredMethods()) {
-
-                if (method.getName().equals(name)
-                        && method.getParameterCount() == 1
-                        && method.getParameterTypes()[0]
-                        .getSimpleName().equals("SoundInstance")) {
-
-                    return method;
-                }
-            }
-
-            current = current.getSuperclass();
-        }
-
-        return null;
-    }
-
-    // --------------------------------------------------
+        // --------------------------------------------------
     // SoundInstance inspection
     // --------------------------------------------------
 
@@ -796,18 +585,10 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         try {
 
-            Method method = findNoArgMethod(
-                    instance.getClass(),
+            Object source = MinecraftReflection.invokeNoArgs(
+                    instance,
                     "getSource"
             );
-
-            if (method == null) {
-                return false;
-            }
-
-            method.setAccessible(true);
-
-            Object source = method.invoke(instance);
 
             return source instanceof Enum<?> category
                     && MUSIC_SOURCE.equals(category.name());
@@ -816,28 +597,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
             return false;
         }
-    }
-
-    private static Method findNoArgMethod(
-            Class<?> type,
-            String name
-    ) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            try {
-
-                return current.getDeclaredMethod(name);
-
-            } catch (NoSuchMethodException ignored) {
-
-                current = current.getSuperclass();
-            }
-        }
-
-        return null;
     }
 
     // --------------------------------------------------
@@ -852,23 +611,23 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         try {
 
-            Object minecraft = getMinecraftInstance();
+            Object minecraft = MinecraftReflection.getMinecraftInstance();
 
-            Method method = findNoArgMethod(
+            if (MinecraftReflection.findNoArgMethod(
                     minecraft.getClass(),
                     "isSameThread"
-            );
+            ) == null) {
 
-            if (method == null) {
                 throw new IllegalStateException(
                         "Minecraft thread check is unavailable"
                 );
             }
 
-            method.setAccessible(true);
-
             boolean correctThread = Boolean.TRUE.equals(
-                    method.invoke(minecraft)
+                    MinecraftReflection.invokeNoArgs(
+                            minecraft,
+                            "isSameThread"
+                    )
             );
 
             if (!correctThread) {

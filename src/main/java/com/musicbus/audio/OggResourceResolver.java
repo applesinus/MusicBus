@@ -1,5 +1,7 @@
 package com.musicbus.audio;
 
+import com.musicbus.core.MinecraftReflection;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -72,7 +74,7 @@ public final class OggResourceResolver {
 
         try {
 
-            Object eventIdentifier = invokeNoArgs(
+            Object eventIdentifier = MinecraftReflection.invokeNoArgs(
                     soundInstance,
                     "getIdentifier"
             );
@@ -81,7 +83,10 @@ public final class OggResourceResolver {
                 return Optional.empty();
             }
 
-            Object sound = invokeNoArgs(soundInstance, "getSound");
+            Object sound = MinecraftReflection.invokeNoArgs(
+                    soundInstance,
+                    "getSound"
+            );
             if (sound == null) {
                 return Optional.empty();
             }
@@ -91,7 +96,10 @@ public final class OggResourceResolver {
                 return Optional.empty();
             }
 
-            Object pathIdentifier = invokeNoArgs(sound, "getPath");
+            Object pathIdentifier = MinecraftReflection.invokeNoArgs(
+                    sound,
+                    "getPath"
+            );
             if (pathIdentifier == null) {
                 return Optional.empty();
             }
@@ -347,22 +355,28 @@ public final class OggResourceResolver {
             ClassLoader loader
     ) throws Exception {
 
-        Object minecraft = getMinecraftInstance(loader);
+        Object minecraft = MinecraftReflection.getMinecraftInstance(loader);
         if (minecraft == null) {
             return null;
         }
 
-        Object soundManager = findObjectByType(minecraft, "SoundManager");
+        Object soundManager = MinecraftReflection.findObjectByType(
+                minecraft,
+                "SoundManager"
+        );
         if (soundManager == null) {
             return null;
         }
 
-        Object soundEngine = findObjectByType(soundManager, "SoundEngine");
+        Object soundEngine = MinecraftReflection.findObjectByType(
+                soundManager,
+                "SoundEngine"
+        );
         if (soundEngine == null) {
             return null;
         }
 
-        Object soundBuffers = findObjectByType(
+        Object soundBuffers = MinecraftReflection.findObjectByType(
                 soundEngine,
                 "SoundBufferLibrary"
         );
@@ -371,7 +385,10 @@ public final class OggResourceResolver {
             return null;
         }
 
-        return findObjectByType(soundBuffers, "ResourceProvider");
+        return MinecraftReflection.findObjectByType(
+                soundBuffers,
+                "ResourceProvider"
+        );
     }
 
     private static byte[] readResourceBytes(
@@ -411,82 +428,6 @@ public final class OggResourceResolver {
 
             return input.readAllBytes();
         }
-    }
-
-    private static Object getMinecraftInstance(
-            ClassLoader loader
-    ) throws Exception {
-
-        ClassLoader effectiveLoader = loader != null
-                ? loader
-                : Thread.currentThread().getContextClassLoader();
-
-        Class<?> minecraftClass = Class.forName(
-                "net.minecraft.client.Minecraft",
-                false,
-                effectiveLoader
-        );
-
-        Method method = minecraftClass.getDeclaredMethod("getInstance");
-        method.setAccessible(true);
-
-        return method.invoke(null);
-    }
-
-    private static Object findObjectByType(
-            Object owner,
-            String simpleName
-    ) throws IllegalAccessException {
-
-        Class<?> current = owner.getClass();
-
-        while (current != null) {
-
-            for (Field field : current.getDeclaredFields()) {
-
-                if (field.getType().getSimpleName().equals(simpleName)) {
-                    field.setAccessible(true);
-                    return field.get(owner);
-                }
-            }
-
-            current = current.getSuperclass();
-        }
-
-        return null;
-    }
-
-    private static Object invokeNoArgs(
-            Object target,
-            String methodName
-    ) throws Exception {
-
-        Method method = findNoArgMethod(target.getClass(), methodName);
-        if (method == null) {
-            throw new NoSuchMethodException(methodName);
-        }
-
-        method.setAccessible(true);
-        return method.invoke(target);
-    }
-
-    private static Method findNoArgMethod(
-            Class<?> type,
-            String name
-    ) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            try {
-                return current.getDeclaredMethod(name);
-            } catch (NoSuchMethodException ignored) {
-                current = current.getSuperclass();
-            }
-        }
-
-        return null;
     }
 
     private static void log(String message) {

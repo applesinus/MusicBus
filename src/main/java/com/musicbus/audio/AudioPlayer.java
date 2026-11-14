@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Common contract for all MusicBus audio audioPlayers.
+ * Common contract for all Audio Players.
  *
  * An AudioPlayer is responsible for actual audio playback.
  * It must not own or modify the logical PlaybackSession state.
@@ -43,7 +43,7 @@ public interface AudioPlayer extends AutoCloseable {
     /**
      * Starts playback or replaces the currently playing session.
      *
-     * The complete snapshot allows a audio player to restore
+     * The complete snapshot allows an audio player to restore
      * playback from an arbitrary position.
      */
     void play(PlaybackSession.Snapshot session);

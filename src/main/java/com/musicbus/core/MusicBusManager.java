@@ -52,7 +52,7 @@ public final class MusicBusManager {
     private static volatile Method calculateVolumeMethod;
     private static volatile Object musicSoundSource;
 
-    private static BusedAudioPlayer BusedPlayer;
+    private static BusedAudioPlayer busedPlayer;
     private static VanillaAudioPlayer vanillaPlayer;
 
     private static PlaybackSession currentSession;
@@ -85,13 +85,13 @@ public final class MusicBusManager {
             try {
 
                 vanillaPlayer = new VanillaAudioPlayer();
-                BusedPlayer = createBusedPlayer();
+                busedPlayer = createBusedPlayer();
 
                 if (!vanillaPlayer.isAvailable()) {
                     log("WARNING: Vanilla audio player unavailable.");
                 }
 
-                if (!BusedPlayer.isAvailable()) {
+                if (!busedPlayer.isAvailable()) {
                     throw new IllegalStateException(
                             "Bused audio player unavailable"
                     );
@@ -117,7 +117,7 @@ public final class MusicBusManager {
             } catch (Exception error) {
 
                 vanillaPlayer = null;
-                BusedPlayer = null;
+                busedPlayer = null;
                 enabled = false;
 
                 throw new IllegalStateException(
@@ -145,7 +145,7 @@ public final class MusicBusManager {
     }
 
     public static BusedAudioPlayer getBusedPlayer() {
-        return BusedPlayer;
+        return busedPlayer;
     }
 
     public static AudioPlayer getVanillaPlayer() {
@@ -215,7 +215,7 @@ public final class MusicBusManager {
             }
 
             boolean vanillaActive =
-                    invokeSoundManagerBoolean(
+                    MinecraftReflection.invokeSoundManagerBoolean(
                             "isActive",
                             instance
                     );
@@ -269,15 +269,15 @@ public final class MusicBusManager {
                 return true;
             }
 
-            if (!BusedPlayer.supports(snapshot)) {
+            if (!busedPlayer.supports(snapshot)) {
                 throw new IllegalStateException(
                         "Bused audio player does not support session"
                 );
             }
 
-            BusedPlayer.play(snapshot);
+            busedPlayer.play(snapshot);
 
-            if (!BusedPlayer.isActive(session.getId())) {
+            if (!busedPlayer.isActive(session.getId())) {
                 throw new IllegalStateException(
                         "Bused audio player did not activate session"
                 );
@@ -354,7 +354,7 @@ public final class MusicBusManager {
             return true;
         }
 
-        BusedPlayer.getStatus(session.getId())
+        busedPlayer.getStatus(session.getId())
                 .ifPresent(session::sync);
 
         PlaybackSession.Snapshot previousState =
@@ -365,7 +365,7 @@ public final class MusicBusManager {
             /*
              * Detach bused AudioPlayer without stopping the logical session.
              */
-            BusedPlayer.stop(session.getId());
+            busedPlayer.stop(session.getId());
 
             synchronized (STATE_LOCK) {
                 BUS_ROUTED_INSTANCES.remove(instance);
@@ -404,7 +404,7 @@ public final class MusicBusManager {
              */
             try {
 
-                BusedPlayer.play(previousState);
+                busedPlayer.play(previousState);
 
                 synchronized (STATE_LOCK) {
                     BUS_ROUTED_INSTANCES.add(instance);
@@ -464,7 +464,7 @@ public final class MusicBusManager {
             PlaybackSession.Snapshot snapshot =
                     session.snapshot();
 
-            if (!BusedPlayer.supports(snapshot)) {
+            if (!busedPlayer.supports(snapshot)) {
                 return false;
             }
 
@@ -476,12 +476,12 @@ public final class MusicBusManager {
                     busedPlayerSession();
 
             if (previous != null && previous != session) {
-                BusedPlayer.stop(previous.getId());
+                busedPlayer.stop(previous.getId());
             }
 
-            BusedPlayer.play(snapshot);
+            busedPlayer.play(snapshot);
 
-            if (!BusedPlayer.isActive(session.getId())) {
+            if (!busedPlayer.isActive(session.getId())) {
                 throw new IllegalStateException(
                         "Bused playback failed"
                 );
@@ -533,12 +533,12 @@ public final class MusicBusManager {
             session = SESSIONS.get(instance);
         }
 
-        if (session == null || BusedPlayer == null) {
+        if (session == null || busedPlayer == null) {
             return false;
         }
 
         Optional<AudioPlayer.PlaybackStatus> status =
-                BusedPlayer.getStatus(session.getId());
+                busedPlayer.getStatus(session.getId());
 
         if (status.isPresent()
                 && status.get().state()
@@ -585,7 +585,7 @@ public final class MusicBusManager {
 
         if (busedPlayerRouted) {
 
-            BusedPlayer.stop(session.getId());
+            busedPlayer.stop(session.getId());
 
             retireSession(instance, session);
 
@@ -654,11 +654,15 @@ public final class MusicBusManager {
                 baseVolume
         );
 
+        if (Float.compare(session.getVolume(), effectiveVolume) == 0) {
+            return;
+        }
+
         session.setVolume(effectiveVolume);
 
-        if (enabled && busedPlayerRouted && BusedPlayer != null) {
+        if (enabled && busedPlayerRouted && busedPlayer != null) {
             try {
-                BusedPlayer.setVolume(session.getId(), effectiveVolume);
+                busedPlayer.setVolume(session.getId(), effectiveVolume);
             } catch (Exception error) {
                 log("WARNING: Failed to update bused volume: " + error);
             }
@@ -676,7 +680,7 @@ public final class MusicBusManager {
 
             Object soundEngine = (soundEngineObj != null)
                     ? soundEngineObj
-                    : getSoundEngine();
+                    : MinecraftReflection.getSoundEngine();
 
             if (soundEngine == null) {
                 return clampedBase;
@@ -736,21 +740,6 @@ public final class MusicBusManager {
         return clampedBase;
     }
 
-    private static Object getSoundEngine() throws Exception {
-
-        Object minecraft = getMinecraftInstance();
-        if (minecraft == null) {
-            return null;
-        }
-
-        Object soundManager = findObjectByType(minecraft, "SoundManager");
-        if (soundManager == null) {
-            return null;
-        }
-
-        return findObjectByType(soundManager, "SoundEngine");
-    }
-
     // --------------------------------------------------
     // SoundEngine lifecycle hooks
     // --------------------------------------------------
@@ -786,13 +775,13 @@ public final class MusicBusManager {
 
         if (session == null
                 || !busedPlayerRouted
-                || BusedPlayer == null
+                || busedPlayer == null
                 || session.getState() != PlaybackSession.State.PLAYING) {
             return;
         }
 
         try {
-            BusedPlayer.getStatus(session.getId())
+            busedPlayer.getStatus(session.getId())
                     .ifPresent(session::sync);
         } catch (Exception ignored) {
         }
@@ -809,7 +798,7 @@ public final class MusicBusManager {
         session.pause();
 
         try {
-            BusedPlayer.pause(session.getId());
+            busedPlayer.pause(session.getId());
         } catch (Exception error) {
             log("WARNING: Failed to pause bused player: " + error);
         }
@@ -837,7 +826,7 @@ public final class MusicBusManager {
 
         if (session == null
                 || !busedPlayerRouted
-                || BusedPlayer == null
+                || busedPlayer == null
                 || session.getState() != PlaybackSession.State.PAUSED) {
             return;
         }
@@ -845,7 +834,7 @@ public final class MusicBusManager {
         session.resume();
 
         try {
-            BusedPlayer.resume(session.snapshot());
+            busedPlayer.resume(session.snapshot());
         } catch (Exception error) {
             log("WARNING: Failed to resume bused player: " + error);
         }
@@ -890,9 +879,9 @@ public final class MusicBusManager {
             return;
         }
 
-        if (busedPlayerRouted && BusedPlayer != null) {
+        if (busedPlayerRouted && busedPlayer != null) {
             try {
-                BusedPlayer.stop(session.getId());
+                busedPlayer.stop(session.getId());
             } catch (Exception error) {
                 log("WARNING: Failed to stop bused player: " + error);
             }
@@ -926,9 +915,9 @@ public final class MusicBusManager {
             return;
         }
 
-        if (busedPlayerRouted && BusedPlayer != null) {
+        if (busedPlayerRouted && busedPlayer != null) {
             try {
-                BusedPlayer.stop(session.getId());
+                busedPlayer.stop(session.getId());
             } catch (Exception error) {
                 log("WARNING: Failed to stop bused player on stopAll: "
                         + error);
@@ -1020,7 +1009,7 @@ public final class MusicBusManager {
         if (previous != null && previous != created) {
 
             if (previousBusedPlayer) {
-                BusedPlayer.stop(previous.getId());
+                busedPlayer.stop(previous.getId());
             }
 
             previous.stop();
@@ -1064,7 +1053,7 @@ public final class MusicBusManager {
             Object instance
     ) throws Exception {
 
-        Object identifier = invokeNoArgs(
+        Object identifier = MinecraftReflection.invokeNoArgs(
                 instance,
                 "getIdentifier"
         );
@@ -1077,19 +1066,19 @@ public final class MusicBusManager {
 
         String resourceId = identifier.toString();
 
-        float baseVolume = readFloat(
+        float baseVolume = MinecraftReflection.readFloat(
                 instance,
                 "getVolume",
                 1.0f
         );
 
-        float pitch = readFloat(
+        float pitch = MinecraftReflection.readFloat(
                 instance,
                 "getPitch",
                 1.0f
         );
 
-        boolean looping = readBoolean(
+        boolean looping = MinecraftReflection.readBoolean(
                 instance,
                 "isLooping",
                 false
@@ -1213,7 +1202,7 @@ public final class MusicBusManager {
 
             if (lockedSound == null) {
 
-                Object resolved = invokeNoArgs(
+                Object resolved = MinecraftReflection.invokeNoArgs(
                         instance,
                         "getSound"
                 );
@@ -1233,7 +1222,7 @@ public final class MusicBusManager {
                 return;
             }
 
-            Object current = invokeNoArgs(
+            Object current = MinecraftReflection.invokeNoArgs(
                     instance,
                     "getSound"
             );
@@ -1259,7 +1248,7 @@ public final class MusicBusManager {
 
         try {
 
-            Object existing = invokeNoArgs(
+            Object existing = MinecraftReflection.invokeNoArgs(
                     instance,
                     "getSound"
             );
@@ -1269,9 +1258,9 @@ public final class MusicBusManager {
                 return;
             }
 
-            Object minecraft = getMinecraftInstance();
+            Object minecraft = MinecraftReflection.getMinecraftInstance();
 
-            Object soundManager = findObjectByType(
+            Object soundManager = MinecraftReflection.findObjectByType(
                     minecraft,
                     "SoundManager"
             );
@@ -1324,7 +1313,7 @@ public final class MusicBusManager {
             Object sound
     ) throws Exception {
 
-        Field field = findField(
+        Field field = MinecraftReflection.findField(
                 instance.getClass(),
                 "sound"
         );
@@ -1344,7 +1333,10 @@ public final class MusicBusManager {
         }
 
         try {
-            Object location = invokeNoArgs(sound, "getLocation");
+            Object location = MinecraftReflection.invokeNoArgs(
+                    sound,
+                    "getLocation"
+            );
             if (location != null) {
                 return location.toString();
             }
@@ -1622,9 +1614,9 @@ public final class MusicBusManager {
 
     private static Object getCurrentMusic() throws Exception {
 
-        Object minecraft = getMinecraftInstance();
+        Object minecraft = MinecraftReflection.getMinecraftInstance();
 
-        Object musicManager = findObjectByType(
+        Object musicManager = MinecraftReflection.findObjectByType(
                 minecraft,
                 "MusicManager"
         );
@@ -1633,7 +1625,7 @@ public final class MusicBusManager {
             return null;
         }
 
-        Field field = findField(
+        Field field = MinecraftReflection.findField(
                 musicManager.getClass(),
                 "currentMusic"
         );
@@ -1645,147 +1637,6 @@ public final class MusicBusManager {
         field.setAccessible(true);
 
         return field.get(musicManager);
-    }
-
-    private static Object getMinecraftInstance()
-            throws Exception {
-
-        ClassLoader loader =
-                Thread.currentThread().getContextClassLoader();
-
-        if (loader == null) {
-            loader = MusicBusManager.class.getClassLoader();
-        }
-
-        Class<?> minecraftClass = Class.forName(
-                "net.minecraft.client.Minecraft",
-                true,
-                loader
-        );
-
-        Method method = minecraftClass.getDeclaredMethod(
-                "getInstance"
-        );
-
-        method.setAccessible(true);
-
-        return method.invoke(null);
-    }
-
-    private static Object findObjectByType(
-            Object owner,
-            String simpleName
-    ) throws IllegalAccessException {
-
-        Class<?> current = owner.getClass();
-
-        while (current != null) {
-
-            for (Field field : current.getDeclaredFields()) {
-
-                if (field.getType().getSimpleName()
-                        .equals(simpleName)) {
-
-                    field.setAccessible(true);
-
-                    return field.get(owner);
-                }
-            }
-
-            current = current.getSuperclass();
-        }
-
-        return null;
-    }
-
-    private static Field findField(
-            Class<?> type,
-            String name
-    ) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            try {
-
-                return current.getDeclaredField(name);
-
-            } catch (NoSuchFieldException ignored) {
-
-                current = current.getSuperclass();
-            }
-        }
-
-        return null;
-    }
-
-    private static Object invokeSoundManager(
-            String methodName,
-            Object instance
-    ) throws Exception {
-
-        Object minecraft = getMinecraftInstance();
-
-        Object soundManager = findObjectByType(
-                minecraft,
-                "SoundManager"
-        );
-
-        if (soundManager == null) {
-            throw new IllegalStateException(
-                    "SoundManager not found"
-            );
-        }
-
-        Method method = findSoundManagerMethod(
-                soundManager.getClass(),
-                methodName
-        );
-
-        if (method == null) {
-            throw new NoSuchMethodException(methodName);
-        }
-
-        method.setAccessible(true);
-
-        return method.invoke(soundManager, instance);
-    }
-
-    private static boolean invokeSoundManagerBoolean(
-            String methodName,
-            Object instance
-    ) throws Exception {
-
-        return Boolean.TRUE.equals(
-                invokeSoundManager(methodName, instance)
-        );
-    }
-
-    private static Method findSoundManagerMethod(
-            Class<?> type,
-            String name
-    ) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            for (Method method : current.getDeclaredMethods()) {
-
-                if (method.getName().equals(name)
-                        && method.getParameterCount() == 1
-                        && method.getParameterTypes()[0]
-                        .getSimpleName().equals("SoundInstance")) {
-
-                    return method;
-                }
-            }
-
-            current = current.getSuperclass();
-        }
-
-        return null;
     }
 
     // --------------------------------------------------
@@ -1800,7 +1651,7 @@ public final class MusicBusManager {
 
         try {
 
-            Object source = invokeNoArgs(
+            Object source = MinecraftReflection.invokeNoArgs(
                     instance,
                     "getSource"
             );
@@ -1812,87 +1663,6 @@ public final class MusicBusManager {
 
             return false;
         }
-    }
-
-    private static Object invokeNoArgs(
-            Object target,
-            String methodName
-    ) throws Exception {
-
-        Method method = findNoArgMethod(
-                target.getClass(),
-                methodName
-        );
-
-        if (method == null) {
-            throw new NoSuchMethodException(methodName);
-        }
-
-        method.setAccessible(true);
-
-        return method.invoke(target);
-    }
-
-    private static Method findNoArgMethod(
-            Class<?> type,
-            String name
-    ) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            try {
-
-                return current.getDeclaredMethod(name);
-
-            } catch (NoSuchMethodException ignored) {
-
-                current = current.getSuperclass();
-            }
-        }
-
-        return null;
-    }
-
-    private static float readFloat(
-            Object target,
-            String methodName,
-            float fallback
-    ) {
-
-        try {
-
-            Object value = invokeNoArgs(target, methodName);
-
-            if (value instanceof Number number) {
-                return number.floatValue();
-            }
-
-        } catch (Exception ignored) {
-        }
-
-        return fallback;
-    }
-
-    private static boolean readBoolean(
-            Object target,
-            String methodName,
-            boolean fallback
-    ) {
-
-        try {
-
-            Object value = invokeNoArgs(target, methodName);
-
-            if (value instanceof Boolean result) {
-                return result;
-            }
-
-        } catch (Exception ignored) {
-        }
-
-        return fallback;
     }
 
     // --------------------------------------------------
