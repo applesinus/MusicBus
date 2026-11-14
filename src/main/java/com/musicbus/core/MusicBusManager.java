@@ -2,6 +2,7 @@ package com.musicbus.core;
 
 import com.musicbus.audio.AudioPlayer;
 import com.musicbus.audio.BusedAudioPlayer;
+import com.musicbus.audio.ExternalAudioPlayer;
 import com.musicbus.audio.MockAudioPlayer;
 import com.musicbus.audio.OggResourceResolver;
 import com.musicbus.audio.PlaybackSession;
@@ -84,6 +85,8 @@ public final class MusicBusManager {
 
             try {
 
+                enabled = MusicBusConfig.load();
+
                 vanillaPlayer = new VanillaAudioPlayer();
                 busedPlayer = createBusedPlayer();
 
@@ -97,8 +100,6 @@ public final class MusicBusManager {
                     );
                 }
 
-                enabled = MusicBusConfig.load();
-
                 instrumentation.addTransformer(
                         new MusicBusTransformer(),
                         false
@@ -107,7 +108,7 @@ public final class MusicBusManager {
                 initialized = true;
 
                 log("Vanilla audio player initialized.");
-                log("Bused audio player initialized.");
+                log("Bused audio player initialized (" + busedPlayer.getId() + ").");
                 log("Configuration loaded: enabled=" + enabled);
                 log("Configuration path: "
                         + MusicBusConfig.getLocation());
@@ -115,6 +116,19 @@ public final class MusicBusManager {
                 log("MusicBus Manager initialized.");
 
             } catch (Exception error) {
+
+                if (busedPlayer != null) {
+                    try {
+                        busedPlayer.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                if (vanillaPlayer != null) {
+                    try {
+                        vanillaPlayer.close();
+                    } catch (Exception ignored) {
+                    }
+                }
 
                 vanillaPlayer = null;
                 busedPlayer = null;
@@ -129,8 +143,37 @@ public final class MusicBusManager {
     }
 
     private static BusedAudioPlayer createBusedPlayer() {
-        // TODO: change to the real player
-        return new MockAudioPlayer();
+        if ("mock".equalsIgnoreCase(System.getProperty("musicbus.player"))) {
+            return new MockAudioPlayer();
+        }
+        return new ExternalAudioPlayer(
+                MusicBusConfig.getPlayerExecutablePath(),
+                null,
+                MusicBusConfig.getOutputDevice(),
+                MusicBusConfig.getWindowMode()
+        );
+    }
+
+    public static void shutdown() {
+        synchronized (TRANSITION_LOCK) {
+            if (!initialized) {
+                return;
+            }
+            if (busedPlayer != null) {
+                try {
+                    busedPlayer.close();
+                } catch (Exception ignored) {
+                }
+            }
+            if (vanillaPlayer != null) {
+                try {
+                    vanillaPlayer.close();
+                } catch (Exception ignored) {
+                }
+            }
+            initialized = false;
+            enabled = false;
+        }
     }
 
     public static boolean isEnabled() {

@@ -1,3 +1,12 @@
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.time.Duration
+import java.util.zip.ZipInputStream
+
 plugins {
     id 'java'
 }
@@ -18,6 +27,272 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
     }
+}
+
+abstract class PrepareNativeToolchainTask extends DefaultTask {
+    @Input
+    abstract Property<String> getZigUrl()
+
+    @Input
+    abstract Property<String> getZigArchiveName()
+
+    @Input
+    abstract Property<String> getMiniaudioUrl()
+
+    @Input
+    abstract Property<String> getStbVorbisUrl()
+
+    @Internal
+    abstract Property<String> getCacheRootPath()
+
+    @OutputFile
+    abstract RegularFileProperty getZigExe()
+
+    @OutputFile
+    abstract RegularFileProperty getMiniaudioHeader()
+
+    @OutputFile
+    abstract RegularFileProperty getStbVorbisSource()
+
+    @TaskAction
+    void prepare() {
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build()
+
+        downloadIfMissing(client, miniaudioUrl.get(), miniaudioHeader.get().asFile.toPath())
+        downloadIfMissing(client, stbVorbisUrl.get(), stbVorbisSource.get().asFile.toPath())
+
+        Path zigExePath = zigExe.get().asFile.toPath()
+        if (!Files.isRegularFile(zigExePath)) {
+            Path cacheRoot = Path.of(cacheRootPath.get())
+            String zipName = "${zigArchiveName.get()}.zip"
+            Path zigZip = cacheRoot.resolve(zipName)
+            if (!Files.isRegularFile(zigZip) || Files.size(zigZip) < 10_000_000L) {
+                downloadZigWithMirrors(client, zipName, zigZip)
+            }
+            logger.lifecycle("[MusicBus] Extracting ${zipName} ...")
+            unzipArchive(zigZip, cacheRoot)
+            if (!Files.isRegularFile(zigExePath)) {
+                throw new GradleException("zig.exe not found after extraction at ${zigExePath}")
+            }
+        }
+    }
+
+    private void downloadZigWithMirrors(HttpClient client, String zipName, Path target) {
+        List<String> candidates = new ArrayList<>()
+
+        try {
+            HttpRequest req = HttpRequest.newBuilder(URI.create('https://ziglang.org/download/community-mirrors.txt'))
+                    .timeout(Duration.ofSeconds(8))
+                    .header('User-Agent', 'MusicBus-Gradle/1.0')
+                    .GET()
+                    .build()
+            HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString())
+            if (resp.statusCode() == 200 && resp.body() != null) {
+                List<String> mirrors = resp.body().readLines()
+                        .collect { it.trim().replaceAll('/+$', '') }
+                        .findAll { it.startsWith('https://') }
+                Collections.shuffle(mirrors)
+                mirrors.each { candidates.add("${it}/${zipName}?source=musicbus") }
+            }
+        } catch (Exception e) {
+            logger.lifecycle("[MusicBus] Could not fetch community-mirrors.txt (${e.message}), using built-in mirror list.")
+        }
+
+        [
+            'https://pkg.machengine.org/zig',
+            'https://ziglang.freetls.fastly.net',
+            'https://zig-mirror.tsimnet.eu/zig',
+            'https://zig.linus.dev/zig',
+            'https://zig.squirl.dev',
+            'https://zigmirror.com',
+            'https://zig.chainsafe.dev',
+            'https://zig.savalione.com',
+            'https://pkg.earth/zig'
+        ].each { mirror ->
+            String url = "${mirror}/${zipName}?source=musicbus"
+            if (!candidates.contains(url)) {
+                candidates.add(url)
+            }
+        }
+        candidates.add(zigUrl.get())
+
+        for (String url : candidates) {
+            try {
+                downloadFile(client, url, target, 90)
+                return
+            } catch (Exception e) {
+                logger.warn("[MusicBus] Mirror failed (${url}): ${e.class.simpleName}: ${e.message}")
+            }
+        }
+        throw new GradleException("Failed to download ${zipName} from all mirrors.")
+    }
+
+    private void downloadIfMissing(HttpClient client, String urlString, Path target) {
+        if (Files.isRegularFile(target) && Files.size(target) > 0L) {
+            return
+        }
+        downloadFile(client, urlString, target, 30)
+    }
+
+    private void downloadFile(HttpClient client, String urlString, Path target, int timeoutSeconds) {
+        Files.createDirectories(target.parent)
+        Path tempFile = target.resolveSibling(target.fileName.toString() + '.part')
+        Files.deleteIfExists(tempFile)
+        logger.lifecycle("[MusicBus] Downloading ${urlString} ...")
+
+        HttpRequest request = HttpRequest.newBuilder(URI.create(urlString))
+                .timeout(Duration.ofSeconds(timeoutSeconds))
+                .header('User-Agent', 'MusicBus-Gradle/1.0')
+                .GET()
+                .build()
+
+        HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream())
+        if (response.statusCode() != 200) {
+            response.body()?.close()
+            throw new IOException("HTTP ${response.statusCode()}")
+        }
+
+        long totalBytes = response.headers().firstValueAsLong('Content-Length').orElse(-1L)
+        long downloaded = 0L
+        long nextLogAt = 5L * 1024L * 1024L
+        byte[] buffer = new byte[65536]
+
+        try (InputStream input = response.body();
+             OutputStream output = Files.newOutputStream(tempFile)) {
+            int read
+            while ((read = input.read(buffer)) != -1) {
+                output.write(buffer, 0, read)
+                downloaded += read
+                if (totalBytes > 0L && downloaded >= nextLogAt) {
+                    logger.lifecycle(String.format(Locale.ROOT,
+                            "[MusicBus]   %.1f / %.1f MB",
+                            downloaded / (1024.0 * 1024.0),
+                            totalBytes / (1024.0 * 1024.0)))
+                    nextLogAt += 5L * 1024L * 1024L
+                }
+            }
+        } catch (Exception e) {
+            Files.deleteIfExists(tempFile)
+            throw e
+        }
+
+        if (Files.size(tempFile) == 0L) {
+            Files.deleteIfExists(tempFile)
+            throw new IOException("Empty response")
+        }
+        Files.move(tempFile, target, StandardCopyOption.REPLACE_EXISTING)
+    }
+
+    private static void unzipArchive(Path zipFile, Path destDir) {
+        Path normalizedDest = destDir.toAbsolutePath().normalize()
+        Files.createDirectories(normalizedDest)
+        new ZipInputStream(Files.newInputStream(zipFile)).withCloseable { zis ->
+            def entry
+            while ((entry = zis.nextEntry) != null) {
+                Path target = normalizedDest.resolve(entry.name).normalize()
+                if (!target.startsWith(normalizedDest)) {
+                    throw new GradleException("Unsafe zip entry: ${entry.name}")
+                }
+                if (entry.directory) {
+                    Files.createDirectories(target)
+                } else {
+                    Files.createDirectories(target.parent)
+                    Files.copy(zis, target, StandardCopyOption.REPLACE_EXISTING)
+                }
+                zis.closeEntry()
+            }
+        }
+    }
+}
+
+def zigVersion = '0.17.1'
+def zigArchiveName = "zig-x86_64-windows-${zigVersion}"
+def zigUrl = "https://ziglang.org/download/${zigVersion}/${zigArchiveName}.zip"
+def miniaudioUrl = 'https://raw.githubusercontent.com/mackron/miniaudio/0.11.22/miniaudio.h'
+def stbVorbisUrl = 'https://raw.githubusercontent.com/nothings/stb/5c205738c191bcb0abc65c4febfa9bd25ff35234/stb_vorbis.c'
+
+File nativeCacheDir = new File(gradle.gradleUserHomeDir, 'caches/musicbus-native')
+File zigInstallDir = new File(nativeCacheDir, zigArchiveName)
+File zigExeFile = new File(zigInstallDir, 'zig.exe')
+File nativeDepsDir = new File(nativeCacheDir, 'deps-0.11.22')
+File miniaudioHeaderFile = new File(nativeDepsDir, 'miniaudio.h')
+File stbVorbisSourceFile = new File(nativeDepsDir, 'stb_vorbis.c')
+
+def nativeSourceFile = layout.projectDirectory.file('src/main/native/musicbus_player.c')
+def generatedNativeResourcesDir = layout.buildDirectory.dir('generated/native-resources')
+def nativeOutputExe = generatedNativeResourcesDir.map {
+    it.file('native/windows-x64/musicbus-player.exe')
+}
+
+def prepareNativeToolchain = tasks.register('prepareNativeToolchain', PrepareNativeToolchainTask) {
+    group = 'build'
+    description = 'Downloads and caches portable Zig and audio headers.'
+
+    it.zigUrl.set(zigUrl)
+    it.zigArchiveName.set(zigArchiveName)
+    it.miniaudioUrl.set(miniaudioUrl)
+    it.stbVorbisUrl.set(stbVorbisUrl)
+    it.cacheRootPath.set(nativeCacheDir.absolutePath)
+    it.zigExe.set(zigExeFile)
+    it.miniaudioHeader.set(miniaudioHeaderFile)
+    it.stbVorbisSource.set(stbVorbisSourceFile)
+}
+
+def zigExePathStr = zigExeFile.absolutePath
+def nativeDepsDirStr = nativeDepsDir.absolutePath
+def nativeSrcPathStr = nativeSourceFile.asFile.absolutePath
+
+def compileNativePlayer = tasks.register('compileNativePlayer', Exec) {
+    group = 'build'
+    description = 'Compiles musicbus-player.exe using portable zig cc.'
+
+    dependsOn(prepareNativeToolchain)
+
+    inputs.file(nativeSourceFile)
+    inputs.file(miniaudioHeaderFile)
+    inputs.file(stbVorbisSourceFile)
+    outputs.file(nativeOutputExe)
+
+    doFirst {
+        File outFile = nativeOutputExe.get().asFile
+        outFile.parentFile.mkdirs()
+
+        executable = zigExePathStr
+        args = [
+            'cc',
+            '-target', 'x86_64-windows-gnu',
+            '-O2',
+            '-std=c11',
+            '-Wall',
+            '-Wextra',
+            '-DUNICODE',
+            '-D_UNICODE',
+            '-DWIN32_LEAN_AND_MEAN',
+            '-I', nativeDepsDirStr,
+            '-mwindows',
+            nativeSrcPathStr,
+            '-o', outFile.absolutePath,
+            '-lole32',
+            '-luser32',
+            '-lgdi32',
+            '-luuid'
+        ]
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir(generatedNativeResourcesDir)
+        }
+    }
+}
+
+tasks.named('processResources') {
+    dependsOn(compileNativePlayer)
 }
 
 jar {
