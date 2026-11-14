@@ -22,6 +22,9 @@ public final class MusicBusTransformer
     private static final String SOUND_INSTANCE =
             "net/minecraft/client/resources/sounds/SoundInstance";
 
+    private static final String ABSTRACT_SOUND_INSTANCE =
+            "net/minecraft/client/resources/sounds/AbstractSoundInstance";
+
     private static final String SOUND_SOURCE =
             "net/minecraft/sounds/SoundSource";
 
@@ -60,6 +63,10 @@ public final class MusicBusTransformer
 
         if (SOUND_ENGINE.equals(className)) {
             return transformSoundEngine(classfileBuffer);
+        }
+
+        if (ABSTRACT_SOUND_INSTANCE.equals(className)) {
+            return transformAbstractSoundInstance(classfileBuffer);
         }
 
         return null;
@@ -449,6 +456,100 @@ public final class MusicBusTransformer
 
         System.out.println(
                 "[MusicBus] SoundEngine fully transformed."
+        );
+
+        return writer.toByteArray();
+    }
+
+    /**
+     * Prevents AbstractSoundInstance.resolve() from replacing
+     * an already locked Sound for an active music session.
+     */
+    private byte[] transformAbstractSoundInstance(byte[] originalBytes) {
+
+        ClassReader reader = new ClassReader(originalBytes);
+
+        ClassWriter writer = new ClassWriter(
+                reader,
+                ClassWriter.COMPUTE_MAXS
+        );
+
+        boolean[] found = {false};
+
+        ClassVisitor visitor = new ClassVisitor(
+                Opcodes.ASM9,
+                writer
+        ) {
+
+            @Override
+            public MethodVisitor visitMethod(
+                    int access,
+                    String name,
+                    String descriptor,
+                    String signature,
+                    String[] exceptions
+            ) {
+
+                MethodVisitor mv = super.visitMethod(
+                        access,
+                        name,
+                        descriptor,
+                        signature,
+                        exceptions
+                );
+
+                if (!name.equals("resolve")
+                        || !descriptor.equals(
+                                "(Lnet/minecraft/client/sounds/SoundManager;)"
+                                + "Lnet/minecraft/client/sounds/WeighedSoundEvents;"
+                        )) {
+                    return mv;
+                }
+
+                found[0] = true;
+
+                System.out.println(
+                        "[MusicBus] Hooked AbstractSoundInstance.resolve()."
+                );
+
+                return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                    @Override
+                    public void visitInsn(int opcode) {
+
+                        if (opcode == Opcodes.ARETURN) {
+
+                            super.visitVarInsn(
+                                    Opcodes.ALOAD,
+                                    0
+                            );
+
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    MANAGER,
+                                    "onSoundResolved",
+                                    "(Ljava/lang/Object;)V",
+                                    false
+                            );
+                        }
+
+                        super.visitInsn(opcode);
+                    }
+                };
+            }
+        };
+
+        reader.accept(visitor, 0);
+
+        if (!found[0]) {
+            System.err.println(
+                    "[MusicBus] AbstractSoundInstance.resolve() not found!"
+            );
+            return null;
+        }
+
+        System.out.println(
+                "[MusicBus] AbstractSoundInstance transformed."
         );
 
         return writer.toByteArray();

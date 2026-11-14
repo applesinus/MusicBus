@@ -29,6 +29,9 @@ public final class MusicBusManager {
     private static final Map<Object, PlaybackSession> SESSIONS =
             new IdentityHashMap<>();
 
+    private static final Map<Object, Object> LOCKED_SOUNDS =
+            new IdentityHashMap<>();
+
     private static final Set<Object> MOCK_ROUTED_INSTANCES =
             Collections.newSetFromMap(new IdentityHashMap<>());
 
@@ -653,6 +656,8 @@ public final class MusicBusManager {
         log("Session created: " + created.getId());
         log("Resource: " + created.getResourceId());
 
+        ensureSoundResolved(instance);
+
         return created;
     }
 
@@ -725,6 +730,7 @@ public final class MusicBusManager {
 
             if (SESSIONS.get(instance) == session) {
                 SESSIONS.remove(instance);
+                LOCKED_SOUNDS.remove(instance);
             }
 
             MOCK_ROUTED_INSTANCES.remove(instance);
@@ -758,8 +764,178 @@ public final class MusicBusManager {
         return null;
     }
 
+    /**
+     * Called from AbstractSoundInstance.resolve(SoundManager).
+     *
+     * Locks the first resolved Sound for an active music session
+     * and restores it on subsequent resolve() calls so vanilla
+     * playback does not switch to a different random track.
+     */
+    public static void onSoundResolved(Object instance) {
+
+        if (instance == null) {
+            return;
+        }
+
+        boolean tracked;
+        Object lockedSound;
+
+        synchronized (STATE_LOCK) {
+            tracked = SESSIONS.containsKey(instance);
+            lockedSound = tracked ? LOCKED_SOUNDS.get(instance) : null;
+        }
+
+        if (!tracked) {
+            return;
+        }
+
+        try {
+
+            if (lockedSound == null) {
+
+                Object resolved = invokeNoArgs(
+                        instance,
+                        "getSound"
+                );
+
+                if (resolved == null) {
+                    return;
+                }
+
+                synchronized (STATE_LOCK) {
+                    if (SESSIONS.containsKey(instance)
+                            && !LOCKED_SOUNDS.containsKey(instance)) {
+                        LOCKED_SOUNDS.put(instance, resolved);
+                    }
+                }
+
+                log("Sound locked: " + describeSound(resolved));
+                return;
+            }
+
+            Object current = invokeNoArgs(
+                    instance,
+                    "getSound"
+            );
+
+            if (current != lockedSound) {
+                setSoundField(instance, lockedSound);
+                log("Restored locked sound: "
+                        + describeSound(lockedSound));
+            }
+
+        } catch (Exception error) {
+
+            log("WARNING: Failed to process resolved sound: "
+                    + error);
+        }
+    }
+
+    private static void ensureSoundResolved(Object instance) {
+
+        if (instance == null) {
+            return;
+        }
+
+        try {
+
+            Object existing = invokeNoArgs(
+                    instance,
+                    "getSound"
+            );
+
+            if (existing != null) {
+                onSoundResolved(instance);
+                return;
+            }
+
+            Object minecraft = getMinecraftInstance();
+
+            Object soundManager = findObjectByType(
+                    minecraft,
+                    "SoundManager"
+            );
+
+            if (soundManager == null) {
+                return;
+            }
+
+            Method resolveMethod = findResolveMethod(
+                    instance.getClass()
+            );
+
+            if (resolveMethod == null) {
+                return;
+            }
+
+            resolveMethod.setAccessible(true);
+            resolveMethod.invoke(instance, soundManager);
+
+        } catch (Exception error) {
+
+            log("WARNING: Pre-resolve failed: " + error);
+        }
+    }
+
+    private static Method findResolveMethod(Class<?> type) {
+
+        Class<?> current = type;
+
+        while (current != null) {
+
+            for (Method method : current.getDeclaredMethods()) {
+
+                if (method.getName().equals("resolve")
+                        && method.getParameterCount() == 1
+                        && method.getParameterTypes()[0]
+                                .getSimpleName().equals("SoundManager")) {
+                    return method;
+                }
+            }
+
+            current = current.getSuperclass();
+        }
+
+        return null;
+    }
+
+    private static void setSoundField(
+            Object instance,
+            Object sound
+    ) throws Exception {
+
+        Field field = findField(
+                instance.getClass(),
+                "sound"
+        );
+
+        if (field == null) {
+            throw new NoSuchFieldException("sound");
+        }
+
+        field.setAccessible(true);
+        field.set(instance, sound);
+    }
+
+    private static String describeSound(Object sound) {
+
+        if (sound == null) {
+            return "null";
+        }
+
+        try {
+            Object location = invokeNoArgs(sound, "getLocation");
+            if (location != null) {
+                return location.toString();
+            }
+        } catch (Exception ignored) {
+        }
+
+        return sound.toString();
+    }
+
     // --------------------------------------------------
-    // Audio Player transition guard
+    // Backend transition guard
     // --------------------------------------------------
 
     private static boolean isAudioPlayerTransition() {
