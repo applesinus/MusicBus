@@ -8,9 +8,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 public final class MusicBus {
-
-    private static boolean enabled = false;
-
     private static final Map<Object, Boolean> INJECTED =
             Collections.synchronizedMap(new WeakHashMap<>());
 
@@ -123,10 +120,6 @@ public final class MusicBus {
         }
 
         return null;
-    }
-
-    public static boolean isEnabled() {
-        return enabled;
     }
 
     private static void log(String message) {

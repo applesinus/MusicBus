@@ -42,10 +42,10 @@ public final class MusicBusManager {
     private static final Map<Object, Object> LOCKED_SOUNDS =
             new IdentityHashMap<>();
 
-    private static final Set<Object> MOCK_ROUTED_INSTANCES =
+    private static final Set<Object> BUS_ROUTED_INSTANCES =
             Collections.newSetFromMap(new IdentityHashMap<>());
 
-    private static AudioPlayer mockPlayer;
+    private static AudioPlayer BusedPlayer;
     private static VanillaAudioPlayer vanillaPlayer;
 
     private static PlaybackSession currentSession;
@@ -78,15 +78,15 @@ public final class MusicBusManager {
             try {
 
                 vanillaPlayer = new VanillaAudioPlayer();
-                mockPlayer = createMockPlayer();
+                BusedPlayer = createBusedPlayer();
 
                 if (!vanillaPlayer.isAvailable()) {
                     log("WARNING: Vanilla audio player unavailable.");
                 }
 
-                if (!mockPlayer.isAvailable()) {
+                if (!BusedPlayer.isAvailable()) {
                     throw new IllegalStateException(
-                            "Mock audio player unavailable"
+                            "Bused audio player unavailable"
                     );
                 }
 
@@ -100,7 +100,7 @@ public final class MusicBusManager {
                 initialized = true;
 
                 log("Vanilla audio player initialized.");
-                log("Mock audio player initialized.");
+                log("Bused audio player initialized.");
                 log("Configuration loaded: enabled=" + enabled);
                 log("Configuration path: "
                         + MusicBusConfig.getLocation());
@@ -110,7 +110,7 @@ public final class MusicBusManager {
             } catch (Exception error) {
 
                 vanillaPlayer = null;
-                mockPlayer = null;
+                BusedPlayer = null;
                 enabled = false;
 
                 throw new IllegalStateException(
@@ -121,7 +121,8 @@ public final class MusicBusManager {
         }
     }
 
-    private static MockAudioPlayer createMockPlayer() {
+    private static AudioPlayer createBusedPlayer() {
+        // TODO: change to the real player
         return new MockAudioPlayer();
     }
 
@@ -136,8 +137,8 @@ public final class MusicBusManager {
         }
     }
 
-    public static AudioPlayer getMockPlayer() {
-        return mockPlayer;
+    public static AudioPlayer getBusedPlayer() {
+        return BusedPlayer;
     }
 
     public static AudioPlayer getVanillaPlayer() {
@@ -253,27 +254,27 @@ public final class MusicBusManager {
                 return true;
             }
 
-            if (!mockPlayer.supports(snapshot)) {
+            if (!BusedPlayer.supports(snapshot)) {
                 throw new IllegalStateException(
-                        "Mock audio player does not support session"
+                        "Bused audio player does not support session"
                 );
             }
 
-            mockPlayer.play(snapshot);
+            BusedPlayer.play(snapshot);
 
-            if (!mockPlayer.isActive(session.getId())) {
+            if (!BusedPlayer.isActive(session.getId())) {
                 throw new IllegalStateException(
-                        "Mock audio player did not activate session"
+                        "Bused audio player did not activate session"
                 );
             }
 
             synchronized (STATE_LOCK) {
-                MOCK_ROUTED_INSTANCES.add(instance);
+                BUS_ROUTED_INSTANCES.add(instance);
             }
 
             enabled = true;
 
-            log("Vanilla -> Mock transition successful.");
+            log("Vanilla -> Bused transition successful.");
             log("Session: " + session.getId());
 
             return true;
@@ -301,7 +302,7 @@ public final class MusicBusManager {
                         );
 
                         synchronized (STATE_LOCK) {
-                            MOCK_ROUTED_INSTANCES.remove(vanillaInstance);
+                            BUS_ROUTED_INSTANCES.remove(vanillaInstance);
                         }
                     }
 
@@ -333,12 +334,12 @@ public final class MusicBusManager {
 
             enabled = false;
 
-            log("No active mock session. Vanilla audio player restored.");
+            log("No active bused session. Vanilla audio player restored.");
 
             return true;
         }
 
-        mockPlayer.getStatus(session.getId())
+        BusedPlayer.getStatus(session.getId())
                 .ifPresent(session::sync);
 
         PlaybackSession.Snapshot previousState =
@@ -347,12 +348,12 @@ public final class MusicBusManager {
         try {
 
             /*
-             * Detach MockAudioPlayer without stopping the logical session.
+             * Detach bused AudioPlayer without stopping the logical session.
              */
-            mockPlayer.stop(session.getId());
+            BusedPlayer.stop(session.getId());
 
             synchronized (STATE_LOCK) {
-                MOCK_ROUTED_INSTANCES.remove(instance);
+                BUS_ROUTED_INSTANCES.remove(instance);
             }
 
             /*
@@ -368,7 +369,7 @@ public final class MusicBusManager {
                 retireSession(instance, session);
             }
 
-            log("Mock -> Vanilla transition successful.");
+            log("Bused -> Vanilla transition successful.");
             log("Session: " + session.getId());
 
             return true;
@@ -379,23 +380,23 @@ public final class MusicBusManager {
                     + error);
 
             /*
-             * Restore MockAudioPlayer if vanilla handoff failed.
+             * Restore BusedAudioPlayer if vanilla handoff failed.
              */
             try {
 
-                mockPlayer.play(previousState);
+                BusedPlayer.play(previousState);
 
                 synchronized (STATE_LOCK) {
-                    MOCK_ROUTED_INSTANCES.add(instance);
+                    BUS_ROUTED_INSTANCES.add(instance);
                 }
 
                 enabled = true;
 
-                log("Mock audio player successfully restored.");
+                log("Bused audio player successfully restored.");
 
             } catch (Exception rollbackError) {
 
-                log("CRITICAL: Mock rollback failed: "
+                log("CRITICAL: Bused rollback failed: "
                         + rollbackError);
 
                 enabled = false;
@@ -443,31 +444,31 @@ public final class MusicBusManager {
             PlaybackSession.Snapshot snapshot =
                     session.snapshot();
 
-            if (!mockPlayer.supports(snapshot)) {
+            if (!BusedPlayer.supports(snapshot)) {
                 return false;
             }
 
             /*
-             * Stop a previous mock session if a new track
+             * Stop a previous bused session if a new track
              * replaces it.
              */
             PlaybackSession previous =
-                    mockPlayerSession();
+                    busedPlayerSession();
 
             if (previous != null && previous != session) {
-                mockPlayer.stop(previous.getId());
+                BusedPlayer.stop(previous.getId());
             }
 
-            mockPlayer.play(snapshot);
+            BusedPlayer.play(snapshot);
 
-            if (!mockPlayer.isActive(session.getId())) {
+            if (!BusedPlayer.isActive(session.getId())) {
                 throw new IllegalStateException(
-                        "Mock playback failed"
+                        "Bused playback failed"
                 );
             }
 
             synchronized (STATE_LOCK) {
-                MOCK_ROUTED_INSTANCES.add(instance);
+                BUS_ROUTED_INSTANCES.add(instance);
             }
 
             log("Music intercepted: " + session.getResourceId());
@@ -476,10 +477,10 @@ public final class MusicBusManager {
 
         } catch (Exception error) {
 
-            log("WARNING: Mock playback failed: " + error);
+            log("WARNING: Bused playback failed: " + error);
 
             synchronized (STATE_LOCK) {
-                MOCK_ROUTED_INSTANCES.remove(instance);
+                BUS_ROUTED_INSTANCES.remove(instance);
             }
 
             /*
@@ -492,10 +493,10 @@ public final class MusicBusManager {
     /**
      * Called from SoundEngine.isActive().
      *
-     * Returns true only when MockAudioPlayer owns this instance
+     * Returns true only when BusedAudioPlayer owns this instance
      * and confirms that playback is active.
      */
-    public static boolean isMockActive(Object instance) {
+    public static boolean isBusActive(Object instance) {
 
         if (!enabled || instance == null) {
             return false;
@@ -505,16 +506,30 @@ public final class MusicBusManager {
 
         synchronized (STATE_LOCK) {
 
-            if (!MOCK_ROUTED_INSTANCES.contains(instance)) {
+            if (!BUS_ROUTED_INSTANCES.contains(instance)) {
                 return false;
             }
 
             session = SESSIONS.get(instance);
         }
 
-        return session != null
-                && mockPlayer != null
-                && mockPlayer.isActive(session.getId());
+        if (session == null || BusedPlayer == null) {
+            return false;
+        }
+
+        Optional<AudioPlayer.PlaybackStatus> status =
+                BusedPlayer.getStatus(session.getId());
+
+        if (status.isPresent()
+                && status.get().state()
+                        != PlaybackSession.State.STOPPED) {
+            return true;
+        }
+
+        session.stop();
+        retireSession(instance, session);
+
+        return false;
     }
 
     /**
@@ -534,23 +549,23 @@ public final class MusicBusManager {
         }
 
         PlaybackSession session;
-        boolean mockRouted;
+        boolean busedPlayerRouted;
 
         synchronized (STATE_LOCK) {
 
             session = SESSIONS.get(instance);
 
-            mockRouted =
-                    MOCK_ROUTED_INSTANCES.contains(instance);
+            busedPlayerRouted =
+                    BUS_ROUTED_INSTANCES.contains(instance);
         }
 
         if (session == null) {
             return false;
         }
 
-        if (mockRouted) {
+        if (busedPlayerRouted) {
 
-            mockPlayer.stop(session.getId());
+            BusedPlayer.stop(session.getId());
 
             retireSession(instance, session);
 
@@ -603,7 +618,7 @@ public final class MusicBusManager {
 
         PlaybackSession previous;
         Object previousInstance;
-        boolean previousMock;
+        boolean previousBusedPlayer;
 
         synchronized (STATE_LOCK) {
 
@@ -619,15 +634,15 @@ public final class MusicBusManager {
             previous = currentSession;
             previousInstance = currentSoundInstance;
 
-            previousMock = previousInstance != null
-                    && MOCK_ROUTED_INSTANCES.contains(previousInstance);
+            previousBusedPlayer = previousInstance != null
+                    && BUS_ROUTED_INSTANCES.contains(previousInstance);
 
             SESSIONS.put(instance, created);
 
             currentSession = created;
             currentSoundInstance = instance;
 
-            MOCK_ROUTED_INSTANCES.remove(instance);
+            BUS_ROUTED_INSTANCES.remove(instance);
         }
 
         /*
@@ -644,8 +659,8 @@ public final class MusicBusManager {
          */
         if (previous != null && previous != created) {
 
-            if (previousMock) {
-                mockPlayer.stop(previous.getId());
+            if (previousBusedPlayer) {
+                BusedPlayer.stop(previous.getId());
             }
 
             previous.stop();
@@ -660,7 +675,7 @@ public final class MusicBusManager {
 
                     SESSIONS.remove(previousInstance);
 
-                    MOCK_ROUTED_INSTANCES.remove(
+                    BUS_ROUTED_INSTANCES.remove(
                             previousInstance
                     );
                 }
@@ -728,7 +743,7 @@ public final class MusicBusManager {
         );
     }
 
-    private static PlaybackSession mockPlayerSession() {
+    private static PlaybackSession busedPlayerSession() {
 
         synchronized (STATE_LOCK) {
             return currentSession;
@@ -747,7 +762,7 @@ public final class MusicBusManager {
                 LOCKED_SOUNDS.remove(instance);
             }
 
-            MOCK_ROUTED_INSTANCES.remove(instance);
+            BUS_ROUTED_INSTANCES.remove(instance);
 
             if (currentSession == session) {
                 currentSession = null;

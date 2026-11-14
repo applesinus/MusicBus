@@ -333,7 +333,7 @@ public final class MusicBusTransformer
                             super.visitMethodInsn(
                                     Opcodes.INVOKESTATIC,
                                     MANAGER,
-                                    "isMockActive",
+                                    "isBusActive",
                                     "(Ljava/lang/Object;)Z",
                                     false
                             );
@@ -343,7 +343,7 @@ public final class MusicBusTransformer
                                     vanilla
                             );
 
-                            // Mock audio player reports active playback.
+                            // Bused audio player reports active playback.
                             super.visitInsn(Opcodes.ICONST_1);
                             super.visitInsn(Opcodes.IRETURN);
 
