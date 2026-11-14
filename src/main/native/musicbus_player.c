@@ -3,11 +3,29 @@
 #endif
 
 #include <windows.h>
+#include <ole2.h>
+#include <oleauto.h>
+#include <exdisp.h>
+#include <shldisp.h>
+#include <shlobj.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef SWC_DESKTOP
+#define SWC_DESKTOP 8
+#endif
+#ifndef SWFO_NEEDDISPATCH
+#define SWFO_NEEDDISPATCH 1
+#endif
+#ifndef SVGIO_BACKGROUND
+#define SVGIO_BACKGROUND 0
+#endif
+#ifndef PIPE_REJECT_REMOTE_CLIENTS
+#define PIPE_REJECT_REMOTE_CLIENTS 0x00000008
+#endif
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
@@ -47,6 +65,7 @@
 #define EVT_ERROR        0x83u
 #define EVT_PONG         0x84u
 #define EVT_DEVICES      0x85u
+#define EVT_LOG          0x86u
 
 #define STATE_PLAYING    0u
 #define STATE_PAUSED     1u
@@ -86,8 +105,8 @@ typedef struct TrackContext {
     float        currentGain;
     float        pitch;
     int          looping;
-    uint8_t      state;          /* STATE_PLAYING, STATE_PAUSED, STATE_STOPPED */
-    int          pausingFade;    /* 1 while ramping down to pause */
+    uint8_t      state;
+    int          pausingFade;
     int          decoderEof;
 
     float        inputBuf[INPUT_BUF_FRAMES * 2u];
@@ -95,7 +114,7 @@ typedef struct TrackContext {
 } TrackContext;
 
 static CRITICAL_SECTION g_audioLock;
-static CRITICAL_SECTION g_stdoutLock;
+static CRITICAL_SECTION g_evtLock;
 
 static TrackContext*    g_activeTrack = NULL;
 
@@ -108,26 +127,44 @@ static ma_uint32        g_deviceSampleRate = 48000u;
 static char             g_desiredDeviceName[512] = "";
 
 static volatile LONG    g_running = 1;
+static volatile LONG    g_evtConnected = 0;
 static HANDLE           g_stopEvent = NULL;
-static HANDLE           g_stdinHandle = INVALID_HANDLE_VALUE;
-static HANDLE           g_stdoutHandle = INVALID_HANDLE_VALUE;
+static HANDLE           g_pipeConnectedEvent = NULL;
+static HANDLE           g_cmdHandle = INVALID_HANDLE_VALUE;
+static HANDLE           g_evtHandle = INVALID_HANDLE_VALUE;
+static int              g_usingNamedPipes = 0;
+static char             g_pipeBase[256] = "";
 static HWND             g_hwnd = NULL;
 static DWORD            g_parentPid = 0;
 static int              g_windowHidden = 0;
+static int              g_bootstrapMode = 0;
 
-/* Tracked last reported status to avoid redundant STOPPED/PAUSED spam */
 static uint8_t          g_lastReportedUuid[16];
 static uint8_t          g_lastReportedState = 0xFFu;
 static int              g_hasReportedOnce = 0;
 
 /* ============================================================================
- * Logging & Byte Helpers
+ * COM GUIDs for Explorer ShellExecute (break out of Java process tree)
  * ========================================================================= */
 
-static void log_err(const char* msg) {
-    fprintf(stderr, "[musicbus-player] %s\n", msg);
-    fflush(stderr);
-}
+static const GUID MB_CLSID_ShellWindows =
+    { 0x9BA05972, 0xF6A8, 0x11CF, { 0xA4, 0x42, 0x00, 0xA0, 0xC9, 0x0A, 0x8F, 0x39 } };
+static const GUID MB_IID_IShellWindows =
+    { 0x85CB6900, 0x4D95, 0x11CF, { 0x96, 0x0C, 0x00, 0x80, 0xC7, 0xF4, 0xEE, 0x85 } };
+static const GUID MB_IID_IServiceProvider =
+    { 0x6D5140C1, 0x7436, 0x11CE, { 0x80, 0x34, 0x00, 0xAA, 0x00, 0x60, 0x09, 0xFA } };
+static const GUID MB_SID_STopLevelBrowser =
+    { 0x4C96BE40, 0x915C, 0x11CF, { 0x99, 0xD3, 0x00, 0xAA, 0x00, 0x4A, 0xE8, 0x37 } };
+static const GUID MB_IID_IShellBrowser =
+    { 0x000214E2, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
+static const GUID MB_IID_IShellFolderViewDual =
+    { 0xE7A1AF80, 0x4D96, 0x11CF, { 0x96, 0x0C, 0x00, 0x80, 0xC7, 0xF4, 0xEE, 0x85 } };
+static const GUID MB_IID_IShellDispatch2 =
+    { 0xA4C6892C, 0x3BA9, 0x11D2, { 0x9D, 0xEA, 0x00, 0xC0, 0x4F, 0xB1, 0x61, 0x62 } };
+
+/* ============================================================================
+ * Byte Helpers & Frame I/O
+ * ========================================================================= */
 
 static uint16_t read_u16_le(const uint8_t* p) {
     return (uint16_t)((uint16_t)p[0] | ((uint16_t)p[1] << 8));
@@ -198,11 +235,7 @@ static float clamp_pitch(float p) {
     return p;
 }
 
-/* ============================================================================
- * Pipe I/O (Thread-safe stdout frames, blocking exact stdin read)
- * ========================================================================= */
-
-static int read_exact_stdin(uint8_t* dst, size_t len) {
+static int read_exact_cmd(uint8_t* dst, size_t len) {
     size_t offset = 0;
     while (offset < len) {
         if (!InterlockedCompareExchange(&g_running, 1, 1)) {
@@ -210,7 +243,7 @@ static int read_exact_stdin(uint8_t* dst, size_t len) {
         }
         DWORD chunk = (DWORD)((len - offset) > 65536u ? 65536u : (len - offset));
         DWORD bytesRead = 0;
-        BOOL ok = ReadFile(g_stdinHandle, dst + offset, chunk, &bytesRead, NULL);
+        BOOL ok = ReadFile(g_cmdHandle, dst + offset, chunk, &bytesRead, NULL);
         if (!ok || bytesRead == 0) {
             return 0;
         }
@@ -219,12 +252,12 @@ static int read_exact_stdin(uint8_t* dst, size_t len) {
     return 1;
 }
 
-static int write_exact_stdout(const uint8_t* src, size_t len) {
+static int write_exact_evt(const uint8_t* src, size_t len) {
     size_t offset = 0;
     while (offset < len) {
         DWORD chunk = (DWORD)((len - offset) > 65536u ? 65536u : (len - offset));
         DWORD written = 0;
-        if (!WriteFile(g_stdoutHandle, src + offset, chunk, &written, NULL) || written == 0) {
+        if (!WriteFile(g_evtHandle, src + offset, chunk, &written, NULL) || written == 0) {
             return 0;
         }
         offset += (size_t)written;
@@ -233,22 +266,43 @@ static int write_exact_stdout(const uint8_t* src, size_t len) {
 }
 
 static void send_frame(uint8_t type, const uint8_t* payload, uint32_t payloadLen) {
+    if (!InterlockedCompareExchange(&g_evtConnected, 1, 1)) {
+        return;
+    }
+
     uint8_t header[5];
     write_u32_le(header, 1u + payloadLen);
     header[4] = type;
 
-    EnterCriticalSection(&g_stdoutLock);
-    int ok = write_exact_stdout(header, sizeof(header));
+    EnterCriticalSection(&g_evtLock);
+    int ok = write_exact_evt(header, sizeof(header));
     if (ok && payloadLen > 0u && payload != NULL) {
-        ok = write_exact_stdout(payload, payloadLen);
+        ok = write_exact_evt(payload, payloadLen);
     }
-    LeaveCriticalSection(&g_stdoutLock);
+    LeaveCriticalSection(&g_evtLock);
 
     if (!ok) {
         InterlockedExchange(&g_running, 0);
         if (g_stopEvent != NULL) {
             SetEvent(g_stopEvent);
         }
+    }
+}
+
+static void log_msg(const char* msg) {
+    if (msg == NULL) return;
+    if (InterlockedCompareExchange(&g_evtConnected, 1, 1)) {
+        size_t len = strlen(msg);
+        if (len > 1024u) len = 1024u;
+        uint8_t buf[2 + 1024];
+        write_u16_le(buf, (uint16_t)len);
+        if (len > 0u) {
+            memcpy(buf + 2, msg, len);
+        }
+        send_frame(EVT_LOG, buf, (uint32_t)(2u + len));
+    } else if (!g_usingNamedPipes) {
+        fprintf(stderr, "[musicbus-player] %s\n", msg);
+        fflush(stderr);
     }
 }
 
@@ -290,6 +344,281 @@ static void send_pong(uint64_t timestamp) {
     uint8_t buf[8];
     write_u64_le(buf, timestamp);
     send_frame(EVT_PONG, buf, sizeof(buf));
+}
+
+/* ============================================================================
+ * Bootstrap Launcher (spawns daemon under explorer.exe, outside Java tree)
+ * ========================================================================= */
+
+static void append_escaped_arg_w(wchar_t* dst, size_t dstCap, const wchar_t* arg) {
+    size_t cur = wcslen(dst);
+    if (cur + 2 >= dstCap) return;
+    if (cur > 0) {
+        dst[cur++] = L' ';
+        dst[cur] = L'\0';
+    }
+
+    int needsQuotes = (arg[0] == L'\0');
+    for (size_t i = 0; arg[i] != L'\0'; i++) {
+        if (arg[i] == L' ' || arg[i] == L'\t' || arg[i] == L'"') {
+            needsQuotes = 1;
+            break;
+        }
+    }
+
+    if (!needsQuotes) {
+        wcsncat(dst, arg, dstCap - cur - 1);
+        return;
+    }
+
+    if (cur + 2 < dstCap) {
+        dst[cur++] = L'"';
+        dst[cur] = L'\0';
+    }
+
+    size_t backslashes = 0;
+    for (size_t i = 0; arg[i] != L'\0' && cur + 4 < dstCap; i++) {
+        wchar_t ch = arg[i];
+        if (ch == L'\\') {
+            backslashes++;
+        } else if (ch == L'"') {
+            for (size_t b = 0; b < backslashes * 2 + 1 && cur + 2 < dstCap; b++) {
+                dst[cur++] = L'\\';
+            }
+            dst[cur++] = L'"';
+            backslashes = 0;
+        } else {
+            for (size_t b = 0; b < backslashes && cur + 2 < dstCap; b++) {
+                dst[cur++] = L'\\';
+            }
+            backslashes = 0;
+            dst[cur++] = ch;
+        }
+    }
+    for (size_t b = 0; b < backslashes * 2 && cur + 2 < dstCap; b++) {
+        dst[cur++] = L'\\';
+    }
+    if (cur + 1 < dstCap) {
+        dst[cur++] = L'"';
+        dst[cur] = L'\0';
+    }
+}
+
+static int launch_via_explorer_com(const wchar_t* exePath, const wchar_t* args) {
+    HRESULT hrInit = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(hrInit) && hrInit != RPC_E_CHANGED_MODE) {
+        return 0;
+    }
+
+    int success = 0;
+    IShellWindows* psw = NULL;
+    IDispatch* pdispDesktop = NULL;
+    IServiceProvider* psp = NULL;
+    IShellBrowser* psb = NULL;
+    IShellView* psv = NULL;
+    IDispatch* pdispView = NULL;
+    IShellFolderViewDual* psfvd = NULL;
+    IDispatch* pdispApp = NULL;
+    IShellDispatch2* psd = NULL;
+
+    VARIANT vtLoc;
+    VARIANT vtEmpty;
+    VARIANT vtArgs;
+    VARIANT vtDir;
+    VARIANT vtOp;
+    VARIANT vtShow;
+
+    VariantInit(&vtLoc);
+    VariantInit(&vtEmpty);
+    VariantInit(&vtArgs);
+    VariantInit(&vtDir);
+    VariantInit(&vtOp);
+    VariantInit(&vtShow);
+
+    if (FAILED(CoCreateInstance(&MB_CLSID_ShellWindows, NULL, CLSCTX_ALL, &MB_IID_IShellWindows, (void**)&psw))) {
+        goto cleanup;
+    }
+
+    long hwndShell = 0;
+    if (FAILED(psw->lpVtbl->FindWindowSW(psw, &vtLoc, &vtEmpty, SWC_DESKTOP, &hwndShell, SWFO_NEEDDISPATCH, &pdispDesktop))
+        || pdispDesktop == NULL) {
+        goto cleanup;
+    }
+
+    if (FAILED(pdispDesktop->lpVtbl->QueryInterface(pdispDesktop, &MB_IID_IServiceProvider, (void**)&psp))
+        || psp == NULL) {
+        goto cleanup;
+    }
+
+    if (FAILED(psp->lpVtbl->QueryService(psp, &MB_SID_STopLevelBrowser, &MB_IID_IShellBrowser, (void**)&psb))
+        || psb == NULL) {
+        goto cleanup;
+    }
+
+    if (FAILED(psb->lpVtbl->QueryActiveShellView(psb, &psv)) || psv == NULL) {
+        goto cleanup;
+    }
+
+    if (FAILED(psv->lpVtbl->GetItemObject(psv, SVGIO_BACKGROUND, &IID_IDispatch, (void**)&pdispView))
+        || pdispView == NULL) {
+        goto cleanup;
+    }
+
+    if (FAILED(pdispView->lpVtbl->QueryInterface(pdispView, &MB_IID_IShellFolderViewDual, (void**)&psfvd))
+        || psfvd == NULL) {
+        goto cleanup;
+    }
+
+    if (FAILED(psfvd->lpVtbl->get_Application(psfvd, &pdispApp)) || pdispApp == NULL) {
+        goto cleanup;
+    }
+
+    if (FAILED(pdispApp->lpVtbl->QueryInterface(pdispApp, &MB_IID_IShellDispatch2, (void**)&psd))
+        || psd == NULL) {
+        goto cleanup;
+    }
+
+    BSTR bstrExe = SysAllocString(exePath);
+    vtArgs.vt = VT_BSTR;
+    vtArgs.bstrVal = SysAllocString(args);
+    vtOp.vt = VT_BSTR;
+    vtOp.bstrVal = SysAllocString(L"open");
+    vtShow.vt = VT_I4;
+    vtShow.lVal = SW_SHOWMINNOACTIVE;
+
+    if (bstrExe != NULL && vtArgs.bstrVal != NULL && vtOp.bstrVal != NULL) {
+        HRESULT hrExec = psd->lpVtbl->ShellExecute(psd, bstrExe, vtArgs, vtDir, vtOp, vtShow);
+        if (SUCCEEDED(hrExec)) {
+            success = 1;
+        }
+    }
+    if (bstrExe != NULL) {
+        SysFreeString(bstrExe);
+    }
+
+cleanup:
+    VariantClear(&vtArgs);
+    VariantClear(&vtDir);
+    VariantClear(&vtOp);
+    VariantClear(&vtShow);
+    VariantClear(&vtLoc);
+    VariantClear(&vtEmpty);
+
+    if (psd != NULL) psd->lpVtbl->Release(psd);
+    if (pdispApp != NULL) pdispApp->lpVtbl->Release(pdispApp);
+    if (psfvd != NULL) psfvd->lpVtbl->Release(psfvd);
+    if (pdispView != NULL) pdispView->lpVtbl->Release(pdispView);
+    if (psv != NULL) psv->lpVtbl->Release(psv);
+    if (psb != NULL) psb->lpVtbl->Release(psb);
+    if (psp != NULL) psp->lpVtbl->Release(psp);
+    if (pdispDesktop != NULL) pdispDesktop->lpVtbl->Release(pdispDesktop);
+    if (psw != NULL) psw->lpVtbl->Release(psw);
+
+    if (SUCCEEDED(hrInit)) {
+        CoUninitialize();
+    }
+    return success;
+}
+
+static int launch_via_parent_attribute(const wchar_t* exePath, const wchar_t* args) {
+    HWND shellWnd = GetShellWindow();
+    if (shellWnd == NULL) {
+        return 0;
+    }
+    DWORD explorerPid = 0;
+    GetWindowThreadProcessId(shellWnd, &explorerPid);
+    if (explorerPid == 0) {
+        return 0;
+    }
+
+    HANDLE hExplorer = OpenProcess(PROCESS_CREATE_PROCESS, FALSE, explorerPid);
+    if (hExplorer == NULL) {
+        return 0;
+    }
+
+    SIZE_T attrSize = 0;
+    InitializeProcThreadAttributeList(NULL, 1, 0, &attrSize);
+    LPPROC_THREAD_ATTRIBUTE_LIST attrList = (LPPROC_THREAD_ATTRIBUTE_LIST)malloc(attrSize);
+    if (attrList == NULL) {
+        CloseHandle(hExplorer);
+        return 0;
+    }
+
+    int ok = 0;
+    if (InitializeProcThreadAttributeList(attrList, 1, 0, &attrSize)
+        && UpdateProcThreadAttribute(
+            attrList,
+            0,
+            PROC_THREAD_ATTRIBUTE_PARENT_PROCESS,
+            &hExplorer,
+            sizeof(HANDLE),
+            NULL,
+            NULL)) {
+
+        size_t cmdCap = wcslen(exePath) + wcslen(args) + 16;
+        wchar_t* cmdLine = (wchar_t*)calloc(cmdCap, sizeof(wchar_t));
+        if (cmdLine != NULL) {
+            swprintf(cmdLine, cmdCap, L"\"%ls\" %ls", exePath, args);
+
+            STARTUPINFOEXW si;
+            memset(&si, 0, sizeof(si));
+            si.StartupInfo.cb = sizeof(STARTUPINFOEXW);
+            si.lpAttributeList = attrList;
+
+            PROCESS_INFORMATION pi;
+            memset(&pi, 0, sizeof(pi));
+
+            DWORD flags = EXTENDED_STARTUPINFO_PRESENT | CREATE_BREAKAWAY_FROM_JOB | CREATE_NO_WINDOW;
+            BOOL created = CreateProcessW(exePath, cmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &si.StartupInfo, &pi);
+            if (!created) {
+                flags = EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW;
+                created = CreateProcessW(exePath, cmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &si.StartupInfo, &pi);
+            }
+
+            if (created) {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+                ok = 1;
+            }
+            free(cmdLine);
+        }
+    }
+
+    DeleteProcThreadAttributeList(attrList);
+    free(attrList);
+    CloseHandle(hExplorer);
+    return ok;
+}
+
+static int run_bootstrap(int argc, char** argv) {
+    wchar_t exePath[MAX_PATH];
+    if (GetModuleFileNameW(NULL, exePath, MAX_PATH) == 0) {
+        return 2;
+    }
+
+    wchar_t args[4096];
+    args[0] = L'\0';
+    append_escaped_arg_w(args, 4096, L"--daemon");
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--bootstrap") == 0) {
+            continue;
+        }
+        wchar_t wArg[1024];
+        if (MultiByteToWideChar(CP_UTF8, 0, argv[i], -1, wArg, 1024) > 0) {
+            append_escaped_arg_w(args, 4096, wArg);
+        }
+    }
+
+    if (launch_via_explorer_com(exePath, args)) {
+        return 0;
+    }
+    if (launch_via_parent_attribute(exePath, args)) {
+        return 0;
+    }
+
+    fprintf(stderr, "[musicbus-player] Failed to launch detached daemon outside parent process tree.\n");
+    return 3;
 }
 
 /* ============================================================================
@@ -573,7 +902,7 @@ static int open_audio_device(const char* desiredDeviceName, char* outErr, size_t
                 }
             }
             if (!hasSelectedId) {
-                log_err("Requested audio device not found, falling back to system default.");
+                log_msg("Requested audio device not found, falling back to system default.");
             }
         }
     }
@@ -581,7 +910,7 @@ static int open_audio_device(const char* desiredDeviceName, char* outErr, size_t
     ma_device_config devConfig = ma_device_config_init(ma_device_type_playback);
     devConfig.playback.format = ma_format_f32;
     devConfig.playback.channels = 2;
-    devConfig.sampleRate = 0; /* native device rate */
+    devConfig.sampleRate = 0;
     devConfig.dataCallback = audio_data_callback;
     if (hasSelectedId) {
         devConfig.playback.pDeviceID = &selectedId;
@@ -589,7 +918,7 @@ static int open_audio_device(const char* desiredDeviceName, char* outErr, size_t
 
     ma_result devRes = ma_device_init(&g_maContext, &devConfig, &g_maDevice);
     if (devRes != MA_SUCCESS && hasSelectedId) {
-        log_err("Failed to open selected audio device, retrying default device.");
+        log_msg("Failed to open selected audio device, retrying default device.");
         devConfig.playback.pDeviceID = NULL;
         devRes = ma_device_init(&g_maContext, &devConfig, &g_maDevice);
     }
@@ -610,7 +939,6 @@ static int open_audio_device(const char* desiredDeviceName, char* outErr, size_t
 
     g_maDeviceReady = 1;
 
-    /* Update existing track resampler rate if device sample rate changed */
     EnterCriticalSection(&g_audioLock);
     if (g_activeTrack != NULL && g_activeTrack->resamplerInitialized) {
         g_activeTrack->dstSampleRate = g_deviceSampleRate;
@@ -981,12 +1309,34 @@ static void handle_cmd_set_device(const uint8_t* payload, uint32_t len) {
  * Background Threads: Command, Status Reporter, Parent Watchdog
  * ========================================================================= */
 
+static int connect_named_pipe(HANDLE hPipe) {
+    if (ConnectNamedPipe(hPipe, NULL)) {
+        return 1;
+    }
+    DWORD err = GetLastError();
+    return err == ERROR_PIPE_CONNECTED;
+}
+
 static DWORD WINAPI command_thread_proc(LPVOID param) {
     (void)param;
 
+    if (g_usingNamedPipes) {
+        if (!connect_named_pipe(g_cmdHandle) || !connect_named_pipe(g_evtHandle)) {
+            request_shutdown();
+            return 0;
+        }
+    }
+
+    InterlockedExchange(&g_evtConnected, 1);
+    if (g_pipeConnectedEvent != NULL) {
+        SetEvent(g_pipeConnectedEvent);
+    }
+
+    send_ready();
+
     while (InterlockedCompareExchange(&g_running, 1, 1)) {
         uint8_t header[5];
-        if (!read_exact_stdin(header, sizeof(header))) {
+        if (!read_exact_cmd(header, sizeof(header))) {
             break;
         }
 
@@ -1006,7 +1356,7 @@ static DWORD WINAPI command_thread_proc(LPVOID param) {
                 send_error(NULL, ERR_PROTOCOL, "Out of memory reading frame");
                 break;
             }
-            if (!read_exact_stdin(payload, (size_t)payloadLen)) {
+            if (!read_exact_cmd(payload, (size_t)payloadLen)) {
                 free(payload);
                 break;
             }
@@ -1066,6 +1416,12 @@ static DWORD WINAPI command_thread_proc(LPVOID param) {
 static DWORD WINAPI status_thread_proc(LPVOID param) {
     (void)param;
 
+    HANDLE waitStart[2] = { g_stopEvent, g_pipeConnectedEvent };
+    DWORD startRes = WaitForMultipleObjects(2, waitStart, FALSE, INFINITE);
+    if (startRes == WAIT_OBJECT_0) {
+        return 0;
+    }
+
     while (InterlockedCompareExchange(&g_running, 1, 1)) {
         DWORD waitRes = WaitForSingleObject(g_stopEvent, 50);
         if (waitRes == WAIT_OBJECT_0 || !InterlockedCompareExchange(&g_running, 1, 1)) {
@@ -1113,10 +1469,9 @@ static DWORD WINAPI watchdog_thread_proc(LPVOID param) {
 
     HANDLE hParent = OpenProcess(SYNCHRONIZE, FALSE, g_parentPid);
     if (hParent == NULL) {
-        /* Parent might already be gone or inaccessible; rely on stdin EOF if denied */
         DWORD err = GetLastError();
         if (err == ERROR_INVALID_PARAMETER) {
-            log_err("Parent process already exited.");
+            log_msg("Parent process already exited.");
             request_shutdown();
         }
         return 0;
@@ -1127,7 +1482,7 @@ static DWORD WINAPI watchdog_thread_proc(LPVOID param) {
     CloseHandle(hParent);
 
     if (waitRes == WAIT_OBJECT_0 + 1) {
-        log_err("Parent process terminated; shutting down.");
+        log_msg("Parent process terminated; shutting down.");
         request_shutdown();
     }
     return 0;
@@ -1140,7 +1495,6 @@ static DWORD WINAPI watchdog_thread_proc(LPVOID param) {
 static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CLOSE:
-            /* Minimize instead of killing audio if user closes taskbar window */
             ShowWindow(hwnd, SW_MINIMIZE);
             return 0;
 
@@ -1236,7 +1590,6 @@ static HWND create_player_window(HINSTANCE hInstance) {
     );
 
     if (hwnd != NULL && !g_windowHidden) {
-        /* Visible to OBS EnumWindows, minimized on taskbar, never steals focus */
         ShowWindow(hwnd, SW_SHOWMINNOACTIVE);
         UpdateWindow(hwnd);
     }
@@ -1250,10 +1603,16 @@ static HWND create_player_window(HINSTANCE hInstance) {
 
 static void parse_args(int argc, char** argv) {
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--parent-pid") == 0 && i + 1 < argc) {
+        if (strcmp(argv[i], "--bootstrap") == 0) {
+            g_bootstrapMode = 1;
+        } else if (strcmp(argv[i], "--daemon") == 0) {
+            g_bootstrapMode = 0;
+        } else if (strcmp(argv[i], "--parent-pid") == 0 && i + 1 < argc) {
             g_parentPid = (DWORD)strtoul(argv[++i], NULL, 10);
         } else if (strncmp(argv[i], "--parent-pid=", 13) == 0) {
             g_parentPid = (DWORD)strtoul(argv[i] + 13, NULL, 10);
+        } else if (strcmp(argv[i], "--pipe") == 0 && i + 1 < argc) {
+            snprintf(g_pipeBase, sizeof(g_pipeBase), "%s", argv[++i]);
         } else if (strcmp(argv[i], "--window=hidden") == 0) {
             g_windowHidden = 1;
         } else if (strcmp(argv[i], "--device") == 0 && i + 1 < argc) {
@@ -1262,38 +1621,89 @@ static void parse_args(int argc, char** argv) {
     }
 }
 
+static int init_ipc_handles(void) {
+    if (g_pipeBase[0] == '\0') {
+        g_usingNamedPipes = 0;
+        g_cmdHandle = GetStdHandle(STD_INPUT_HANDLE);
+        g_evtHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+        return g_cmdHandle != INVALID_HANDLE_VALUE && g_evtHandle != INVALID_HANDLE_VALUE;
+    }
+
+    g_usingNamedPipes = 1;
+
+    char cmdNameA[300];
+    char evtNameA[300];
+    snprintf(cmdNameA, sizeof(cmdNameA), "%s-cmd", g_pipeBase);
+    snprintf(evtNameA, sizeof(evtNameA), "%s-evt", g_pipeBase);
+
+    wchar_t cmdNameW[300];
+    wchar_t evtNameW[300];
+    MultiByteToWideChar(CP_UTF8, 0, cmdNameA, -1, cmdNameW, 300);
+    MultiByteToWideChar(CP_UTF8, 0, evtNameA, -1, evtNameW, 300);
+
+    g_cmdHandle = CreateNamedPipeW(
+        cmdNameW,
+        PIPE_ACCESS_INBOUND,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
+        1,
+        65536,
+        65536,
+        0,
+        NULL
+    );
+    if (g_cmdHandle == INVALID_HANDLE_VALUE) {
+        return 0;
+    }
+
+    g_evtHandle = CreateNamedPipeW(
+        evtNameW,
+        PIPE_ACCESS_OUTBOUND,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
+        1,
+        65536,
+        65536,
+        0,
+        NULL
+    );
+    if (g_evtHandle == INVALID_HANDLE_VALUE) {
+        CloseHandle(g_cmdHandle);
+        g_cmdHandle = INVALID_HANDLE_VALUE;
+        return 0;
+    }
+
+    return 1;
+}
+
 int main(int argc, char** argv) {
     parse_args(argc, argv);
 
-    g_stdinHandle = GetStdHandle(STD_INPUT_HANDLE);
-    g_stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (g_stdinHandle == INVALID_HANDLE_VALUE || g_stdoutHandle == INVALID_HANDLE_VALUE) {
-        log_err("Invalid standard pipe handles.");
+    if (g_bootstrapMode) {
+        return run_bootstrap(argc, argv);
+    }
+
+    if (!init_ipc_handles()) {
         return 1;
     }
 
     InitializeCriticalSection(&g_audioLock);
-    InitializeCriticalSection(&g_stdoutLock);
+    InitializeCriticalSection(&g_evtLock);
     g_stopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    g_pipeConnectedEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
 
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     g_hwnd = create_player_window(hInstance);
 
-    /* Open audio device upfront so OBS / Windows mixer registers session immediately */
     char devErr[256] = "";
     if (!open_audio_device(g_desiredDeviceName, devErr, sizeof(devErr))) {
-        log_err(devErr);
-        /* Non-fatal: can retry on CMD_PLAY or CMD_SET_DEVICE */
+        /* Will report on play/device switch */
     }
 
-    HANDLE hCommandThread = CreateThread(NULL, 0, command_thread_proc, NULL, 0, NULL);
-    HANDLE hStatusThread = CreateThread(NULL, 0, status_thread_proc, NULL, 0, NULL);
     HANDLE hWatchdogThread = NULL;
     if (g_parentPid != 0u) {
         hWatchdogThread = CreateThread(NULL, 0, watchdog_thread_proc, NULL, 0, NULL);
     }
-
-    send_ready();
+    HANDLE hCommandThread = CreateThread(NULL, 0, command_thread_proc, NULL, 0, NULL);
+    HANDLE hStatusThread = CreateThread(NULL, 0, status_thread_proc, NULL, 0, NULL);
 
     if (g_hwnd != NULL) {
         MSG msg;
@@ -1305,7 +1715,6 @@ int main(int argc, char** argv) {
         WaitForSingleObject(hCommandThread, INFINITE);
     }
 
-    /* Ordered shutdown & zero-leak cleanup */
     InterlockedExchange(&g_running, 0);
     if (g_stopEvent != NULL) {
         SetEvent(g_stopEvent);
@@ -1325,6 +1734,19 @@ int main(int argc, char** argv) {
         CloseHandle(hWatchdogThread);
     }
 
+    if (g_usingNamedPipes) {
+        if (g_cmdHandle != INVALID_HANDLE_VALUE) {
+            DisconnectNamedPipe(g_cmdHandle);
+            CloseHandle(g_cmdHandle);
+            g_cmdHandle = INVALID_HANDLE_VALUE;
+        }
+        if (g_evtHandle != INVALID_HANDLE_VALUE) {
+            DisconnectNamedPipe(g_evtHandle);
+            CloseHandle(g_evtHandle);
+            g_evtHandle = INVALID_HANDLE_VALUE;
+        }
+    }
+
     close_audio_device();
     if (g_maContextReady) {
         ma_context_uninit(&g_maContext);
@@ -1337,12 +1759,16 @@ int main(int argc, char** argv) {
     LeaveCriticalSection(&g_audioLock);
     destroy_track(remaining);
 
+    if (g_pipeConnectedEvent != NULL) {
+        CloseHandle(g_pipeConnectedEvent);
+        g_pipeConnectedEvent = NULL;
+    }
     if (g_stopEvent != NULL) {
         CloseHandle(g_stopEvent);
         g_stopEvent = NULL;
     }
 
-    DeleteCriticalSection(&g_stdoutLock);
+    DeleteCriticalSection(&g_evtLock);
     DeleteCriticalSection(&g_audioLock);
 
     return 0;

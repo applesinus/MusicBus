@@ -45,6 +45,7 @@ final class ExternalPlayerProtocol {
     static final int EVT_ERROR = 0x83;
     static final int EVT_PONG = 0x84;
     static final int EVT_DEVICES = 0x85;
+    static final int EVT_LOG = 0x86;
 
     static final int STATE_PLAYING = 0;
     static final int STATE_PAUSED = 1;
@@ -58,7 +59,7 @@ final class ExternalPlayerProtocol {
     // Decoded events
     // --------------------------------------------------
 
-    sealed interface Event permits ReadyEvent, StatusEvent, ErrorEvent, PongEvent, DevicesEvent {}
+    sealed interface Event permits ReadyEvent, StatusEvent, ErrorEvent, PongEvent, DevicesEvent, LogEvent {}
 
     record ReadyEvent(int protocolVersion, long pid) implements Event {}
 
@@ -71,6 +72,8 @@ final class ExternalPlayerProtocol {
     record AudioDeviceInfo(boolean isDefault, String name) {}
 
     record DevicesEvent(List<AudioDeviceInfo> devices) implements Event {}
+
+    record LogEvent(String message) implements Event {}
 
     // --------------------------------------------------
     // Frame writing (Java -> Player)
@@ -344,6 +347,18 @@ final class ExternalPlayerProtocol {
                     ));
                 }
                 yield new DevicesEvent(List.copyOf(devices));
+            }
+            case EVT_LOG -> {
+                if (payload.length < 2) {
+                    throw new IOException("Truncated EVT_LOG");
+                }
+                int msgLen = Short.toUnsignedInt(buf.getShort());
+                if (msgLen > payload.length - 2) {
+                    msgLen = payload.length - 2;
+                }
+                byte[] msgBytes = new byte[msgLen];
+                buf.get(msgBytes);
+                yield new LogEvent(new String(msgBytes, StandardCharsets.UTF_8));
             }
             default -> null;
         };

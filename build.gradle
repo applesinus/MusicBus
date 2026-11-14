@@ -276,6 +276,7 @@ def compileNativePlayer = tasks.register('compileNativePlayer', Exec) {
             nativeSrcPathStr,
             '-o', outFile.absolutePath,
             '-lole32',
+            '-loleaut32',
             '-luser32',
             '-lgdi32',
             '-luuid'

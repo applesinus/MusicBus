@@ -7,8 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,14 +20,16 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Out-of-process BusedAudioPlayer backed by musicbus-player.exe.
  *
- * Completely agnostic to Minecraft. All IPC is asynchronous so caller threads
- * (such as the game tick) never block on pipe writes, process restarts, or audio I/O.
+ * The player daemon is launched outside the Java process tree (via Explorer/shell)
+ * so Windows WASAPI process-tree loopback in OBS does not capture external music
+ * inside Minecraft's audio stream. Communication uses unidirectional Named Pipes.
  */
 public final class ExternalAudioPlayer implements BusedAudioPlayer {
 
@@ -33,7 +38,8 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
         HIDDEN
     }
 
-    private static final long STARTUP_READY_TIMEOUT_MS = 2_500L;
+    private static final long STARTUP_READY_TIMEOUT_MS = 3_500L;
+    private static final long BOOTSTRAP_TIMEOUT_MS = 3_000L;
     private static final long STATE_OVERRIDE_GRACE_NANOS = 400_000_000L;
     private static final long RESTART_WINDOW_NANOS = 30_000_000_000L;
     private static final int MAX_RESTARTS_IN_WINDOW = 5;
@@ -57,17 +63,15 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
     private volatile String desiredDeviceName;
     private volatile List<ExternalPlayerProtocol.AudioDeviceInfo> lastKnownDevices = List.of();
 
-    private Process process;
-    private OutputStream processStdin;
-    private InputStream processStdout;
-    private InputStream processStderr;
+    private Object activeConnectionToken;
+    private ProcessHandle daemonHandle;
+    private OutputStream pipeCmdOut;
+    private InputStream pipeEvtIn;
     private UUID loadedSessionIdOnProcess;
     private CountDownLatch readyLatch;
-    private volatile boolean processReady;
 
     private final Thread writerThread;
     private Thread readerThread;
-    private Thread stderrThread;
     private Thread supervisorThread;
     private final Thread shutdownHook;
 
@@ -417,28 +421,27 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
             queueLock.notifyAll();
         }
 
-        Process procToStop;
-        OutputStream stdinToClose;
+        ProcessHandle handleToStop;
+        OutputStream cmdToClose;
         synchronized (processLock) {
-            procToStop = this.process;
-            stdinToClose = this.processStdin;
+            handleToStop = this.daemonHandle;
+            cmdToClose = this.pipeCmdOut;
         }
 
-        if (stdinToClose != null) {
+        if (cmdToClose != null) {
             try {
-                ExternalPlayerProtocol.writeShutdown(stdinToClose);
+                ExternalPlayerProtocol.writeShutdown(cmdToClose);
             } catch (IOException ignored) {
             }
         }
 
-        if (procToStop != null) {
+        if (handleToStop != null && handleToStop.isAlive()) {
             try {
-                if (!procToStop.waitFor(450L, TimeUnit.MILLISECONDS)) {
-                    procToStop.destroyForcibly();
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                procToStop.destroyForcibly();
+                handleToStop.onExit().get(450L, TimeUnit.MILLISECONDS);
+            } catch (Exception ignored) {
+            }
+            if (handleToStop.isAlive()) {
+                handleToStop.destroyForcibly();
             }
         }
 
@@ -447,75 +450,85 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
         joinQuietly(writerThread, 500L);
         joinQuietly(supervisorThread, 500L);
         joinQuietly(readerThread, 500L);
-        joinQuietly(stderrThread, 500L);
 
         log("ExternalAudioPlayer closed.");
     }
 
     // --------------------------------------------------
-    // Process startup, supervision & auto-restart
+    // Process startup (via bootstrap + Named Pipes)
     // --------------------------------------------------
 
     private boolean startProcessAndAwaitReady() {
-        CountDownLatch latch;
         synchronized (processLock) {
             if (closed.get() || permanentlyFailed.get()) {
                 return false;
             }
-            if (process != null && process.isAlive()) {
+            if (activeConnectionToken != null) {
                 return true;
             }
+        }
 
-            List<String> cmd = new ArrayList<>();
-            cmd.add(executablePath.toString());
-            cmd.add("--parent-pid");
-            cmd.add(Long.toString(ProcessHandle.current().pid()));
-            if (windowMode == WindowMode.HIDDEN) {
-                cmd.add("--window=hidden");
-            }
-            String device = desiredDeviceName;
-            if (device != null && !device.isBlank()) {
-                cmd.add("--device");
-                cmd.add(device);
-            }
+        long myPid = ProcessHandle.current().pid();
+        String pipeBase = "\\\\.\\pipe\\musicbus-"
+                + myPid
+                + "-"
+                + Long.toHexString(ThreadLocalRandom.current().nextLong());
 
-            try {
-                ProcessBuilder pb = new ProcessBuilder(cmd);
-                pb.redirectErrorStream(false);
-                Process started = pb.start();
+        if (!launchDetachedDaemon(myPid, pipeBase)) {
+            return false;
+        }
 
-                this.process = started;
-                this.processStdin = new BufferedOutputStream(started.getOutputStream(), 16384);
-                this.processStdout = new BufferedInputStream(started.getInputStream(), 8192);
-                this.processStderr = started.getErrorStream();
-                this.loadedSessionIdOnProcess = null;
-                this.processReady = false;
-                latch = new CountDownLatch(1);
-                this.readyLatch = latch;
+        long deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(STARTUP_READY_TIMEOUT_MS);
+        OutputStream cmdOut = null;
+        InputStream evtIn = null;
 
-                Thread rThread = new Thread(
-                        () -> readerLoop(started, this.processStdout),
-                        "musicbus-ipc-reader"
-                );
-                rThread.setDaemon(true);
+        try {
+            FileChannel cmdChannel = openPipeWithRetry(
+                    Path.of(pipeBase + "-cmd"),
+                    StandardOpenOption.WRITE,
+                    deadlineNanos
+            );
+            cmdOut = new BufferedOutputStream(Channels.newOutputStream(cmdChannel), 16384);
 
-                Thread eThread = new Thread(
-                        () -> stderrLoop(started, this.processStderr),
-                        "musicbus-ipc-stderr"
-                );
-                eThread.setDaemon(true);
+            FileChannel evtChannel = openPipeWithRetry(
+                    Path.of(pipeBase + "-evt"),
+                    StandardOpenOption.READ,
+                    deadlineNanos
+            );
+            evtIn = new BufferedInputStream(Channels.newInputStream(evtChannel), 8192);
+        } catch (IOException error) {
+            closeQuietly(cmdOut);
+            closeQuietly(evtIn);
+            log("WARNING: Failed to connect Named Pipes to external player: " + error);
+            return false;
+        }
 
-                this.readerThread = rThread;
-                this.stderrThread = eThread;
+        Object connectionToken = new Object();
+        CountDownLatch latch = new CountDownLatch(1);
+        InputStream finalEvtIn = evtIn;
+        OutputStream finalCmdOut = cmdOut;
 
-                rThread.start();
-                eThread.start();
-
-            } catch (IOException error) {
-                log("WARNING: Failed to launch musicbus-player.exe: " + error);
-                closeProcessResources();
+        synchronized (processLock) {
+            if (closed.get() || permanentlyFailed.get()) {
+                closeQuietly(finalCmdOut);
+                closeQuietly(finalEvtIn);
                 return false;
             }
+
+            this.activeConnectionToken = connectionToken;
+            this.pipeCmdOut = finalCmdOut;
+            this.pipeEvtIn = finalEvtIn;
+            this.daemonHandle = null;
+            this.loadedSessionIdOnProcess = null;
+            this.readyLatch = latch;
+
+            Thread rThread = new Thread(
+                    () -> readerLoop(connectionToken, finalEvtIn),
+                    "musicbus-ipc-reader"
+            );
+            rThread.setDaemon(true);
+            this.readerThread = rThread;
+            rThread.start();
         }
 
         try {
@@ -527,15 +540,97 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
         }
 
         synchronized (processLock) {
-            return process != null && process.isAlive();
+            return this.activeConnectionToken == connectionToken;
         }
     }
 
-    private void onProcessDisconnected(Process exitedProcess, String reason) {
+    private boolean launchDetachedDaemon(long myPid, String pipeBase) {
+        List<String> cmd = new ArrayList<>();
+        cmd.add(executablePath.toString());
+        cmd.add("--bootstrap");
+        cmd.add("--parent-pid");
+        cmd.add(Long.toString(myPid));
+        cmd.add("--pipe");
+        cmd.add(pipeBase);
+        if (windowMode == WindowMode.HIDDEN) {
+            cmd.add("--window=hidden");
+        }
+        String device = desiredDeviceName;
+        if (device != null && !device.isBlank()) {
+            cmd.add("--device");
+            cmd.add(device);
+        }
+
+        Process bootstrap = null;
+        try {
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            pb.redirectErrorStream(true);
+            bootstrap = pb.start();
+
+            try (BufferedReader errReader = new BufferedReader(
+                    new InputStreamReader(bootstrap.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = errReader.readLine()) != null) {
+                    if (!line.isBlank()) {
+                        log("[bootstrap] " + line);
+                    }
+                }
+            }
+
+            if (!bootstrap.waitFor(BOOTSTRAP_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                bootstrap.destroyForcibly();
+                log("WARNING: External player bootstrap timed out.");
+                return false;
+            }
+
+            int exitCode = bootstrap.exitValue();
+            if (exitCode != 0) {
+                log("WARNING: External player bootstrap exited with code " + exitCode);
+                return false;
+            }
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            if (bootstrap != null) {
+                bootstrap.destroyForcibly();
+            }
+            return false;
+        } catch (IOException error) {
+            log("WARNING: Failed to launch external player bootstrap: " + error);
+            return false;
+        }
+    }
+
+    private FileChannel openPipeWithRetry(
+            Path pipePath,
+            StandardOpenOption option,
+            long deadlineNanos
+    ) throws IOException {
+        IOException lastError = null;
+        while (!closed.get()) {
+            try {
+                return FileChannel.open(pipePath, option);
+            } catch (IOException error) {
+                lastError = error;
+                if (System.nanoTime() >= deadlineNanos) {
+                    break;
+                }
+                try {
+                    Thread.sleep(15L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted waiting for pipe " + pipePath, e);
+                }
+            }
+        }
+        throw (lastError != null) ? lastError : new IOException("Aborted waiting for pipe " + pipePath);
+    }
+
+    private void onProcessDisconnected(Object connectionToken, String reason) {
         boolean shouldRestart = false;
 
         synchronized (processLock) {
-            if (this.process != exitedProcess) {
+            if (connectionToken == null || this.activeConnectionToken != connectionToken) {
                 return;
             }
             log("External player disconnected (" + reason + ").");
@@ -598,12 +693,10 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
                     restoreActiveSessionAfterRestart();
                 } else {
                     log("WARNING: External player restart failed.");
-                    Process current;
                     synchronized (processLock) {
-                        current = this.process;
-                    }
-                    if (current == null && !closed.get()) {
-                        permanentlyFailed.set(true);
+                        if (this.activeConnectionToken == null && !closed.get()) {
+                            permanentlyFailed.set(true);
+                        }
                     }
                 }
             }, "musicbus-supervisor");
@@ -653,24 +746,17 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
     }
 
     private void closeProcessResourcesLocked() {
-        this.processReady = false;
+        this.activeConnectionToken = null;
         this.loadedSessionIdOnProcess = null;
         if (this.readyLatch != null) {
             this.readyLatch.countDown();
         }
 
-        closeQuietly(this.processStdin);
-        closeQuietly(this.processStdout);
-        closeQuietly(this.processStderr);
-        this.processStdin = null;
-        this.processStdout = null;
-        this.processStderr = null;
-
-        Process p = this.process;
-        this.process = null;
-        if (p != null && p.isAlive()) {
-            p.destroyForcibly();
-        }
+        closeQuietly(this.pipeCmdOut);
+        closeQuietly(this.pipeEvtIn);
+        this.pipeCmdOut = null;
+        this.pipeEvtIn = null;
+        this.daemonHandle = null;
     }
 
     // --------------------------------------------------
@@ -685,7 +771,6 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
 
             switch (cmd.kind) {
                 case PLAY -> {
-                    // Drop obsolete queued transport updates before a fresh PLAY
                     commandQueue.removeIf(existing ->
                             existing.kind != OutboundCommand.Kind.SET_DEVICE
                                     && existing.kind != OutboundCommand.Kind.LIST_DEVICES);
@@ -742,13 +827,13 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
             }
 
             OutputStream out;
-            Process ownerProc;
+            Object token;
             synchronized (processLock) {
-                out = this.processStdin;
-                ownerProc = this.process;
+                out = this.pipeCmdOut;
+                token = this.activeConnectionToken;
             }
 
-            if (out == null || ownerProc == null || !ownerProc.isAlive()) {
+            if (out == null || token == null) {
                 continue;
             }
 
@@ -756,7 +841,7 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
                 writeCommand(out, cmd);
             } catch (IOException error) {
                 if (!closed.get()) {
-                    onProcessDisconnected(ownerProc, "write failed: " + error.getMessage());
+                    onProcessDisconnected(token, "write failed: " + error.getMessage());
                 }
             }
         }
@@ -803,17 +888,17 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
     }
 
     // --------------------------------------------------
-    // Reader & stderr loops
+    // Reader loop
     // --------------------------------------------------
 
-    private void readerLoop(Process ownerProc, InputStream stdout) {
+    private void readerLoop(Object connectionToken, InputStream evtIn) {
         try {
             while (!closed.get()) {
-                ExternalPlayerProtocol.Event event = ExternalPlayerProtocol.readNextEvent(stdout);
+                ExternalPlayerProtocol.Event event = ExternalPlayerProtocol.readNextEvent(evtIn);
                 if (event == null) {
                     break;
                 }
-                handleEvent(event);
+                handleEvent(connectionToken, event);
             }
         } catch (IOException error) {
             if (!closed.get()) {
@@ -821,21 +906,27 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
             }
         } finally {
             if (!closed.get()) {
-                onProcessDisconnected(ownerProc, "stdout EOF");
+                onProcessDisconnected(connectionToken, "pipe EOF");
             }
         }
     }
 
-    private void handleEvent(ExternalPlayerProtocol.Event event) {
+    private void handleEvent(Object connectionToken, ExternalPlayerProtocol.Event event) {
         long now = System.nanoTime();
 
         switch (event) {
             case ExternalPlayerProtocol.ReadyEvent ready -> {
+                ProcessHandle handle = ProcessHandle.of(ready.pid()).orElse(null);
                 synchronized (processLock) {
-                    this.processReady = true;
-                    if (this.readyLatch != null) {
-                        this.readyLatch.countDown();
+                    if (this.activeConnectionToken == connectionToken) {
+                        this.daemonHandle = handle;
+                        if (this.readyLatch != null) {
+                            this.readyLatch.countDown();
+                        }
                     }
+                }
+                if (handle != null) {
+                    handle.onExit().thenRun(() -> onProcessDisconnected(connectionToken, "daemon exited"));
                 }
                 log("External player ready (pid=" + ready.pid()
                         + ", protocol=" + ready.protocolVersion() + ")");
@@ -868,7 +959,6 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
                     trackedSession.anchorNanos = now;
 
                     if (reportedState == PlaybackSession.State.STOPPED) {
-                        // Release OGG byte[] immediately once track finishes
                         trackedSession.snapshot = null;
                     }
                 }
@@ -890,24 +980,12 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
             case ExternalPlayerProtocol.DevicesEvent devices -> {
                 this.lastKnownDevices = Collections.unmodifiableList(devices.devices());
             }
-            case ExternalPlayerProtocol.PongEvent ignored -> {
-            }
-        }
-    }
-
-    private void stderrLoop(Process ownerProc, InputStream stderr) {
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(stderr, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.isBlank()) {
-                    log("[native] " + line);
+            case ExternalPlayerProtocol.LogEvent logEvt -> {
+                if (!logEvt.message().isBlank()) {
+                    log("[native] " + logEvt.message());
                 }
             }
-        } catch (IOException ignored) {
-        } finally {
-            if (!closed.get() && !ownerProc.isAlive()) {
-                onProcessDisconnected(ownerProc, "process exited");
+            case ExternalPlayerProtocol.PongEvent ignored -> {
             }
         }
     }
