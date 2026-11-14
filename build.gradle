@@ -34,8 +34,10 @@ jar {
     manifest {
         attributes(
             'Premain-Class': 'com.musicbus.MusicBusAgent',
+            'Can-Redefine-Classes': 'false',
             'Can-Retransform-Classes': 'false',
-            'Can-Redefine-Classes': 'false'
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version.toString()
         )
     }
 }
