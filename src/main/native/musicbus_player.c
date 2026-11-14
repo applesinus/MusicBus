@@ -5,6 +5,9 @@
 #include <windows.h>
 #include <ole2.h>
 #include <oleauto.h>
+#include <shellapi.h>
+#include <mmdeviceapi.h>
+#include <audiopolicy.h>
 #include <exdisp.h>
 #include <shldisp.h>
 #include <shlobj.h>
@@ -76,7 +79,16 @@
 #define ERR_PROTOCOL     3u
 
 #define WM_APP_QUIT      (WM_APP + 1)
-#define WM_APP_REFRESH   (WM_APP + 2)
+#define WM_APP_TRAY      (WM_APP + 2)
+
+#define TRAY_ICON_ID     1u
+#define ID_TRAY_TOGGLE   1001u
+
+#ifndef MUSICBUS_VERSION_RAW
+#define MUSICBUS_VERSION_RAW 0.3.7
+#endif
+#define MB_STR_HELPER(x) #x
+#define MB_STR(x)        MB_STR_HELPER(x)
 
 #define INPUT_BUF_FRAMES 1024u
 #define RAMP_STEP        0.0025f /* ~8 ms ramp at 48 kHz */
@@ -134,10 +146,14 @@ static HANDLE           g_cmdHandle = INVALID_HANDLE_VALUE;
 static HANDLE           g_evtHandle = INVALID_HANDLE_VALUE;
 static int              g_usingNamedPipes = 0;
 static char             g_pipeBase[256] = "";
+static HWND             g_ownerHwnd = NULL;
 static HWND             g_hwnd = NULL;
 static DWORD            g_parentPid = 0;
 static int              g_windowHidden = 0;
 static int              g_bootstrapMode = 0;
+static int              g_inTray = 1;
+static int              g_trayIconAdded = 0;
+static volatile LONG    g_audioDeviceGen = 0;
 
 static uint8_t          g_lastReportedUuid[16];
 static uint8_t          g_lastReportedState = 0xFFu;
@@ -161,6 +177,17 @@ static const GUID MB_IID_IShellFolderViewDual =
     { 0xE7A1AF80, 0x4D96, 0x11CF, { 0x96, 0x0C, 0x00, 0x80, 0xC7, 0xF4, 0xEE, 0x85 } };
 static const GUID MB_IID_IShellDispatch2 =
     { 0xA4C6892C, 0x3BA9, 0x11D2, { 0x9D, 0xEA, 0x00, 0xC0, 0x4F, 0xB1, 0x61, 0x62 } };
+
+static const GUID MB_CLSID_MMDeviceEnumerator =
+    { 0xBCDE0395, 0xE52F, 0x467C, { 0x8E, 0x3D, 0xC4, 0x57, 0x92, 0x91, 0x69, 0x2E } };
+static const GUID MB_IID_IMMDeviceEnumerator =
+    { 0xA95664D2, 0x9614, 0x4F35, { 0xA7, 0x46, 0xDE, 0x8D, 0xB6, 0x36, 0x17, 0xE6 } };
+static const GUID MB_IID_IAudioSessionManager2 =
+    { 0x77AA99A0, 0x1BD6, 0x484F, { 0x8B, 0xC7, 0x2C, 0x65, 0x4C, 0x9A, 0x9B, 0x6F } };
+static const GUID MB_IID_IAudioSessionControl2 =
+    { 0xBFB7FF88, 0x7239, 0x4FC9, { 0x8F, 0xA2, 0x07, 0xC9, 0x50, 0xBE, 0x9C, 0x6D } };
+static const GUID MB_IID_ISimpleAudioVolume =
+    { 0x87CE5498, 0x68D6, 0x44E5, { 0x92, 0x15, 0x6D, 0xA4, 0x7E, 0xF8, 0x83, 0xD8 } };
 
 /* ============================================================================
  * Byte Helpers & Frame I/O
@@ -938,6 +965,7 @@ static int open_audio_device(const char* desiredDeviceName, char* outErr, size_t
     }
 
     g_maDeviceReady = 1;
+    InterlockedIncrement(&g_audioDeviceGen);
 
     EnterCriticalSection(&g_audioLock);
     if (g_activeTrack != NULL && g_activeTrack->resamplerInitialized) {
@@ -1082,10 +1110,6 @@ static void handle_cmd_play(const uint8_t* payload, uint32_t len) {
     g_lastReportedState = stateNow;
     g_hasReportedOnce = 1;
     send_status(uuid, stateNow, posNow);
-
-    if (g_hwnd != NULL) {
-        PostMessageW(g_hwnd, WM_APP_REFRESH, 0, 0);
-    }
 }
 
 static void handle_cmd_stop(const uint8_t* payload, uint32_t len) {
@@ -1109,9 +1133,6 @@ static void handle_cmd_stop(const uint8_t* payload, uint32_t len) {
         g_lastReportedState = STATE_STOPPED;
         g_hasReportedOnce = 1;
         send_status(uuid, STATE_STOPPED, finalPos);
-        if (g_hwnd != NULL) {
-            PostMessageW(g_hwnd, WM_APP_REFRESH, 0, 0);
-        }
     }
 }
 
@@ -1126,10 +1147,6 @@ static void handle_cmd_pause(const uint8_t* payload, uint32_t len) {
         }
     }
     LeaveCriticalSection(&g_audioLock);
-
-    if (g_hwnd != NULL) {
-        PostMessageW(g_hwnd, WM_APP_REFRESH, 0, 0);
-    }
 }
 
 static void handle_cmd_resume(const uint8_t* payload, uint32_t len) {
@@ -1193,9 +1210,6 @@ static void handle_cmd_resume(const uint8_t* payload, uint32_t len) {
         g_lastReportedState = stateNow;
         g_hasReportedOnce = 1;
         send_status(uuid, stateNow, posNow);
-        if (g_hwnd != NULL) {
-            PostMessageW(g_hwnd, WM_APP_REFRESH, 0, 0);
-        }
     }
 }
 
@@ -1489,24 +1503,391 @@ static DWORD WINAPI watchdog_thread_proc(LPVOID param) {
 }
 
 /* ============================================================================
- * Win32 Status Window (Required for OBS Application Audio Capture)
+ * Windows Volume Mixer Sync (inherits Minecraft session volume & mute)
  * ========================================================================= */
+
+static int read_process_mixer_volume(
+    IMMDeviceEnumerator* pEnum,
+    DWORD targetPid,
+    float* outVol,
+    BOOL* outMute
+) {
+    if (pEnum == NULL || targetPid == 0u) {
+        return 0;
+    }
+
+    IMMDeviceCollection* pColl = NULL;
+    if (FAILED(pEnum->lpVtbl->EnumAudioEndpoints(pEnum, eRender, DEVICE_STATE_ACTIVE, &pColl))
+        || pColl == NULL) {
+        return 0;
+    }
+
+    UINT devCount = 0;
+    pColl->lpVtbl->GetCount(pColl, &devCount);
+
+    int foundActive = 0;
+    int foundAny = 0;
+    float bestVol = 1.0f;
+    BOOL bestMute = FALSE;
+
+    for (UINT d = 0; d < devCount && !foundActive; d++) {
+        IMMDevice* pDev = NULL;
+        if (FAILED(pColl->lpVtbl->Item(pColl, d, &pDev)) || pDev == NULL) {
+            continue;
+        }
+
+        IAudioSessionManager2* pMgr = NULL;
+        if (SUCCEEDED(pDev->lpVtbl->Activate(
+                pDev, &MB_IID_IAudioSessionManager2, CLSCTX_ALL, NULL, (void**)&pMgr))
+            && pMgr != NULL) {
+
+            IAudioSessionEnumerator* pSessEnum = NULL;
+            if (SUCCEEDED(pMgr->lpVtbl->GetSessionEnumerator(pMgr, &pSessEnum))
+                && pSessEnum != NULL) {
+
+                int sessCount = 0;
+                pSessEnum->lpVtbl->GetCount(pSessEnum, &sessCount);
+
+                for (int s = 0; s < sessCount && !foundActive; s++) {
+                    IAudioSessionControl* pCtrl = NULL;
+                    if (FAILED(pSessEnum->lpVtbl->GetSession(pSessEnum, s, &pCtrl))
+                        || pCtrl == NULL) {
+                        continue;
+                    }
+
+                    AudioSessionState state = AudioSessionStateInactive;
+                    if (SUCCEEDED(pCtrl->lpVtbl->GetState(pCtrl, &state))
+                        && state != AudioSessionStateExpired) {
+
+                        IAudioSessionControl2* pCtrl2 = NULL;
+                        if (SUCCEEDED(pCtrl->lpVtbl->QueryInterface(
+                                pCtrl, &MB_IID_IAudioSessionControl2, (void**)&pCtrl2))
+                            && pCtrl2 != NULL) {
+
+                            DWORD pid = 0;
+                            if (SUCCEEDED(pCtrl2->lpVtbl->GetProcessId(pCtrl2, &pid))
+                                && pid == targetPid) {
+
+                                ISimpleAudioVolume* pVol = NULL;
+                                if (SUCCEEDED(pCtrl->lpVtbl->QueryInterface(
+                                        pCtrl, &MB_IID_ISimpleAudioVolume, (void**)&pVol))
+                                    && pVol != NULL) {
+
+                                    float v = 1.0f;
+                                    BOOL m = FALSE;
+                                    if (SUCCEEDED(pVol->lpVtbl->GetMasterVolume(pVol, &v))
+                                        && SUCCEEDED(pVol->lpVtbl->GetMute(pVol, &m))) {
+                                        bestVol = v;
+                                        bestMute = m;
+                                        foundAny = 1;
+                                        if (state == AudioSessionStateActive) {
+                                            foundActive = 1;
+                                        }
+                                    }
+                                    pVol->lpVtbl->Release(pVol);
+                                }
+                            }
+                            pCtrl2->lpVtbl->Release(pCtrl2);
+                        }
+                    }
+                    pCtrl->lpVtbl->Release(pCtrl);
+                }
+                pSessEnum->lpVtbl->Release(pSessEnum);
+            }
+            pMgr->lpVtbl->Release(pMgr);
+        }
+        pDev->lpVtbl->Release(pDev);
+    }
+
+    pColl->lpVtbl->Release(pColl);
+
+    if (foundAny) {
+        *outVol = bestVol;
+        *outMute = bestMute;
+        return 1;
+    }
+    return 0;
+}
+
+static int apply_process_mixer_volume(
+    IMMDeviceEnumerator* pEnum,
+    DWORD targetPid,
+    float vol,
+    BOOL mute
+) {
+    if (pEnum == NULL || targetPid == 0u) {
+        return 0;
+    }
+
+    IMMDeviceCollection* pColl = NULL;
+    if (FAILED(pEnum->lpVtbl->EnumAudioEndpoints(pEnum, eRender, DEVICE_STATE_ACTIVE, &pColl))
+        || pColl == NULL) {
+        return 0;
+    }
+
+    UINT devCount = 0;
+    pColl->lpVtbl->GetCount(pColl, &devCount);
+
+    int applied = 0;
+    for (UINT d = 0; d < devCount; d++) {
+        IMMDevice* pDev = NULL;
+        if (FAILED(pColl->lpVtbl->Item(pColl, d, &pDev)) || pDev == NULL) {
+            continue;
+        }
+
+        IAudioSessionManager2* pMgr = NULL;
+        if (SUCCEEDED(pDev->lpVtbl->Activate(
+                pDev, &MB_IID_IAudioSessionManager2, CLSCTX_ALL, NULL, (void**)&pMgr))
+            && pMgr != NULL) {
+
+            IAudioSessionEnumerator* pSessEnum = NULL;
+            if (SUCCEEDED(pMgr->lpVtbl->GetSessionEnumerator(pMgr, &pSessEnum))
+                && pSessEnum != NULL) {
+
+                int sessCount = 0;
+                pSessEnum->lpVtbl->GetCount(pSessEnum, &sessCount);
+
+                for (int s = 0; s < sessCount; s++) {
+                    IAudioSessionControl* pCtrl = NULL;
+                    if (FAILED(pSessEnum->lpVtbl->GetSession(pSessEnum, s, &pCtrl))
+                        || pCtrl == NULL) {
+                        continue;
+                    }
+
+                    AudioSessionState state = AudioSessionStateInactive;
+                    if (SUCCEEDED(pCtrl->lpVtbl->GetState(pCtrl, &state))
+                        && state != AudioSessionStateExpired) {
+
+                        IAudioSessionControl2* pCtrl2 = NULL;
+                        if (SUCCEEDED(pCtrl->lpVtbl->QueryInterface(
+                                pCtrl, &MB_IID_IAudioSessionControl2, (void**)&pCtrl2))
+                            && pCtrl2 != NULL) {
+
+                            DWORD pid = 0;
+                            if (SUCCEEDED(pCtrl2->lpVtbl->GetProcessId(pCtrl2, &pid))
+                                && pid == targetPid) {
+
+                                ISimpleAudioVolume* pVol = NULL;
+                                if (SUCCEEDED(pCtrl->lpVtbl->QueryInterface(
+                                        pCtrl, &MB_IID_ISimpleAudioVolume, (void**)&pVol))
+                                    && pVol != NULL) {
+
+                                    if (SUCCEEDED(pVol->lpVtbl->SetMasterVolume(pVol, vol, NULL))
+                                        && SUCCEEDED(pVol->lpVtbl->SetMute(pVol, mute, NULL))) {
+                                        applied = 1;
+                                    }
+                                    pVol->lpVtbl->Release(pVol);
+                                }
+                            }
+                            pCtrl2->lpVtbl->Release(pCtrl2);
+                        }
+                    }
+                    pCtrl->lpVtbl->Release(pCtrl);
+                }
+                pSessEnum->lpVtbl->Release(pSessEnum);
+            }
+            pMgr->lpVtbl->Release(pMgr);
+        }
+        pDev->lpVtbl->Release(pDev);
+    }
+
+    pColl->lpVtbl->Release(pColl);
+    return applied;
+}
+
+static DWORD WINAPI mixer_sync_thread_proc(LPVOID param) {
+    (void)param;
+    if (g_parentPid == 0u) {
+        return 0;
+    }
+
+    HRESULT hrInit = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    if (FAILED(hrInit) && hrInit != RPC_E_CHANGED_MODE) {
+        return 0;
+    }
+
+    IMMDeviceEnumerator* pEnum = NULL;
+    if (FAILED(CoCreateInstance(
+            &MB_CLSID_MMDeviceEnumerator,
+            NULL,
+            CLSCTX_ALL,
+            &MB_IID_IMMDeviceEnumerator,
+            (void**)&pEnum))
+        || pEnum == NULL) {
+        if (SUCCEEDED(hrInit)) {
+            CoUninitialize();
+        }
+        return 0;
+    }
+
+    DWORD selfPid = GetCurrentProcessId();
+    LONG lastGen = -1;
+    int hasAppliedInitial = 0;
+    float lastMcVol = 1.0f;
+    BOOL lastMcMute = FALSE;
+
+    while (InterlockedCompareExchange(&g_running, 1, 1)) {
+        LONG curGen = InterlockedCompareExchange(&g_audioDeviceGen, 0, 0);
+        if (curGen != lastGen) {
+            lastGen = curGen;
+            hasAppliedInitial = 0;
+        }
+
+        float mcVol = 1.0f;
+        BOOL mcMute = FALSE;
+        if (read_process_mixer_volume(pEnum, g_parentPid, &mcVol, &mcMute)) {
+            int mcChanged = !hasAppliedInitial
+                || fabsf(mcVol - lastMcVol) > 0.005f
+                || mcMute != lastMcMute;
+
+            if (mcChanged && apply_process_mixer_volume(pEnum, selfPid, mcVol, mcMute)) {
+                hasAppliedInitial = 1;
+                lastMcVol = mcVol;
+                lastMcMute = mcMute;
+            }
+        }
+
+        if (WaitForSingleObject(g_stopEvent, 250) == WAIT_OBJECT_0) {
+            break;
+        }
+    }
+
+    pEnum->lpVtbl->Release(pEnum);
+    if (SUCCEEDED(hrInit)) {
+        CoUninitialize();
+    }
+    return 0;
+}
+
+/* ============================================================================
+ * Win32 Status Window & Tray Icon (Compatible with OBS Application Audio Capture)
+ * ========================================================================= */
+
+static void add_tray_icon(HWND hwnd) {
+    if (g_windowHidden || g_trayIconAdded) {
+        return;
+    }
+    NOTIFYICONDATAW nid;
+    memset(&nid, 0, sizeof(nid));
+    nid.cbSize = sizeof(nid);
+    nid.hWnd = hwnd;
+    nid.uID = TRAY_ICON_ID;
+    nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+    nid.uCallbackMessage = WM_APP_TRAY;
+    nid.hIcon = LoadIconW(NULL, IDI_APPLICATION);
+    wcsncpy(nid.szTip, L"MusicBus Player", 64);
+
+    if (Shell_NotifyIconW(NIM_ADD, &nid)) {
+        g_trayIconAdded = 1;
+    }
+}
+
+static void remove_tray_icon(HWND hwnd) {
+    if (!g_trayIconAdded) {
+        return;
+    }
+    NOTIFYICONDATAW nid;
+    memset(&nid, 0, sizeof(nid));
+    nid.cbSize = sizeof(nid);
+    nid.hWnd = hwnd;
+    nid.uID = TRAY_ICON_ID;
+    Shell_NotifyIconW(NIM_DELETE, &nid);
+    g_trayIconAdded = 0;
+}
+
+static void park_to_tray(HWND hwnd) {
+    g_inTray = 1;
+    /* Keep WS_VISIBLE true and off-screen instead of SW_HIDE so OBS never drops capture */
+    SetWindowPos(hwnd, NULL, -32000, -32000, 260, 96, SWP_NOACTIVATE | SWP_NOZORDER);
+}
+
+static void restore_from_tray(HWND hwnd) {
+    RECT wa;
+    if (!SystemParametersInfoW(SPI_GETWORKAREA, 0, &wa, 0)) {
+        wa.left = 0;
+        wa.top = 0;
+        wa.right = 1280;
+        wa.bottom = 720;
+    }
+    int w = 260;
+    int h = 96;
+    int x = wa.left + ((wa.right - wa.left) - w) / 2;
+    int y = wa.top + ((wa.bottom - wa.top) - h) / 2;
+
+    g_inTray = 0;
+    SetWindowPos(hwnd, HWND_TOP, x, y, w, h, SWP_SHOWWINDOW);
+    SetForegroundWindow(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+static void show_tray_menu(HWND hwnd) {
+    POINT pt;
+    GetCursorPos(&pt);
+
+    HMENU hMenu = CreatePopupMenu();
+    if (hMenu == NULL) {
+        return;
+    }
+
+    AppendMenuW(
+        hMenu,
+        MF_STRING,
+        ID_TRAY_TOGGLE,
+        g_inTray ? L"Show Window" : L"Minimize to Tray"
+    );
+
+    SetForegroundWindow(hwnd);
+    TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, pt.x, pt.y, 0, hwnd, NULL);
+    PostMessageW(hwnd, WM_NULL, 0, 0);
+    DestroyMenu(hMenu);
+}
 
 static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CLOSE:
-            ShowWindow(hwnd, SW_MINIMIZE);
+            park_to_tray(hwnd);
             return 0;
 
-        case WM_APP_REFRESH:
-            InvalidateRect(hwnd, NULL, TRUE);
+        case WM_SYSCOMMAND:
+            if ((wParam & 0xFFF0u) == SC_MINIMIZE) {
+                park_to_tray(hwnd);
+                return 0;
+            }
+            return DefWindowProcW(hwnd, msg, wParam, lParam);
+
+        case WM_APP_TRAY:
+            if (lParam == WM_LBUTTONDBLCLK || lParam == WM_LBUTTONUP) {
+                if (g_inTray) {
+                    restore_from_tray(hwnd);
+                } else {
+                    park_to_tray(hwnd);
+                }
+            } else if (lParam == WM_RBUTTONUP || lParam == WM_CONTEXTMENU) {
+                show_tray_menu(hwnd);
+            }
             return 0;
+
+        case WM_COMMAND:
+            if (LOWORD(wParam) == ID_TRAY_TOGGLE) {
+                if (g_inTray) {
+                    restore_from_tray(hwnd);
+                } else {
+                    park_to_tray(hwnd);
+                }
+                return 0;
+            }
+            return DefWindowProcW(hwnd, msg, wParam, lParam);
 
         case WM_APP_QUIT:
             DestroyWindow(hwnd);
             return 0;
 
         case WM_DESTROY:
+            remove_tray_icon(hwnd);
+            if (g_ownerHwnd != NULL) {
+                DestroyWindow(g_ownerHwnd);
+                g_ownerHwnd = NULL;
+            }
             PostQuitMessage(0);
             return 0;
 
@@ -1517,32 +1898,17 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             GetClientRect(hwnd, &rc);
             FillRect(hdc, &rc, (HBRUSH)(COLOR_WINDOW + 1));
 
-            wchar_t statusText[256] = L"MusicBus External Player\nStatus: Idle";
-
-            EnterCriticalSection(&g_audioLock);
-            if (g_activeTrack != NULL) {
-                const wchar_t* st = L"Stopped";
-                if (g_activeTrack->state == STATE_PLAYING) st = L"Playing";
-                else if (g_activeTrack->state == STATE_PAUSED) st = L"Paused";
-
-                double pos = (double)g_activeTrack->currentSourceFrame
-                    / (double)g_activeTrack->srcSampleRate;
-                swprintf(
-                    statusText,
-                    256,
-                    L"MusicBus External Player\nStatus: %ls (%.1fs, vol=%.0f%%)",
-                    st,
-                    pos,
-                    (double)(g_activeTrack->targetVolume * 100.0f)
-                );
-            }
-            LeaveCriticalSection(&g_audioLock);
-
             RECT textRc = rc;
             textRc.left += 12;
             textRc.top += 12;
             SetBkMode(hdc, TRANSPARENT);
-            DrawTextW(hdc, statusText, -1, &textRc, DT_LEFT | DT_WORDBREAK);
+            DrawTextA(
+                hdc,
+                "MusicBus Player\nv" MB_STR(MUSICBUS_VERSION_RAW),
+                -1,
+                &textRc,
+                DT_LEFT | DT_WORDBREAK
+            );
 
             EndPaint(hwnd, &ps);
             return 0;
@@ -1554,14 +1920,38 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 }
 
 static HWND create_player_window(HINSTANCE hInstance) {
+    const wchar_t* ownerClassName = L"MusicBusOwnerWindowClass";
     const wchar_t* className = L"MusicBusPlayerWindowClass";
+
+    WNDCLASSEXW ownerWc;
+    memset(&ownerWc, 0, sizeof(ownerWc));
+    ownerWc.cbSize = sizeof(ownerWc);
+    ownerWc.lpfnWndProc = DefWindowProcW;
+    ownerWc.hInstance = hInstance;
+    ownerWc.lpszClassName = ownerClassName;
+    RegisterClassExW(&ownerWc);
+
+    /* Invisible owner removes the owned top-level window from Taskbar & Alt+Tab */
+    g_ownerHwnd = CreateWindowExW(
+        0,
+        ownerClassName,
+        L"",
+        WS_OVERLAPPED,
+        0, 0, 0, 0,
+        NULL,
+        NULL,
+        hInstance,
+        NULL
+    );
 
     WNDCLASSEXW wc;
     memset(&wc, 0, sizeof(wc));
     wc.cbSize = sizeof(wc);
+    wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = window_proc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    wc.hIcon = LoadIconW(NULL, IDI_APPLICATION);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszClassName = className;
 
@@ -1569,29 +1959,26 @@ static HWND create_player_window(HINSTANCE hInstance) {
         return NULL;
     }
 
-    DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    if (!g_windowHidden) {
-        style |= WS_MINIMIZE;
-    }
-
     HWND hwnd = CreateWindowExW(
-        WS_EX_APPWINDOW,
+        0,
         className,
         L"MusicBus Player",
-        style,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        360,
-        120,
-        NULL,
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        -32000,
+        -32000,
+        260,
+        96,
+        g_ownerHwnd,
         NULL,
         hInstance,
         NULL
     );
 
-    if (hwnd != NULL && !g_windowHidden) {
-        ShowWindow(hwnd, SW_SHOWMINNOACTIVE);
+    if (hwnd != NULL) {
+        g_inTray = 1;
+        ShowWindow(hwnd, SW_SHOWNOACTIVATE);
         UpdateWindow(hwnd);
+        add_tray_icon(hwnd);
     }
 
     return hwnd;
@@ -1699,8 +2086,10 @@ int main(int argc, char** argv) {
     }
 
     HANDLE hWatchdogThread = NULL;
+    HANDLE hMixerThread = NULL;
     if (g_parentPid != 0u) {
         hWatchdogThread = CreateThread(NULL, 0, watchdog_thread_proc, NULL, 0, NULL);
+        hMixerThread = CreateThread(NULL, 0, mixer_sync_thread_proc, NULL, 0, NULL);
     }
     HANDLE hCommandThread = CreateThread(NULL, 0, command_thread_proc, NULL, 0, NULL);
     HANDLE hStatusThread = CreateThread(NULL, 0, status_thread_proc, NULL, 0, NULL);
@@ -1732,6 +2121,10 @@ int main(int argc, char** argv) {
     if (hWatchdogThread != NULL) {
         WaitForSingleObject(hWatchdogThread, 1500);
         CloseHandle(hWatchdogThread);
+    }
+    if (hMixerThread != NULL) {
+        WaitForSingleObject(hMixerThread, 1500);
+        CloseHandle(hMixerThread);
     }
 
     if (g_usingNamedPipes) {
