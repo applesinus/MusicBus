@@ -28,6 +28,9 @@ public final class MusicBusTransformer
     private static final String SOUND_BUFFER_LIBRARY =
             "net/minecraft/client/sounds/SoundBufferLibrary";
 
+    private static final String CHANNEL =
+            "com/mojang/blaze3d/audio/Channel";
+
     private static final String SOUND_SOURCE =
             "net/minecraft/sounds/SoundSource";
 
@@ -36,6 +39,9 @@ public final class MusicBusTransformer
 
     private static final String MANAGER =
             "com/musicbus/core/MusicBusManager";
+
+    private static final String CHANNEL_TRACKER =
+            "com/musicbus/audio/VanillaChannelTracker";
 
     private static final String PLAY_DESCRIPTOR =
             "(Lnet/minecraft/client/resources/sounds/SoundInstance;)"
@@ -74,6 +80,10 @@ public final class MusicBusTransformer
 
         if (SOUND_BUFFER_LIBRARY.equals(className)) {
             return transformSoundBufferLibrary(classfileBuffer);
+        }
+
+        if (CHANNEL.equals(className)) {
+            return transformChannel(classfileBuffer);
         }
 
         return null;
@@ -648,6 +658,203 @@ public final class MusicBusTransformer
 
         System.out.println(
                 "[MusicBus] SoundBufferLibrary transformed."
+        );
+
+        return writer.toByteArray();
+    }
+
+    /**
+     * Instruments com.mojang.blaze3d.audio.Channel to track exact
+     * queued/unqueued OpenAL buffer durations and stop/destroy transitions.
+     */
+    private byte[] transformChannel(byte[] originalBytes) {
+
+        ClassReader reader = new ClassReader(originalBytes);
+
+        ClassWriter writer = new ClassWriter(
+                reader,
+                ClassWriter.COMPUTE_MAXS
+        );
+
+        boolean[] found = new boolean[6];
+
+        ClassVisitor visitor = new ClassVisitor(
+                Opcodes.ASM9,
+                writer
+        ) {
+
+            @Override
+            public MethodVisitor visitMethod(
+                    int access,
+                    String name,
+                    String descriptor,
+                    String signature,
+                    String[] exceptions
+            ) {
+
+                MethodVisitor mv = super.visitMethod(
+                        access,
+                        name,
+                        descriptor,
+                        signature,
+                        exceptions
+                );
+
+                if (name.equals("lambda$pumpBuffers$0")
+                        && descriptor.equals("(I)V")) {
+
+                    found[0] = true;
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+                            super.visitCode();
+                            super.visitVarInsn(Opcodes.ALOAD, 0);
+                            super.visitVarInsn(Opcodes.ILOAD, 1);
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    CHANNEL_TRACKER,
+                                    "onBufferQueued",
+                                    "(Ljava/lang/Object;I)V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                if (name.equals("lambda$attachStaticBuffer$0")
+                        && descriptor.equals("(I)V")) {
+
+                    found[1] = true;
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+                            super.visitCode();
+                            super.visitVarInsn(Opcodes.ALOAD, 0);
+                            super.visitVarInsn(Opcodes.ILOAD, 1);
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    CHANNEL_TRACKER,
+                                    "onStaticBufferAttached",
+                                    "(Ljava/lang/Object;I)V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                if (name.equals("removeProcessedBuffers")
+                        && descriptor.equals("()I")) {
+
+                    found[2] = true;
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitInsn(int opcode) {
+                            if (opcode == Opcodes.IRETURN) {
+                                super.visitInsn(Opcodes.DUP);
+                                super.visitVarInsn(Opcodes.ALOAD, 0);
+                                super.visitInsn(Opcodes.SWAP);
+                                super.visitMethodInsn(
+                                        Opcodes.INVOKESTATIC,
+                                        CHANNEL_TRACKER,
+                                        "onBuffersUnqueued",
+                                        "(Ljava/lang/Object;I)V",
+                                        false
+                                );
+                            }
+                            super.visitInsn(opcode);
+                        }
+                    };
+                }
+
+                if (name.equals("play")
+                        && descriptor.equals("()V")) {
+
+                    found[3] = true;
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+                            super.visitCode();
+                            super.visitVarInsn(Opcodes.ALOAD, 0);
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    CHANNEL_TRACKER,
+                                    "onChannelPlay",
+                                    "(Ljava/lang/Object;)V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                if (name.equals("stop")
+                        && descriptor.equals("()V")) {
+
+                    found[4] = true;
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+                            super.visitCode();
+                            super.visitVarInsn(Opcodes.ALOAD, 0);
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    CHANNEL_TRACKER,
+                                    "onChannelStopping",
+                                    "(Ljava/lang/Object;)V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                if (name.equals("destroy")
+                        && descriptor.equals("()V")) {
+
+                    found[5] = true;
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+                            super.visitCode();
+                            super.visitVarInsn(Opcodes.ALOAD, 0);
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    CHANNEL_TRACKER,
+                                    "onChannelDestroying",
+                                    "(Ljava/lang/Object;)V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                return mv;
+            }
+        };
+
+        reader.accept(visitor, 0);
+
+        for (boolean ok : found) {
+            if (!ok) {
+                System.err.println(
+                        "[MusicBus] Channel transformation incomplete!"
+                );
+                return null;
+            }
+        }
+
+        System.out.println(
+                "[MusicBus] Channel transformed."
         );
 
         return writer.toByteArray();

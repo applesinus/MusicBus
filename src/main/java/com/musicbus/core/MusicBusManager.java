@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -229,12 +230,15 @@ public final class MusicBusManager {
             }
 
             /*
-             * Stop vanilla playback.
-             *
-             * The transition guard prevents SoundEngine.stop()
-             * from destroying the logical PlaybackSession.
+             * Query exact vanilla OpenAL position before stopping
+             * and store it in the blind PlaybackSession mediator.
              */
             PlaybackSession targetSession = session;
+
+            Optional<AudioPlayer.PlaybackStatus> vanillaStatus =
+                    vanillaPlayer.getStatus(targetSession.getId());
+
+            vanillaStatus.ifPresent(targetSession::sync);
 
             duringAudioPlayerTransition(
                     () -> vanillaPlayer.stop(targetSession.getId())
@@ -242,6 +246,12 @@ public final class MusicBusManager {
 
             PlaybackSession.Snapshot snapshot =
                     session.snapshot();
+
+            if (snapshot.state() == PlaybackSession.State.STOPPED) {
+                enabled = true;
+                log("MusicBus enabled. Vanilla track already finished.");
+                return true;
+            }
 
             if (!mockPlayer.supports(snapshot)) {
                 throw new IllegalStateException(
@@ -285,7 +295,7 @@ public final class MusicBusManager {
                         PlaybackSession targetSession = session;
 
                         duringAudioPlayerTransition(
-                                () -> vanillaPlayer.play(
+                                () -> vanillaPlayer.resume(
                                         targetSession.snapshot()
                                 )
                         );
@@ -328,6 +338,9 @@ public final class MusicBusManager {
             return true;
         }
 
+        mockPlayer.getStatus(session.getId())
+                .ifPresent(session::sync);
+
         PlaybackSession.Snapshot previousState =
                 session.snapshot();
 
@@ -347,9 +360,13 @@ public final class MusicBusManager {
              */
             enabled = false;
 
-            duringAudioPlayerTransition(
-                    () -> vanillaPlayer.resume(session.snapshot())
-            );
+            if (previousState.state() != PlaybackSession.State.STOPPED) {
+                duringAudioPlayerTransition(
+                        () -> vanillaPlayer.resume(previousState)
+                );
+            } else {
+                retireSession(instance, session);
+            }
 
             log("Mock -> Vanilla transition successful.");
             log("Session: " + session.getId());

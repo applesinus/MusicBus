@@ -6,9 +6,9 @@ import java.util.UUID;
 /**
  * Represents one logical music playback session.
  *
- * The session is independent of the audio audio player.
- * It preserves track identity, playback position
- * and playback parameters across audio player changes.
+ * Acts as a blind state mediator between AudioPlayer backends:
+ * it never estimates elapsed time on its own and only stores
+ * explicitly set or synchronized playback state.
  */
 public final class PlaybackSession {
 
@@ -30,12 +30,6 @@ public final class PlaybackSession {
     private boolean looping;
 
     private State state;
-
-    /**
-     * Monotonic time at which the current position
-     * was established or playback was resumed.
-     */
-    private long anchorNanos;
 
     public PlaybackSession(
             String resourceId,
@@ -80,7 +74,6 @@ public final class PlaybackSession {
         );
 
         this.state = State.PLAYING;
-        this.anchorNanos = System.nanoTime();
     }
 
     // ------------------------------------------
@@ -100,11 +93,11 @@ public final class PlaybackSession {
     }
 
     // ------------------------------------------
-    // Playback position
+    // Playback position & synchronization
     // ------------------------------------------
 
     public synchronized double getPositionSeconds() {
-        return calculatePosition(System.nanoTime());
+        return positionSeconds;
     }
 
     /**
@@ -117,24 +110,35 @@ public final class PlaybackSession {
         this.positionSeconds = normalizePosition(
                 positionSeconds
         );
-
-        this.anchorNanos = System.nanoTime();
     }
 
-    private double calculatePosition(long nowNanos) {
+    /**
+     * Synchronizes position only from the active AudioPlayer
+     * without altering logical session state.
+     */
+    public synchronized void syncPosition(double positionSeconds) {
 
-        if (state != State.PLAYING) {
-            return positionSeconds;
-        }
+        validatePosition(positionSeconds);
 
-        double elapsedSeconds =
-                Math.max(0L, nowNanos - anchorNanos)
-                        / 1_000_000_000.0;
+        this.positionSeconds = normalizePosition(
+                positionSeconds
+        );
+    }
 
-        double currentPosition =
-                positionSeconds + elapsedSeconds * pitch;
+    /**
+     * Synchronizes both position and state from the active
+     * AudioPlayer's observed PlaybackStatus.
+     */
+    public synchronized void sync(
+            AudioPlayer.PlaybackStatus status
+    ) {
 
-        return normalizePosition(currentPosition);
+        Objects.requireNonNull(status, "status cannot be null");
+
+        this.positionSeconds = normalizePosition(
+                status.positionSeconds()
+        );
+        this.state = status.state();
     }
 
     private double normalizePosition(double position) {
@@ -163,10 +167,6 @@ public final class PlaybackSession {
             return;
         }
 
-        positionSeconds = calculatePosition(
-                System.nanoTime()
-        );
-
         state = State.PAUSED;
     }
 
@@ -182,7 +182,6 @@ public final class PlaybackSession {
             return;
         }
 
-        anchorNanos = System.nanoTime();
         state = State.PLAYING;
     }
 
@@ -190,12 +189,6 @@ public final class PlaybackSession {
 
         if (state == State.STOPPED) {
             return;
-        }
-
-        if (state == State.PLAYING) {
-            positionSeconds = calculatePosition(
-                    System.nanoTime()
-            );
         }
 
         state = State.STOPPED;
@@ -228,11 +221,6 @@ public final class PlaybackSession {
 
         validatePitch(pitch);
 
-        long now = System.nanoTime();
-
-        positionSeconds = calculatePosition(now);
-
-        anchorNanos = now;
         this.pitch = pitch;
     }
 
@@ -242,14 +230,8 @@ public final class PlaybackSession {
 
     public synchronized void setLooping(boolean looping) {
 
-        long now = System.nanoTime();
-
-        positionSeconds = calculatePosition(now);
-
-        anchorNanos = now;
         this.looping = looping;
-
-        positionSeconds = normalizePosition(positionSeconds);
+        this.positionSeconds = normalizePosition(positionSeconds);
     }
 
     // ------------------------------------------
@@ -257,17 +239,16 @@ public final class PlaybackSession {
     // ------------------------------------------
 
     /**
-     * Captures the complete session state at one point
-     * in time.
+     * Captures the last synchronized session state.
      *
-     * AudioPlayer adapters will use this during handoff.
+     * AudioPlayer adapters use this during handoff.
      */
     public synchronized Snapshot snapshot() {
 
         return new Snapshot(
                 id,
                 resourceId,
-                calculatePosition(System.nanoTime()),
+                positionSeconds,
                 durationSeconds,
                 volume,
                 pitch,

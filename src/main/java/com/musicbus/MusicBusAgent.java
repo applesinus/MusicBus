@@ -19,7 +19,7 @@ public final class MusicBusAgent {
 
         String version = MusicBusAgent.class.getPackage().getImplementationVersion();
         if (version == null) {
-            version = "DEV-MODE"; 
+            version = "DEV-MODE";
         }
 
         log("=================================");

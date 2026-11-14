@@ -9,19 +9,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Vanilla Minecraft implementation of AudioPlayer.
  *
- * Uses Minecraft's native SoundManager and SoundEngine.
- *
- * This implementation does not own logical playback state.
- * PlaybackSession remains managed by MusicBus.
- *
- * Important limitations:
- * - Individual SoundInstance pause is not exposed by SoundManager.
- * - Arbitrary seeking is not supported by vanilla playback.
- * - Playback parameters cannot be changed on an already
- *   created vanilla audio channel through SoundManager.
+ * Uses Minecraft's native SoundManager and SoundEngine and queries
+ * exact OpenAL playback positions via VanillaChannelTracker.
  *
  * Minecraft classes are accessed through reflection to keep
  * the Java Agent independent of Minecraft compile-time classes.
@@ -31,6 +27,12 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     private final Map<UUID, Entry> sessions = new HashMap<>();
 
     private static final String MUSIC_SOURCE = "MUSIC";
+    private static final long QUERY_TIMEOUT_MS = 50L;
+
+    private static volatile Field soundEngineField;
+    private static volatile Field executorField;
+    private static volatile Field instanceToChannelField;
+    private static volatile Field channelHandleChannelField;
 
     // --------------------------------------------------
     // Audio Player identity
@@ -73,9 +75,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     /**
      * Associates a Minecraft SoundInstance with a logical
      * MusicBus session.
-     *
-     * Must be called when MusicBus creates or adopts
-     * a PlaybackSession from a Minecraft SoundInstance.
      */
     public synchronized void registerSoundInstance(
             UUID sessionId,
@@ -146,31 +145,28 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         try {
 
-            /*
-             * Vanilla SoundManager cannot restore arbitrary
-             * media positions. Playback starts from the beginning.
-             */
             if (session.positionSeconds() > 0.0) {
 
-                log("WARNING: Vanilla playback cannot restore "
+                log("WARNING: Vanilla play() called with non-zero "
                         + "position. Restarting from zero.");
+            }
+
+            synchronized (entry) {
+
+                entry.state = PlaybackSession.State.PLAYING;
+                entry.initialOffsetSeconds = 0.0;
+                entry.lastKnownPositionSeconds = 0.0;
+                entry.durationSeconds = session.durationSeconds();
+                entry.volume = session.volume();
+                entry.pitch = session.pitch();
+                entry.looping = session.looping();
+                entry.lastChannel = null;
             }
 
             invokeSoundManager(
                     "play",
                     entry.soundInstance
             );
-
-            synchronized (entry) {
-
-                entry.state = PlaybackSession.State.PLAYING;
-                entry.positionSeconds = 0.0;
-                entry.durationSeconds = session.durationSeconds();
-                entry.volume = session.volume();
-                entry.pitch = session.pitch();
-                entry.looping = session.looping();
-                entry.anchorNanos = System.nanoTime();
-            }
 
             log("Vanilla playback started: " + session.id());
 
@@ -196,22 +192,35 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         try {
 
+            VanillaChannelTracker.ChannelSnapshot snap =
+                    queryChannelSnapshot(entry);
+
+            if (snap != null) {
+                synchronized (entry) {
+                    entry.lastKnownPositionSeconds = normalizePosition(
+                            entry,
+                            entry.initialOffsetSeconds
+                                    + snap.positionSeconds()
+                    );
+                }
+            }
+
             invokeSoundManager(
                     "stop",
                     entry.soundInstance
             );
 
             synchronized (entry) {
-
-                entry.positionSeconds = calculatePosition(
-                        entry,
-                        System.nanoTime()
-                );
-
                 entry.state = PlaybackSession.State.STOPPED;
             }
 
-            log("Vanilla playback stopped: " + sessionId);
+            log("Vanilla playback stopped: " + sessionId
+                    + " at "
+                    + String.format(
+                            Locale.ROOT,
+                            "%.2fs",
+                            entry.lastKnownPositionSeconds
+                    ));
 
         } catch (Exception error) {
 
@@ -259,6 +268,18 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         try {
 
+            synchronized (entry) {
+
+                entry.state = PlaybackSession.State.PLAYING;
+                entry.initialOffsetSeconds = targetPosition;
+                entry.lastKnownPositionSeconds = targetPosition;
+                entry.durationSeconds = session.durationSeconds();
+                entry.volume = session.volume();
+                entry.pitch = session.pitch();
+                entry.looping = session.looping();
+                entry.lastChannel = null;
+            }
+
             MusicBusManager.setPendingResumeSeconds(targetPosition);
 
             try {
@@ -268,17 +289,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
                 );
             } finally {
                 MusicBusManager.clearPendingResumeSeconds();
-            }
-
-            synchronized (entry) {
-
-                entry.state = PlaybackSession.State.PLAYING;
-                entry.positionSeconds = targetPosition;
-                entry.durationSeconds = session.durationSeconds();
-                entry.volume = session.volume();
-                entry.pitch = session.pitch();
-                entry.looping = session.looping();
-                entry.anchorNanos = System.nanoTime();
             }
 
             log("Vanilla playback resumed: "
@@ -365,33 +375,49 @@ public final class VanillaAudioPlayer implements AudioPlayer {
                     entry.soundInstance
             );
 
+            VanillaChannelTracker.ChannelSnapshot snap =
+                    queryChannelSnapshot(entry);
+
             synchronized (entry) {
 
-                long now = System.nanoTime();
+                if (snap != null) {
+                    entry.lastKnownPositionSeconds = normalizePosition(
+                            entry,
+                            entry.initialOffsetSeconds
+                                    + snap.positionSeconds()
+                    );
+                }
 
-                if (active) {
-
-                    entry.state = PlaybackSession.State.PLAYING;
+                if (!active) {
+                    entry.state = PlaybackSession.State.STOPPED;
 
                     return Optional.of(
                             new PlaybackStatus(
-                                    entry.state,
-                                    calculatePosition(entry, now)
+                                    PlaybackSession.State.STOPPED,
+                                    entry.lastKnownPositionSeconds
                             )
                     );
                 }
 
-                entry.positionSeconds = calculatePosition(
-                        entry,
-                        now
-                );
+                if (snap != null
+                        && snap.state()
+                        == VanillaChannelTracker.ChannelPlaybackState.PAUSED) {
+                    entry.state = PlaybackSession.State.PAUSED;
 
-                entry.state = PlaybackSession.State.STOPPED;
+                    return Optional.of(
+                            new PlaybackStatus(
+                                    PlaybackSession.State.PAUSED,
+                                    entry.lastKnownPositionSeconds
+                            )
+                    );
+                }
+
+                entry.state = PlaybackSession.State.PLAYING;
 
                 return Optional.of(
                         new PlaybackStatus(
-                                entry.state,
-                                entry.positionSeconds
+                                PlaybackSession.State.PLAYING,
+                                entry.lastKnownPositionSeconds
                         )
                 );
             }
@@ -406,43 +432,129 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     }
 
     // --------------------------------------------------
-    // Position estimation
+    // Exact OpenAL Channel position query
     // --------------------------------------------------
 
-    /**
-     * Estimates playback position from monotonic elapsed time.
-     *
-     * This is an estimate, not an actual SoundEngine position.
-     */
-    private static double calculatePosition(
-            Entry entry,
-            long nowNanos
+    private static VanillaChannelTracker.ChannelSnapshot queryChannelSnapshot(
+            Entry entry
     ) {
 
-        if (entry.state != PlaybackSession.State.PLAYING) {
-            return entry.positionSeconds;
+        try {
+
+            Object soundManager = getSoundManager();
+            Object soundEngine = getSoundEngine(soundManager);
+
+            if (soundEngine == null) {
+                return null;
+            }
+
+            Object channel = findChannelForInstance(
+                    soundEngine,
+                    entry
+            );
+
+            if (channel == null) {
+                return null;
+            }
+
+            VanillaChannelTracker.ChannelSnapshot terminal =
+                    VanillaChannelTracker.getTerminalSnapshotIfStopped(
+                            channel
+                    );
+
+            if (terminal != null) {
+                return terminal;
+            }
+
+            Executor soundExecutor = getSoundEngineExecutor(soundEngine);
+
+            if (soundExecutor == null) {
+                return new VanillaChannelTracker.ChannelSnapshot(
+                        VanillaChannelTracker.ChannelPlaybackState.PLAYING,
+                        VanillaChannelTracker.getFallbackPosition(channel)
+                );
+            }
+
+            CompletableFuture<VanillaChannelTracker.ChannelSnapshot> future =
+                    new CompletableFuture<>();
+
+            soundExecutor.execute(() -> {
+                try {
+                    future.complete(
+                            VanillaChannelTracker.sampleOnSoundThread(channel)
+                    );
+                } catch (Throwable error) {
+                    future.completeExceptionally(error);
+                }
+            });
+
+            return future.get(QUERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        } catch (Exception ignored) {
+
+            Object channel;
+            synchronized (entry) {
+                channel = entry.lastChannel;
+            }
+
+            if (channel != null) {
+                return new VanillaChannelTracker.ChannelSnapshot(
+                        VanillaChannelTracker.ChannelPlaybackState.PLAYING,
+                        VanillaChannelTracker.getFallbackPosition(channel)
+                );
+            }
+
+            return null;
+        }
+    }
+
+    private static Object findChannelForInstance(
+            Object soundEngine,
+            Entry entry
+    ) throws Exception {
+
+        Map<?, ?> instanceToChannel =
+                getInstanceToChannel(soundEngine);
+
+        if (instanceToChannel != null) {
+            Object handle = instanceToChannel.get(entry.soundInstance);
+
+            if (handle != null) {
+                Object channel = getChannelFromHandle(handle);
+
+                if (channel != null) {
+                    synchronized (entry) {
+                        entry.lastChannel = channel;
+                    }
+                    return channel;
+                }
+            }
         }
 
-        double elapsed =
-                Math.max(0L, nowNanos - entry.anchorNanos)
-                        / 1_000_000_000.0;
+        synchronized (entry) {
+            return entry.lastChannel;
+        }
+    }
 
-        double position =
-                entry.positionSeconds + elapsed * entry.pitch;
+    private static double normalizePosition(
+            Entry entry,
+            double position
+    ) {
+
+        if (!Double.isFinite(position) || position < 0.0) {
+            return 0.0;
+        }
 
         if (entry.durationSeconds > 0.0) {
 
             if (entry.looping) {
-                position %= entry.durationSeconds;
-            } else {
-                position = Math.min(
-                        position,
-                        entry.durationSeconds
-                );
+                return position % entry.durationSeconds;
             }
+
+            return Math.min(position, entry.durationSeconds);
         }
 
-        return Math.max(0.0, position);
+        return position;
     }
 
     // --------------------------------------------------
@@ -461,7 +573,8 @@ public final class VanillaAudioPlayer implements AudioPlayer {
         private PlaybackSession.State state =
                 PlaybackSession.State.STOPPED;
 
-        private double positionSeconds;
+        private double initialOffsetSeconds;
+        private double lastKnownPositionSeconds;
         private double durationSeconds;
 
         private float volume = 1.0f;
@@ -469,7 +582,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         private boolean looping;
 
-        private long anchorNanos;
+        private Object lastChannel;
 
         private Entry(Object soundInstance) {
             this.soundInstance = soundInstance;
@@ -531,6 +644,138 @@ public final class VanillaAudioPlayer implements AudioPlayer {
         throw new IllegalStateException(
                 "Minecraft SoundManager not found"
         );
+    }
+
+    private static Object getSoundEngine(Object soundManager)
+            throws Exception {
+
+        if (soundManager == null) {
+            return null;
+        }
+
+        Field field = soundEngineField;
+        if (field == null) {
+            field = findFieldByTypeSimpleName(
+                    soundManager.getClass(),
+                    "SoundEngine"
+            );
+            if (field == null) {
+                return null;
+            }
+            field.setAccessible(true);
+            soundEngineField = field;
+        }
+
+        return field.get(soundManager);
+    }
+
+    private static Executor getSoundEngineExecutor(Object soundEngine)
+            throws Exception {
+
+        if (soundEngine == null) {
+            return null;
+        }
+
+        Field field = executorField;
+        if (field == null) {
+            field = findFieldByTypeSimpleName(
+                    soundEngine.getClass(),
+                    "SoundEngineExecutor"
+            );
+            if (field == null) {
+                return null;
+            }
+            field.setAccessible(true);
+            executorField = field;
+        }
+
+        Object exec = field.get(soundEngine);
+        return exec instanceof Executor executor ? executor : null;
+    }
+
+    private static Map<?, ?> getInstanceToChannel(Object soundEngine)
+            throws Exception {
+
+        if (soundEngine == null) {
+            return null;
+        }
+
+        Field field = instanceToChannelField;
+        if (field == null) {
+            field = findFieldByName(
+                    soundEngine.getClass(),
+                    "instanceToChannel"
+            );
+            if (field == null) {
+                return null;
+            }
+            field.setAccessible(true);
+            instanceToChannelField = field;
+        }
+
+        Object map = field.get(soundEngine);
+        return map instanceof Map<?, ?> result ? result : null;
+    }
+
+    private static Object getChannelFromHandle(Object handle)
+            throws Exception {
+
+        if (handle == null) {
+            return null;
+        }
+
+        Field field = channelHandleChannelField;
+        if (field == null) {
+            field = findFieldByName(handle.getClass(), "channel");
+            if (field == null) {
+                return null;
+            }
+            field.setAccessible(true);
+            channelHandleChannelField = field;
+        }
+
+        return field.get(handle);
+    }
+
+    private static Field findFieldByTypeSimpleName(
+            Class<?> type,
+            String simpleName
+    ) {
+
+        Class<?> current = type;
+
+        while (current != null) {
+
+            for (Field field : current.getDeclaredFields()) {
+
+                if (field.getType().getSimpleName().equals(simpleName)) {
+                    return field;
+                }
+            }
+
+            current = current.getSuperclass();
+        }
+
+        return null;
+    }
+
+    private static Field findFieldByName(
+            Class<?> type,
+            String name
+    ) {
+
+        Class<?> current = type;
+
+        while (current != null) {
+
+            try {
+                return current.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {
+                current = current.getSuperclass();
+            }
+        }
+
+        return null;
     }
 
     private static Object invokeSoundManager(

@@ -6,13 +6,13 @@ import java.util.UUID;
 /**
  * Mock implementation of AudioPlayer.
  *
- * Simulates audio playback without producing actual sound.
- * Useful for testing MusicBus session management and
- * audio player switching.
+ * Simulates audio playback using a monotonic wall-clock timer
+ * without producing actual sound.
  */
 public final class MockAudioPlayer implements AudioPlayer {
 
     private PlaybackSession.Snapshot currentSession;
+    private long anchorNanos;
 
     public MockAudioPlayer() {}
 
@@ -55,6 +55,7 @@ public final class MockAudioPlayer implements AudioPlayer {
         }
 
         currentSession = session;
+        anchorNanos = System.nanoTime();
 
         log("Playback started: " + session.id());
         log("Resource: " + session.resourceId());
@@ -68,9 +69,17 @@ public final class MockAudioPlayer implements AudioPlayer {
             return;
         }
 
-        log("Playback stopped: " + sessionId);
+        double finalPosition = calculatePosition(
+                currentSession,
+                anchorNanos,
+                System.nanoTime()
+        );
+
+        log("Playback stopped: " + sessionId
+                + " at " + finalPosition + "s");
 
         currentSession = null;
+        anchorNanos = 0L;
     }
 
     @Override
@@ -86,10 +95,16 @@ public final class MockAudioPlayer implements AudioPlayer {
             return;
         }
 
+        double currentPosition = calculatePosition(
+                session,
+                anchorNanos,
+                System.nanoTime()
+        );
+
         currentSession = new PlaybackSession.Snapshot(
                 session.id(),
                 session.resourceId(),
-                session.positionSeconds(),
+                currentPosition,
                 session.durationSeconds(),
                 session.volume(),
                 session.pitch(),
@@ -97,7 +112,8 @@ public final class MockAudioPlayer implements AudioPlayer {
                 PlaybackSession.State.PAUSED
         );
 
-        log("Playback paused: " + sessionId);
+        log("Playback paused: " + sessionId
+                + " at " + currentPosition + "s");
     }
 
     @Override
@@ -116,8 +132,10 @@ public final class MockAudioPlayer implements AudioPlayer {
         }
 
         currentSession = session;
+        anchorNanos = System.nanoTime();
 
-        log("Playback resumed: " + session.id());
+        log("Playback resumed: " + session.id()
+                + " at " + session.positionSeconds() + "s");
     }
 
     // --------------------------------------------------
@@ -143,19 +161,25 @@ public final class MockAudioPlayer implements AudioPlayer {
         }
 
         PlaybackSession.Snapshot session = currentSession;
+        double normalized = normalizePosition(
+                positionSeconds,
+                session.durationSeconds(),
+                session.looping()
+        );
 
         currentSession = new PlaybackSession.Snapshot(
                 session.id(),
                 session.resourceId(),
-                positionSeconds,
+                normalized,
                 session.durationSeconds(),
                 session.volume(),
                 session.pitch(),
                 session.looping(),
                 session.state()
         );
+        anchorNanos = System.nanoTime();
 
-        log("Playback seek: " + positionSeconds + "s");
+        log("Playback seek: " + normalized + "s");
     }
 
     @Override
@@ -198,18 +222,25 @@ public final class MockAudioPlayer implements AudioPlayer {
 
         validateNonNegative(pitch, "pitch");
 
+        long now = System.nanoTime();
         PlaybackSession.Snapshot session = currentSession;
+        double currentPosition = calculatePosition(
+                session,
+                anchorNanos,
+                now
+        );
 
         currentSession = new PlaybackSession.Snapshot(
                 session.id(),
                 session.resourceId(),
-                session.positionSeconds(),
+                currentPosition,
                 session.durationSeconds(),
                 session.volume(),
                 pitch,
                 session.looping(),
                 session.state()
         );
+        anchorNanos = now;
 
         log("Pitch changed: " + pitch);
     }
@@ -224,18 +255,25 @@ public final class MockAudioPlayer implements AudioPlayer {
             return;
         }
 
+        long now = System.nanoTime();
         PlaybackSession.Snapshot session = currentSession;
+        double currentPosition = normalizePosition(
+                calculatePosition(session, anchorNanos, now),
+                session.durationSeconds(),
+                looping
+        );
 
         currentSession = new PlaybackSession.Snapshot(
                 session.id(),
                 session.resourceId(),
-                session.positionSeconds(),
+                currentPosition,
                 session.durationSeconds(),
                 session.volume(),
                 session.pitch(),
                 looping,
                 session.state()
         );
+        anchorNanos = now;
 
         log("Looping changed: " + looping);
     }
@@ -253,10 +291,44 @@ public final class MockAudioPlayer implements AudioPlayer {
             return Optional.empty();
         }
 
+        long now = System.nanoTime();
+        PlaybackSession.Snapshot session = currentSession;
+        double position = calculatePosition(
+                session,
+                anchorNanos,
+                now
+        );
+
+        if (session.state() == PlaybackSession.State.PLAYING
+                && session.durationSeconds() > 0.0
+                && !session.looping()
+                && position >= session.durationSeconds()) {
+
+            double endPosition = session.durationSeconds();
+
+            currentSession = new PlaybackSession.Snapshot(
+                    session.id(),
+                    session.resourceId(),
+                    endPosition,
+                    session.durationSeconds(),
+                    session.volume(),
+                    session.pitch(),
+                    false,
+                    PlaybackSession.State.STOPPED
+            );
+
+            return Optional.of(
+                    new PlaybackStatus(
+                            PlaybackSession.State.STOPPED,
+                            endPosition
+                    )
+            );
+        }
+
         return Optional.of(
                 new PlaybackStatus(
-                        currentSession.state(),
-                        currentSession.positionSeconds()
+                        session.state(),
+                        position
                 )
         );
     }
@@ -264,6 +336,51 @@ public final class MockAudioPlayer implements AudioPlayer {
     // --------------------------------------------------
     // Internal helpers
     // --------------------------------------------------
+
+    private static double calculatePosition(
+            PlaybackSession.Snapshot session,
+            long anchorNanos,
+            long nowNanos
+    ) {
+
+        if (session.state() != PlaybackSession.State.PLAYING) {
+            return session.positionSeconds();
+        }
+
+        double elapsedSeconds =
+                Math.max(0L, nowNanos - anchorNanos)
+                        / 1_000_000_000.0;
+
+        double currentPosition =
+                session.positionSeconds()
+                        + elapsedSeconds * session.pitch();
+
+        return normalizePosition(
+                currentPosition,
+                session.durationSeconds(),
+                session.looping()
+        );
+    }
+
+    private static double normalizePosition(
+            double position,
+            double durationSeconds,
+            boolean looping
+    ) {
+
+        if (durationSeconds <= 0.0) {
+            return Math.max(0.0, position);
+        }
+
+        if (looping) {
+            return position % durationSeconds;
+        }
+
+        return Math.min(
+                Math.max(0.0, position),
+                durationSeconds
+        );
+    }
 
     private boolean isCurrentSession(UUID sessionId) {
 
