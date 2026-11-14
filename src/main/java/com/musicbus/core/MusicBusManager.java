@@ -660,18 +660,18 @@ public final class MusicBusManager {
             Object instance
     ) throws Exception {
 
-        Object location = invokeNoArgs(
+        Object identifier = invokeNoArgs(
                 instance,
-                "getLocation"
+                "getIdentifier"
         );
 
-        if (location == null) {
+        if (identifier == null) {
             throw new IllegalStateException(
-                    "SoundInstance location is null"
+                    "SoundInstance identifier is null"
             );
         }
 
-        String resourceId = location.toString();
+        String resourceId = identifier.toString();
 
         float volume = readFloat(
                 instance,
