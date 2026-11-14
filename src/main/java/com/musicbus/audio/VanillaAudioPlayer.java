@@ -1,12 +1,14 @@
 package com.musicbus.audio;
 
+import com.musicbus.core.MusicBusManager;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 /**
  * Vanilla Minecraft implementation of AudioPlayer.
  *
@@ -231,9 +233,66 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     @Override
     public void resume(PlaybackSession.Snapshot session) {
 
-        throw unsupported(
-                "Individual vanilla SoundInstance resume"
-        );
+        if (session == null) {
+            throw new IllegalArgumentException(
+                    "Session cannot be null"
+            );
+        }
+
+        if (session.state() == PlaybackSession.State.STOPPED) {
+            stop(session.id());
+            return;
+        }
+
+        Entry entry = getEntry(session.id());
+
+        if (entry == null) {
+            throw new IllegalStateException(
+                    "No SoundInstance registered for session: "
+                            + session.id()
+            );
+        }
+
+        ensureClientThread();
+
+        double targetPosition = Math.max(0.0, session.positionSeconds());
+
+        try {
+
+            MusicBusManager.setPendingResumeSeconds(targetPosition);
+
+            try {
+                invokeSoundManager(
+                        "play",
+                        entry.soundInstance
+                );
+            } finally {
+                MusicBusManager.clearPendingResumeSeconds();
+            }
+
+            synchronized (entry) {
+
+                entry.state = PlaybackSession.State.PLAYING;
+                entry.positionSeconds = targetPosition;
+                entry.durationSeconds = session.durationSeconds();
+                entry.volume = session.volume();
+                entry.pitch = session.pitch();
+                entry.looping = session.looping();
+                entry.anchorNanos = System.nanoTime();
+            }
+
+            log("Vanilla playback resumed: "
+                    + session.id()
+                    + " at "
+                    + String.format(Locale.ROOT, "%.2fs", targetPosition));
+
+        } catch (Exception error) {
+
+            throw new IllegalStateException(
+                    "Failed to resume vanilla playback",
+                    error
+            );
+        }
     }
 
     // --------------------------------------------------

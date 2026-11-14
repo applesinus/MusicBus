@@ -7,13 +7,19 @@ import com.musicbus.audio.PlaybackSession;
 import com.musicbus.audio.VanillaAudioPlayer;
 import com.musicbus.config.MusicBusConfig;
 
+import javax.sound.sampled.AudioFormat;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public final class MusicBusManager {
 
@@ -25,6 +31,9 @@ public final class MusicBusManager {
 
     private static final ThreadLocal<Boolean> AUDIO_PLAYER_TRANSITION =
             ThreadLocal.withInitial(() -> false);
+
+    private static final ThreadLocal<Double> PENDING_RESUME_SECONDS =
+            new ThreadLocal<>();
 
     private static final Map<Object, PlaybackSession> SESSIONS =
             new IdentityHashMap<>();
@@ -273,12 +282,6 @@ public final class MusicBusManager {
                     Object vanillaInstance = findInstanceForSession(session);
 
                     if (vanillaInstance != null) {
-
-                        session.seek(0.0);
-
-                        PlaybackSession.Snapshot snapshot =
-                                session.snapshot();
-
                         PlaybackSession targetSession = session;
 
                         duringAudioPlayerTransition(
@@ -344,14 +347,8 @@ public final class MusicBusManager {
              */
             enabled = false;
 
-            /*
-             * Vanilla cannot restore arbitrary playback positions.
-             * Restart the session from the beginning.
-             */
-            session.seek(0.0);
-
             duringAudioPlayerTransition(
-                    () -> vanillaPlayer.play(session.snapshot())
+                    () -> vanillaPlayer.resume(session.snapshot())
             );
 
             log("Mock -> Vanilla transition successful.");
@@ -935,7 +932,238 @@ public final class MusicBusManager {
     }
 
     // --------------------------------------------------
-    // Backend transition guard
+    // Vanilla stream resume / seek
+    // --------------------------------------------------
+
+    public static void setPendingResumeSeconds(double seconds) {
+
+        if (Double.isFinite(seconds) && seconds > 0.0) {
+            PENDING_RESUME_SECONDS.set(seconds);
+        } else {
+            PENDING_RESUME_SECONDS.remove();
+        }
+    }
+
+    public static void clearPendingResumeSeconds() {
+        PENDING_RESUME_SECONDS.remove();
+    }
+
+    private static Double consumePendingResumeSeconds() {
+
+        Double seconds = PENDING_RESUME_SECONDS.get();
+        PENDING_RESUME_SECONDS.remove();
+        return seconds;
+    }
+
+    /**
+     * Called from SoundBufferLibrary.getStream(Identifier, boolean).
+     */
+    public static CompletableFuture<?> wrapAudioStreamFuture(
+            CompletableFuture<?> future
+    ) {
+
+        Double targetSeconds = consumePendingResumeSeconds();
+
+        if (future == null
+                || targetSeconds == null
+                || !Double.isFinite(targetSeconds)
+                || targetSeconds <= 0.0) {
+            return future;
+        }
+
+        final double seconds = targetSeconds;
+
+        return future.thenApply(
+                stream -> seekAudioStream(stream, seconds)
+        );
+    }
+
+    private static Object seekAudioStream(
+            Object stream,
+            double targetSeconds
+    ) {
+
+        if (stream == null || targetSeconds <= 0.0) {
+            return stream;
+        }
+
+        try {
+
+            Class<?> audioStreamClass = Class.forName(
+                    "net.minecraft.client.sounds.AudioStream",
+                    false,
+                    stream.getClass().getClassLoader()
+            );
+
+            Method getFormatMethod = audioStreamClass.getMethod("getFormat");
+            Method readMethod = audioStreamClass.getMethod("read", int.class);
+
+            AudioFormat format = (AudioFormat) getFormatMethod.invoke(stream);
+
+            if (format == null) {
+                return stream;
+            }
+
+            int frameSize = format.getFrameSize();
+            float frameRate = format.getFrameRate();
+            double bytesPerSecond;
+
+            if (frameSize > 0 && frameRate > 0.0f) {
+                bytesPerSecond = (double) frameSize * (double) frameRate;
+            } else {
+                float sampleRate = format.getSampleRate();
+                int channels = format.getChannels();
+                int sampleBits = format.getSampleSizeInBits();
+
+                if (sampleRate <= 0.0f || channels <= 0 || sampleBits <= 0) {
+                    return stream;
+                }
+
+                int computedFrameSize = (channels * sampleBits) / 8;
+                if (computedFrameSize <= 0) {
+                    return stream;
+                }
+
+                frameSize = computedFrameSize;
+                bytesPerSecond = (double) sampleRate * (double) frameSize;
+            }
+
+            long bytesToSkip = Math.round(targetSeconds * bytesPerSecond);
+            if (frameSize > 1) {
+                bytesToSkip -= bytesToSkip % frameSize;
+            }
+
+            if (bytesToSkip <= 0L) {
+                return stream;
+            }
+
+            long remaining = bytesToSkip;
+            ByteBuffer leftover = null;
+            final int chunkSize = Math.max(frameSize * 4096, 16384);
+
+            while (remaining > 0L) {
+
+                int request = (int) Math.min(
+                        chunkSize,
+                        Math.max(remaining, frameSize)
+                );
+
+                ByteBuffer buffer = (ByteBuffer) readMethod.invoke(
+                        stream,
+                        request
+                );
+
+                if (buffer == null || !buffer.hasRemaining()) {
+                    break;
+                }
+
+                int available = buffer.remaining();
+                if (available <= remaining) {
+                    remaining -= available;
+                } else {
+                    buffer.position(buffer.position() + (int) remaining);
+                    leftover = buffer;
+                    remaining = 0L;
+                }
+            }
+
+            log("AudioStream skipped to "
+                    + String.format(Locale.ROOT, "%.2fs", targetSeconds)
+                    + " (bytes skipped: "
+                    + (bytesToSkip - remaining)
+                    + ")");
+
+            if (leftover == null || !leftover.hasRemaining()) {
+                return stream;
+            }
+
+            return wrapRemainingStream(
+                    audioStreamClass,
+                    stream,
+                    readMethod,
+                    leftover
+            );
+
+        } catch (Exception error) {
+
+            log("WARNING: Failed to seek AudioStream to "
+                    + targetSeconds + "s: " + error);
+
+            return stream;
+        }
+    }
+
+    private static Object wrapRemainingStream(
+            Class<?> audioStreamClass,
+            Object delegate,
+            Method readMethod,
+            ByteBuffer leftover
+    ) {
+
+        final ByteBuffer[] pendingRef = new ByteBuffer[] { leftover };
+
+        return Proxy.newProxyInstance(
+                audioStreamClass.getClassLoader(),
+                new Class<?>[] { audioStreamClass },
+                (proxy, method, args) -> {
+
+                    String name = method.getName();
+
+                    if (method.getDeclaringClass() == Object.class) {
+                        return switch (name) {
+                            case "equals" -> args != null
+                                    && args.length == 1
+                                    && proxy == args[0];
+                            case "hashCode" -> System.identityHashCode(proxy);
+                            case "toString" -> "SeekingAudioStream[" + delegate + "]";
+                            default -> method.invoke(delegate, args);
+                        };
+                    }
+
+                    if ("read".equals(name)
+                            && args != null
+                            && args.length == 1
+                            && args[0] instanceof Integer requested) {
+
+                        ByteBuffer pending = pendingRef[0];
+                        if (pending != null && pending.hasRemaining()) {
+
+                            if (requested <= 0) {
+                                return ByteBuffer.allocate(0);
+                            }
+
+                            if (pending.remaining() <= requested) {
+                                pendingRef[0] = null;
+                                return pending;
+                            }
+
+                            ByteBuffer slice = pending.slice();
+                            slice.order(pending.order());
+                            slice.limit(requested);
+                            pending.position(pending.position() + requested);
+                            return slice;
+                        }
+
+                        try {
+                            return readMethod.invoke(delegate, requested);
+                        } catch (InvocationTargetException error) {
+                            Throwable cause = error.getCause();
+                            throw (cause != null) ? cause : error;
+                        }
+                    }
+
+                    try {
+                        return method.invoke(delegate, args);
+                    } catch (InvocationTargetException error) {
+                        Throwable cause = error.getCause();
+                        throw (cause != null) ? cause : error;
+                    }
+                }
+        );
+    }
+
+    // --------------------------------------------------
+    // Audio Player transition guard
     // --------------------------------------------------
 
     private static boolean isAudioPlayerTransition() {

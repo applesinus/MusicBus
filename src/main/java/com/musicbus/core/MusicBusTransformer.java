@@ -25,6 +25,9 @@ public final class MusicBusTransformer
     private static final String ABSTRACT_SOUND_INSTANCE =
             "net/minecraft/client/resources/sounds/AbstractSoundInstance";
 
+    private static final String SOUND_BUFFER_LIBRARY =
+            "net/minecraft/client/sounds/SoundBufferLibrary";
+
     private static final String SOUND_SOURCE =
             "net/minecraft/sounds/SoundSource";
 
@@ -67,6 +70,10 @@ public final class MusicBusTransformer
 
         if (ABSTRACT_SOUND_INSTANCE.equals(className)) {
             return transformAbstractSoundInstance(classfileBuffer);
+        }
+
+        if (SOUND_BUFFER_LIBRARY.equals(className)) {
+            return transformSoundBufferLibrary(classfileBuffer);
         }
 
         return null;
@@ -550,6 +557,97 @@ public final class MusicBusTransformer
 
         System.out.println(
                 "[MusicBus] AbstractSoundInstance transformed."
+        );
+
+        return writer.toByteArray();
+    }
+
+    /**
+     * Wraps CompletableFuture<AudioStream> returned by
+     * SoundBufferLibrary.getStream() when resuming vanilla playback
+     * from a non-zero position.
+     */
+    private byte[] transformSoundBufferLibrary(byte[] originalBytes) {
+
+        ClassReader reader = new ClassReader(originalBytes);
+
+        ClassWriter writer = new ClassWriter(
+                reader,
+                ClassWriter.COMPUTE_MAXS
+        );
+
+        boolean[] found = {false};
+
+        ClassVisitor visitor = new ClassVisitor(
+                Opcodes.ASM9,
+                writer
+        ) {
+
+            @Override
+            public MethodVisitor visitMethod(
+                    int access,
+                    String name,
+                    String descriptor,
+                    String signature,
+                    String[] exceptions
+            ) {
+
+                MethodVisitor mv = super.visitMethod(
+                        access,
+                        name,
+                        descriptor,
+                        signature,
+                        exceptions
+                );
+
+                if (!name.equals("getStream")
+                        || !descriptor.equals(
+                                "(Lnet/minecraft/resources/Identifier;Z)"
+                                + "Ljava/util/concurrent/CompletableFuture;"
+                        )) {
+                    return mv;
+                }
+
+                found[0] = true;
+
+                System.out.println(
+                        "[MusicBus] Hooked SoundBufferLibrary.getStream()."
+                );
+
+                return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                    @Override
+                    public void visitInsn(int opcode) {
+
+                        if (opcode == Opcodes.ARETURN) {
+
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    MANAGER,
+                                    "wrapAudioStreamFuture",
+                                    "(Ljava/util/concurrent/CompletableFuture;)"
+                                    + "Ljava/util/concurrent/CompletableFuture;",
+                                    false
+                            );
+                        }
+
+                        super.visitInsn(opcode);
+                    }
+                };
+            }
+        };
+
+        reader.accept(visitor, 0);
+
+        if (!found[0]) {
+            System.err.println(
+                    "[MusicBus] SoundBufferLibrary.getStream() not found!"
+            );
+            return null;
+        }
+
+        System.out.println(
+                "[MusicBus] SoundBufferLibrary transformed."
         );
 
         return writer.toByteArray();
