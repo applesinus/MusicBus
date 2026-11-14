@@ -59,6 +59,14 @@ public final class MockAudioPlayer implements AudioPlayer {
 
         log("Playback started: " + session.id());
         log("Resource: " + session.resourceId());
+        if (session.oggPath() != null) {
+            log("OGG: " + session.oggPath()
+                    + " (" + String.format(
+                            java.util.Locale.ROOT,
+                            "%.2fs",
+                            session.durationSeconds()
+                    ) + ")");
+        }
         log("Position: " + session.positionSeconds() + "s");
     }
 
@@ -101,14 +109,8 @@ public final class MockAudioPlayer implements AudioPlayer {
                 System.nanoTime()
         );
 
-        currentSession = new PlaybackSession.Snapshot(
-                session.id(),
-                session.resourceId(),
+        currentSession = session.withPositionAndState(
                 currentPosition,
-                session.durationSeconds(),
-                session.volume(),
-                session.pitch(),
-                session.looping(),
                 PlaybackSession.State.PAUSED
         );
 
@@ -167,16 +169,7 @@ public final class MockAudioPlayer implements AudioPlayer {
                 session.looping()
         );
 
-        currentSession = new PlaybackSession.Snapshot(
-                session.id(),
-                session.resourceId(),
-                normalized,
-                session.durationSeconds(),
-                session.volume(),
-                session.pitch(),
-                session.looping(),
-                session.state()
-        );
+        currentSession = session.withPosition(normalized);
         anchorNanos = System.nanoTime();
 
         log("Playback seek: " + normalized + "s");
@@ -196,16 +189,7 @@ public final class MockAudioPlayer implements AudioPlayer {
 
         PlaybackSession.Snapshot session = currentSession;
 
-        currentSession = new PlaybackSession.Snapshot(
-                session.id(),
-                session.resourceId(),
-                session.positionSeconds(),
-                session.durationSeconds(),
-                volume,
-                session.pitch(),
-                session.looping(),
-                session.state()
-        );
+        currentSession = session.withVolume(volume);
 
         log("Volume changed: " + volume);
     }
@@ -230,15 +214,9 @@ public final class MockAudioPlayer implements AudioPlayer {
                 now
         );
 
-        currentSession = new PlaybackSession.Snapshot(
-                session.id(),
-                session.resourceId(),
+        currentSession = session.withPositionAndPitch(
                 currentPosition,
-                session.durationSeconds(),
-                session.volume(),
-                pitch,
-                session.looping(),
-                session.state()
+                pitch
         );
         anchorNanos = now;
 
@@ -263,15 +241,9 @@ public final class MockAudioPlayer implements AudioPlayer {
                 looping
         );
 
-        currentSession = new PlaybackSession.Snapshot(
-                session.id(),
-                session.resourceId(),
+        currentSession = session.withPositionAndLooping(
                 currentPosition,
-                session.durationSeconds(),
-                session.volume(),
-                session.pitch(),
-                looping,
-                session.state()
+                looping
         );
         anchorNanos = now;
 
@@ -306,14 +278,8 @@ public final class MockAudioPlayer implements AudioPlayer {
 
             double endPosition = session.durationSeconds();
 
-            currentSession = new PlaybackSession.Snapshot(
-                    session.id(),
-                    session.resourceId(),
+            currentSession = session.withPositionAndState(
                     endPosition,
-                    session.durationSeconds(),
-                    session.volume(),
-                    session.pitch(),
-                    false,
                     PlaybackSession.State.STOPPED
             );
 

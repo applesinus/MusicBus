@@ -20,6 +20,8 @@ public final class PlaybackSession {
 
     private final UUID id;
     private final String resourceId;
+    private final String oggPath;
+    private final byte[] oggData;
     private final double durationSeconds;
 
     private double positionSeconds;
@@ -33,6 +35,28 @@ public final class PlaybackSession {
 
     public PlaybackSession(
             String resourceId,
+            double durationSeconds,
+            double initialPositionSeconds,
+            float volume,
+            float pitch,
+            boolean looping
+    ) {
+        this(
+                resourceId,
+                null,
+                null,
+                durationSeconds,
+                initialPositionSeconds,
+                volume,
+                pitch,
+                looping
+        );
+    }
+
+    public PlaybackSession(
+            String resourceId,
+            String oggPath,
+            byte[] oggData,
             double durationSeconds,
             double initialPositionSeconds,
             float volume,
@@ -53,6 +77,18 @@ public final class PlaybackSession {
             );
         }
 
+        if (oggPath != null && oggPath.isBlank()) {
+            throw new IllegalArgumentException(
+                    "oggPath cannot be blank"
+            );
+        }
+
+        if (oggData != null && oggData.length == 0) {
+            throw new IllegalArgumentException(
+                    "oggData cannot be empty"
+            );
+        }
+
         if (!Double.isFinite(durationSeconds)
                 || durationSeconds < 0.0) {
             throw new IllegalArgumentException(
@@ -64,6 +100,8 @@ public final class PlaybackSession {
         validateVolume(volume);
         validatePitch(pitch);
 
+        this.oggPath = oggPath;
+        this.oggData = oggData;
         this.durationSeconds = durationSeconds;
         this.volume = volume;
         this.pitch = pitch;
@@ -77,7 +115,7 @@ public final class PlaybackSession {
     }
 
     // ------------------------------------------
-    // Identity
+    // Identity & resource payload
     // ------------------------------------------
 
     public UUID getId() {
@@ -86,6 +124,18 @@ public final class PlaybackSession {
 
     public String getResourceId() {
         return resourceId;
+    }
+
+    public String getOggPath() {
+        return oggPath;
+    }
+
+    public byte[] getOggData() {
+        return oggData;
+    }
+
+    public boolean hasOggData() {
+        return oggData != null && oggData.length > 0;
     }
 
     public double getDurationSeconds() {
@@ -248,6 +298,8 @@ public final class PlaybackSession {
         return new Snapshot(
                 id,
                 resourceId,
+                oggPath,
+                oggData,
                 positionSeconds,
                 durationSeconds,
                 volume,
@@ -295,11 +347,117 @@ public final class PlaybackSession {
     public record Snapshot(
             UUID id,
             String resourceId,
+            String oggPath,
+            byte[] oggData,
             double positionSeconds,
             double durationSeconds,
             float volume,
             float pitch,
             boolean looping,
             State state
-    ) {}
+    ) {
+
+        public boolean hasOggData() {
+            return oggData != null && oggData.length > 0;
+        }
+
+        public Snapshot withState(State newState) {
+            return new Snapshot(
+                    id,
+                    resourceId,
+                    oggPath,
+                    oggData,
+                    positionSeconds,
+                    durationSeconds,
+                    volume,
+                    pitch,
+                    looping,
+                    newState
+            );
+        }
+
+        public Snapshot withPosition(double newPositionSeconds) {
+            return new Snapshot(
+                    id,
+                    resourceId,
+                    oggPath,
+                    oggData,
+                    newPositionSeconds,
+                    durationSeconds,
+                    volume,
+                    pitch,
+                    looping,
+                    state
+            );
+        }
+
+        public Snapshot withPositionAndState(
+                double newPositionSeconds,
+                State newState
+        ) {
+            return new Snapshot(
+                    id,
+                    resourceId,
+                    oggPath,
+                    oggData,
+                    newPositionSeconds,
+                    durationSeconds,
+                    volume,
+                    pitch,
+                    looping,
+                    newState
+            );
+        }
+
+        public Snapshot withVolume(float newVolume) {
+            return new Snapshot(
+                    id,
+                    resourceId,
+                    oggPath,
+                    oggData,
+                    positionSeconds,
+                    durationSeconds,
+                    newVolume,
+                    pitch,
+                    looping,
+                    state
+            );
+        }
+
+        public Snapshot withPositionAndPitch(
+                double newPositionSeconds,
+                float newPitch
+        ) {
+            return new Snapshot(
+                    id,
+                    resourceId,
+                    oggPath,
+                    oggData,
+                    newPositionSeconds,
+                    durationSeconds,
+                    volume,
+                    newPitch,
+                    looping,
+                    state
+            );
+        }
+
+        public Snapshot withPositionAndLooping(
+                double newPositionSeconds,
+                boolean newLooping
+        ) {
+            return new Snapshot(
+                    id,
+                    resourceId,
+                    oggPath,
+                    oggData,
+                    newPositionSeconds,
+                    durationSeconds,
+                    volume,
+                    pitch,
+                    newLooping,
+                    state
+            );
+        }
+    }
 }

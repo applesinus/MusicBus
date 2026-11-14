@@ -194,7 +194,7 @@ public final class MusicBusTransformer
                 ClassWriter.COMPUTE_MAXS
         );
 
-        boolean[] found = new boolean[3];
+        boolean[] found = new boolean[8];
 
         ClassVisitor visitor = new ClassVisitor(
                 Opcodes.ASM9,
@@ -443,13 +443,184 @@ public final class MusicBusTransformer
                     };
                 }
 
+                // ------------------------------------------
+                // 4. SoundEngine.refreshCategoryVolume(SoundSource)
+                // ------------------------------------------
+
+                if (name.equals("refreshCategoryVolume")
+                        && descriptor.equals(
+                                "(Lnet/minecraft/sounds/SoundSource;)V"
+                        )) {
+
+                    found[3] = true;
+
+                    System.out.println(
+                            "[MusicBus] Hooked SoundEngine.refreshCategoryVolume()."
+                    );
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+
+                            super.visitCode();
+
+                            super.visitVarInsn(Opcodes.ALOAD, 0);
+                            super.visitVarInsn(Opcodes.ALOAD, 1);
+
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    MANAGER,
+                                    "onCategoryVolumeRefreshed",
+                                    "(Ljava/lang/Object;Ljava/lang/Object;)V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                // ------------------------------------------
+                // 5. SoundEngine.pauseAllExcept(SoundSource...)
+                // ------------------------------------------
+
+                if (name.equals("pauseAllExcept")
+                        && descriptor.equals(
+                                "([Lnet/minecraft/sounds/SoundSource;)V"
+                        )) {
+
+                    found[4] = true;
+
+                    System.out.println(
+                            "[MusicBus] Hooked SoundEngine.pauseAllExcept()."
+                    );
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+
+                            super.visitCode();
+
+                            super.visitVarInsn(Opcodes.ALOAD, 1);
+
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    MANAGER,
+                                    "onPauseAllExcept",
+                                    "([Ljava/lang/Object;)V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                // ------------------------------------------
+                // 6. SoundEngine.resume()
+                // ------------------------------------------
+
+                if (name.equals("resume")
+                        && descriptor.equals("()V")) {
+
+                    found[5] = true;
+
+                    System.out.println(
+                            "[MusicBus] Hooked SoundEngine.resume()."
+                    );
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+
+                            super.visitCode();
+
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    MANAGER,
+                                    "onSoundEngineResume",
+                                    "()V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                // ------------------------------------------
+                // 7. SoundEngine.stop(Identifier, SoundSource)
+                // ------------------------------------------
+
+                if (name.equals("stop")
+                        && descriptor.equals(
+                                "(Lnet/minecraft/resources/Identifier;"
+                                + "Lnet/minecraft/sounds/SoundSource;)V"
+                        )) {
+
+                    found[6] = true;
+
+                    System.out.println(
+                            "[MusicBus] Hooked SoundEngine.stop(Identifier, SoundSource)."
+                    );
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+
+                            super.visitCode();
+
+                            super.visitVarInsn(Opcodes.ALOAD, 1);
+                            super.visitVarInsn(Opcodes.ALOAD, 2);
+
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    MANAGER,
+                                    "onStopByIdAndSource",
+                                    "(Ljava/lang/Object;Ljava/lang/Object;)V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
+                // ------------------------------------------
+                // 8. SoundEngine.stopAll()
+                // ------------------------------------------
+
+                if (name.equals("stopAll")
+                        && descriptor.equals("()V")) {
+
+                    found[7] = true;
+
+                    System.out.println(
+                            "[MusicBus] Hooked SoundEngine.stopAll()."
+                    );
+
+                    return new MethodVisitor(Opcodes.ASM9, mv) {
+
+                        @Override
+                        public void visitCode() {
+
+                            super.visitCode();
+
+                            super.visitMethodInsn(
+                                    Opcodes.INVOKESTATIC,
+                                    MANAGER,
+                                    "onStopAll",
+                                    "()V",
+                                    false
+                            );
+                        }
+                    };
+                }
+
                 return mv;
             }
         };
 
         reader.accept(visitor, 0);
 
-        if (!found[0] || !found[1] || !found[2]) {
+        if (!found[0] || !found[1] || !found[2] || !found[3]
+                || !found[4] || !found[5] || !found[6] || !found[7]) {
 
             System.err.println(
                     "[MusicBus] SoundEngine transformation incomplete!"
@@ -465,6 +636,26 @@ public final class MusicBusTransformer
 
             System.err.println(
                     "[MusicBus] stop found: " + found[2]
+            );
+
+            System.err.println(
+                    "[MusicBus] refreshCategoryVolume found: " + found[3]
+            );
+
+            System.err.println(
+                    "[MusicBus] pauseAllExcept found: " + found[4]
+            );
+
+            System.err.println(
+                    "[MusicBus] resume found: " + found[5]
+            );
+
+            System.err.println(
+                    "[MusicBus] stop(Id, Source) found: " + found[6]
+            );
+
+            System.err.println(
+                    "[MusicBus] stopAll found: " + found[7]
             );
 
             // Do not install a partially functioning interceptor.

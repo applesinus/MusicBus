@@ -3,6 +3,7 @@ package com.musicbus.core;
 
 import com.musicbus.audio.AudioPlayer;
 import com.musicbus.audio.MockAudioPlayer;
+import com.musicbus.audio.OggResourceResolver;
 import com.musicbus.audio.PlaybackSession;
 import com.musicbus.audio.VanillaAudioPlayer;
 import com.musicbus.config.MusicBusConfig;
@@ -42,8 +43,14 @@ public final class MusicBusManager {
     private static final Map<Object, Object> LOCKED_SOUNDS =
             new IdentityHashMap<>();
 
+    private static final Map<Object, Float> BASE_VOLUMES =
+            new IdentityHashMap<>();
+
     private static final Set<Object> BUS_ROUTED_INSTANCES =
             Collections.newSetFromMap(new IdentityHashMap<>());
+
+    private static volatile Method calculateVolumeMethod;
+    private static volatile Object musicSoundSource;
 
     private static AudioPlayer BusedPlayer;
     private static VanillaAudioPlayer vanillaPlayer;
@@ -245,6 +252,14 @@ public final class MusicBusManager {
                     () -> vanillaPlayer.stop(targetSession.getId())
             );
 
+            float baseVolume;
+            synchronized (STATE_LOCK) {
+                baseVolume = BASE_VOLUMES.getOrDefault(instance, 1.0f);
+            }
+            session.setVolume(
+                    calculateEffectiveMusicVolume(null, baseVolume)
+            );
+
             PlaybackSession.Snapshot snapshot =
                     session.snapshot();
 
@@ -362,8 +377,13 @@ public final class MusicBusManager {
             enabled = false;
 
             if (previousState.state() != PlaybackSession.State.STOPPED) {
+                if (previousState.state() == PlaybackSession.State.PAUSED) {
+                    session.resume();
+                }
+                final PlaybackSession.Snapshot handoffSnapshot =
+                        session.snapshot();
                 duringAudioPlayerTransition(
-                        () -> vanillaPlayer.resume(previousState)
+                        () -> vanillaPlayer.resume(handoffSnapshot)
                 );
             } else {
                 retireSession(instance, session);
@@ -583,6 +603,344 @@ public final class MusicBusManager {
         return false;
     }
 
+    /**
+     * Called from SoundEngine.refreshCategoryVolume(SoundSource).
+     *
+     * Handles both Options slider changes (MASTER / MUSIC) and
+     * MusicManager.fadePlaying() updates via updateCategoryVolume().
+     */
+    public static void onCategoryVolumeRefreshed(
+            Object soundEngine,
+            Object soundSource
+    ) {
+
+        if (!initialized || soundSource == null) {
+            return;
+        }
+
+        if (!(soundSource instanceof Enum<?> category)) {
+            return;
+        }
+
+        String categoryName = category.name();
+        if (!"MUSIC".equals(categoryName)
+                && !"MASTER".equals(categoryName)) {
+            return;
+        }
+
+        PlaybackSession session;
+        Object instance;
+        float baseVolume;
+        boolean busedPlayerRouted;
+
+        synchronized (STATE_LOCK) {
+            session = currentSession;
+            instance = currentSoundInstance;
+            baseVolume = (instance != null)
+                    ? BASE_VOLUMES.getOrDefault(instance, 1.0f)
+                    : 1.0f;
+            busedPlayerRouted = instance != null
+                    && BUS_ROUTED_INSTANCES.contains(instance);
+        }
+
+        if (session == null
+                || instance == null
+                || session.getState() == PlaybackSession.State.STOPPED) {
+            return;
+        }
+
+        float effectiveVolume = calculateEffectiveMusicVolume(
+                soundEngine,
+                baseVolume
+        );
+
+        session.setVolume(effectiveVolume);
+
+        if (enabled && busedPlayerRouted && BusedPlayer != null) {
+            try {
+                BusedPlayer.setVolume(session.getId(), effectiveVolume);
+            } catch (Exception error) {
+                log("WARNING: Failed to update bused volume: " + error);
+            }
+        }
+    }
+
+    private static float calculateEffectiveMusicVolume(
+            Object soundEngineObj,
+            float baseVolume
+    ) {
+
+        float clampedBase = Math.max(0.0f, Math.min(1.0f, baseVolume));
+
+        try {
+
+            Object soundEngine = (soundEngineObj != null)
+                    ? soundEngineObj
+                    : getSoundEngine();
+
+            if (soundEngine == null) {
+                return clampedBase;
+            }
+
+            Method method = calculateVolumeMethod;
+            Object musicSource = musicSoundSource;
+
+            if (method == null || musicSource == null) {
+
+                ClassLoader loader = soundEngine.getClass().getClassLoader();
+                Class<?> soundSourceClass = Class.forName(
+                        "net.minecraft.sounds.SoundSource",
+                        false,
+                        loader
+                );
+
+                @SuppressWarnings({"unchecked", "rawtypes"})
+                Object resolvedSource = Enum.valueOf(
+                        (Class<? extends Enum>) soundSourceClass,
+                        "MUSIC"
+                );
+
+                Method resolvedMethod = soundEngine.getClass().getDeclaredMethod(
+                        "calculateVolume",
+                        float.class,
+                        soundSourceClass
+                );
+                resolvedMethod.setAccessible(true);
+
+                musicSoundSource = resolvedSource;
+                calculateVolumeMethod = resolvedMethod;
+
+                musicSource = resolvedSource;
+                method = resolvedMethod;
+            }
+
+            Object result = method.invoke(
+                    soundEngine,
+                    clampedBase,
+                    musicSource
+            );
+
+            if (result instanceof Number number) {
+                float value = number.floatValue();
+                if (Float.isFinite(value)) {
+                    return Math.max(0.0f, Math.min(1.0f, value));
+                }
+            }
+
+        } catch (Exception error) {
+
+            log("WARNING: Failed to calculate effective music volume: "
+                    + error);
+        }
+
+        return clampedBase;
+    }
+
+    private static Object getSoundEngine() throws Exception {
+
+        Object minecraft = getMinecraftInstance();
+        if (minecraft == null) {
+            return null;
+        }
+
+        Object soundManager = findObjectByType(minecraft, "SoundManager");
+        if (soundManager == null) {
+            return null;
+        }
+
+        return findObjectByType(soundManager, "SoundEngine");
+    }
+
+    // --------------------------------------------------
+    // SoundEngine lifecycle hooks
+    // --------------------------------------------------
+
+    /**
+     * Called from SoundEngine.pauseAllExcept(SoundSource...).
+     */
+    public static void onPauseAllExcept(Object[] exceptedSources) {
+
+        if (!initialized || !enabled || isAudioPlayerTransition()) {
+            return;
+        }
+
+        if (exceptedSources != null) {
+            for (Object source : exceptedSources) {
+                if (source instanceof Enum<?> category
+                        && "MUSIC".equals(category.name())) {
+                    return;
+                }
+            }
+        }
+
+        PlaybackSession session;
+        Object instance;
+        boolean busedPlayerRouted;
+
+        synchronized (STATE_LOCK) {
+            session = currentSession;
+            instance = currentSoundInstance;
+            busedPlayerRouted = instance != null
+                    && BUS_ROUTED_INSTANCES.contains(instance);
+        }
+
+        if (session == null
+                || !busedPlayerRouted
+                || BusedPlayer == null
+                || session.getState() != PlaybackSession.State.PLAYING) {
+            return;
+        }
+
+        try {
+            BusedPlayer.getStatus(session.getId())
+                    .ifPresent(session::sync);
+        } catch (Exception ignored) {
+        }
+
+        if (session.getState() == PlaybackSession.State.STOPPED) {
+            retireSession(instance, session);
+            return;
+        }
+
+        if (session.getState() != PlaybackSession.State.PLAYING) {
+            return;
+        }
+
+        session.pause();
+
+        try {
+            BusedPlayer.pause(session.getId());
+        } catch (Exception error) {
+            log("WARNING: Failed to pause bused player: " + error);
+        }
+    }
+
+    /**
+     * Called from SoundEngine.resume().
+     */
+    public static void onSoundEngineResume() {
+
+        if (!initialized || !enabled || isAudioPlayerTransition()) {
+            return;
+        }
+
+        PlaybackSession session;
+        Object instance;
+        boolean busedPlayerRouted;
+
+        synchronized (STATE_LOCK) {
+            session = currentSession;
+            instance = currentSoundInstance;
+            busedPlayerRouted = instance != null
+                    && BUS_ROUTED_INSTANCES.contains(instance);
+        }
+
+        if (session == null
+                || !busedPlayerRouted
+                || BusedPlayer == null
+                || session.getState() != PlaybackSession.State.PAUSED) {
+            return;
+        }
+
+        session.resume();
+
+        try {
+            BusedPlayer.resume(session.snapshot());
+        } catch (Exception error) {
+            log("WARNING: Failed to resume bused player: " + error);
+        }
+    }
+
+    /**
+     * Called from SoundEngine.stop(Identifier, SoundSource).
+     */
+    public static void onStopByIdAndSource(
+            Object identifier,
+            Object soundSource
+    ) {
+
+        if (!initialized || isAudioPlayerTransition()) {
+            return;
+        }
+
+        if (soundSource != null) {
+            if (!(soundSource instanceof Enum<?> category)
+                    || !"MUSIC".equals(category.name())) {
+                return;
+            }
+        }
+
+        PlaybackSession session;
+        Object instance;
+        boolean busedPlayerRouted;
+
+        synchronized (STATE_LOCK) {
+            session = currentSession;
+            instance = currentSoundInstance;
+            busedPlayerRouted = instance != null
+                    && BUS_ROUTED_INSTANCES.contains(instance);
+        }
+
+        if (session == null || instance == null) {
+            return;
+        }
+
+        if (identifier != null
+                && !identifier.toString().equals(session.getResourceId())) {
+            return;
+        }
+
+        if (busedPlayerRouted && BusedPlayer != null) {
+            try {
+                BusedPlayer.stop(session.getId());
+            } catch (Exception error) {
+                log("WARNING: Failed to stop bused player: " + error);
+            }
+        }
+
+        session.stop();
+        retireSession(instance, session);
+    }
+
+    /**
+     * Called from SoundEngine.stopAll().
+     */
+    public static void onStopAll() {
+
+        if (!initialized || isAudioPlayerTransition()) {
+            return;
+        }
+
+        PlaybackSession session;
+        Object instance;
+        boolean busedPlayerRouted;
+
+        synchronized (STATE_LOCK) {
+            session = currentSession;
+            instance = currentSoundInstance;
+            busedPlayerRouted = instance != null
+                    && BUS_ROUTED_INSTANCES.contains(instance);
+        }
+
+        if (session == null) {
+            return;
+        }
+
+        if (busedPlayerRouted && BusedPlayer != null) {
+            try {
+                BusedPlayer.stop(session.getId());
+            } catch (Exception error) {
+                log("WARNING: Failed to stop bused player on stopAll: "
+                        + error);
+            }
+        }
+
+        session.stop();
+        if (instance != null) {
+            retireSession(instance, session);
+        }
+    }
+
     // --------------------------------------------------
     // Session management
     // --------------------------------------------------
@@ -602,6 +960,8 @@ public final class MusicBusManager {
                 return existing;
             }
         }
+
+        ensureSoundResolved(instance);
 
         PlaybackSession created;
 
@@ -674,6 +1034,8 @@ public final class MusicBusManager {
                 synchronized (STATE_LOCK) {
 
                     SESSIONS.remove(previousInstance);
+                    LOCKED_SOUNDS.remove(previousInstance);
+                    BASE_VOLUMES.remove(previousInstance);
 
                     BUS_ROUTED_INSTANCES.remove(
                             previousInstance
@@ -682,10 +1044,18 @@ public final class MusicBusManager {
             }
         }
 
+        onSoundResolved(instance);
+
         log("Session created: " + created.getId());
         log("Resource: " + created.getResourceId());
-
-        ensureSoundResolved(instance);
+        if (created.getOggPath() != null) {
+            log("OGG: " + created.getOggPath()
+                    + " (" + String.format(
+                            Locale.ROOT,
+                            "%.2fs",
+                            created.getDurationSeconds()
+                    ) + ")");
+        }
 
         return created;
     }
@@ -707,7 +1077,7 @@ public final class MusicBusManager {
 
         String resourceId = identifier.toString();
 
-        float volume = readFloat(
+        float baseVolume = readFloat(
                 instance,
                 "getVolume",
                 1.0f
@@ -725,19 +1095,39 @@ public final class MusicBusManager {
                 false
         );
 
-        if (!Float.isFinite(volume) || volume < 0.0f) {
-            volume = 1.0f;
+        if (!Float.isFinite(baseVolume) || baseVolume < 0.0f) {
+            baseVolume = 1.0f;
         }
+
+        synchronized (STATE_LOCK) {
+            BASE_VOLUMES.put(instance, baseVolume);
+        }
+
+        float effectiveVolume = calculateEffectiveMusicVolume(
+                null,
+                baseVolume
+        );
 
         if (!Float.isFinite(pitch) || pitch < 0.0f) {
             pitch = 1.0f;
         }
 
+        OggResourceResolver.ResolvedOgg resolved =
+                OggResourceResolver.resolve(instance).orElse(null);
+
+        String oggPath = resolved != null ? resolved.oggPath() : null;
+        byte[] oggData = resolved != null ? resolved.oggData() : null;
+        double durationSeconds = resolved != null
+                ? resolved.durationSeconds()
+                : 0.0;
+
         return new PlaybackSession(
                 resourceId,
+                oggPath,
+                oggData,
+                durationSeconds,
                 0.0,
-                0.0,
-                volume,
+                effectiveVolume,
                 pitch,
                 looping
         );
@@ -760,6 +1150,7 @@ public final class MusicBusManager {
             if (SESSIONS.get(instance) == session) {
                 SESSIONS.remove(instance);
                 LOCKED_SOUNDS.remove(instance);
+                BASE_VOLUMES.remove(instance);
             }
 
             BUS_ROUTED_INSTANCES.remove(instance);
