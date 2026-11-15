@@ -40,7 +40,7 @@ public final class OptionsScreenHook {
                     screen.getClass().getClassLoader()
             );
 
-            // Находим OptionsList в SoundOptionsScreen
+            // Locate OptionsList in SoundOptionsScreen
             Object list = findOptionsList(screen);
 
             if (list == null) {
@@ -48,7 +48,7 @@ public final class OptionsScreenHook {
                 return;
             }
 
-            // Создаём штатный Minecraft OptionInstance<Boolean>
+            // Create a native Minecraft OptionInstance<Boolean>
             Method createBoolean = null;
 
             for (Method method : optionClass.getDeclaredMethods()) {
@@ -77,11 +77,11 @@ public final class OptionsScreenHook {
                             MusicBusManager::setEnabled
             );
 
-            // Создаём массив OptionInstance[]
+            // Create OptionInstance[] array
             Object optionsArray = Array.newInstance(optionClass, 1);
             Array.set(optionsArray, 0, option);
 
-            // Вызываем OptionsList.addSmall(OptionInstance[])
+            // Invoke OptionsList.addSmall(OptionInstance[])
             Method addSmall = null;
 
             for (Method method : list.getClass().getMethods()) {
