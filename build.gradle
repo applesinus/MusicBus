@@ -9,12 +9,21 @@ version = '0.3.0'
 
 repositories {
     mavenCentral()
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+}
+
+configurations {
+    fabricBundle
+    implementation.extendsFrom(fabricBundle)
 }
 
 dependencies {
     implementation 'org.ow2.asm:asm:9.9'
     implementation 'org.ow2.asm:asm-commons:9.9'
-    implementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
+    fabricBundle 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
 }
 
 java {
@@ -139,10 +148,28 @@ sourceSets {
             srcDir(generatedNativeResourcesDir)
         }
     }
+    fabric {
+        compileClasspath += sourceSets.main.output + configurations.compileClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+dependencies {
+    fabricCompileOnly 'net.fabricmc:fabric-loader:0.19.1'
+    fabricCompileOnly 'net.fabricmc:sponge-mixin:0.17.+'
+    fabricCompileOnly 'org.ow2.asm:asm-tree:9.9'
 }
 
 tasks.named('processResources') {
     dependsOn(compileNativePlayer)
+}
+
+tasks.named('processFabricResources', ProcessResources) {
+    def modVersion = project.version.toString()
+    inputs.property('version', modVersion)
+    filesMatching('fabric.mod.json') {
+        expand(version: modVersion)
+    }
 }
 
 jar {
@@ -166,4 +193,39 @@ jar {
             'Implementation-Version': project.version.toString()
         )
     }
+}
+
+def fabricJar = tasks.register('fabricJar', Jar) {
+    group = 'build'
+    description = 'Builds the Fabric mod JAR without bundling ASM or the standalone installer.'
+
+    dependsOn(tasks.named('classes'), tasks.named('fabricClasses'))
+
+    archiveClassifier = 'fabric'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from(sourceSets.main.output) {
+        exclude 'com/musicbus/MusicBusAgent.class'
+        exclude 'com/musicbus/MusicBusAgent$*.class'
+        exclude 'com/musicbus/installer/**'
+    }
+
+    from(sourceSets.fabric.output)
+
+    from {
+        configurations.fabricBundle.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+
+    manifest {
+        attributes(
+            'Implementation-Title': "${project.name}-fabric",
+            'Implementation-Version': project.version.toString()
+        )
+    }
+}
+
+tasks.named('assemble') {
+    dependsOn(fabricJar)
 }

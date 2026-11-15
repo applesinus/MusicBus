@@ -53,6 +53,33 @@ public final class MusicBusTransformer
     private static final String STOP_DESCRIPTOR =
             "(Lnet/minecraft/client/resources/sounds/SoundInstance;)V";
 
+    private static final MusicBusTransformer INSTANCE =
+            new MusicBusTransformer();
+
+    public static boolean isTargetClass(String internalClassName) {
+        if (internalClassName == null) {
+            return false;
+        }
+        return SOUND_OPTIONS_SCREEN.equals(internalClassName)
+                || SOUND_ENGINE.equals(internalClassName)
+                || ABSTRACT_SOUND_INSTANCE.equals(internalClassName)
+                || SOUND_BUFFER_LIBRARY.equals(internalClassName)
+                || CHANNEL.equals(internalClassName);
+    }
+
+    public static byte[] transformClassBytes(
+            String internalClassName,
+            byte[] classfileBuffer
+    ) {
+        if (internalClassName == null || classfileBuffer == null) {
+            return null;
+        }
+        return INSTANCE.transformInternal(
+                internalClassName,
+                classfileBuffer
+        );
+    }
+
     @Override
     public byte[] transform(
             ClassLoader loader,
@@ -61,11 +88,13 @@ public final class MusicBusTransformer
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
     ) {
+        return transformClassBytes(className, classfileBuffer);
+    }
 
-        if (className == null) {
-            return null;
-        }
-
+    private byte[] transformInternal(
+            String className,
+            byte[] classfileBuffer
+    ) {
         if (SOUND_OPTIONS_SCREEN.equals(className)) {
             return transformSoundOptions(classfileBuffer);
         }

@@ -42,6 +42,7 @@ public final class MusicBusManager {
 
     private static volatile boolean enabled;
     private static volatile boolean initialized;
+    private static volatile boolean shutdownHookRegistered;
 
     private static final Object STATE_LOCK = new Object();
     private static final Object TRANSITION_LOCK = new Object();
@@ -79,20 +80,12 @@ public final class MusicBusManager {
     // Initialization
     // --------------------------------------------------
 
-    public static void initialize(
-            Instrumentation instrumentation
-    ) {
+    public static void initialize() {
 
         synchronized (TRANSITION_LOCK) {
 
             if (initialized) {
                 return;
-            }
-
-            if (instrumentation == null) {
-                throw new IllegalArgumentException(
-                        "Instrumentation cannot be null"
-                );
             }
 
             log("Initializing MusicBus Manager...");
@@ -114,12 +107,8 @@ public final class MusicBusManager {
                     );
                 }
 
-                instrumentation.addTransformer(
-                        new MusicBusTransformer(),
-                        false
-                );
-
                 initialized = true;
+                registerShutdownHook();
 
                 log("Vanilla audio player initialized.");
                 log("Bused audio player initialized (" + busedPlayer.getId() + ").");
@@ -131,22 +120,7 @@ public final class MusicBusManager {
 
             } catch (Exception error) {
 
-                if (busedPlayer != null) {
-                    try {
-                        busedPlayer.close();
-                    } catch (Exception ignored) {
-                    }
-                }
-                if (vanillaPlayer != null) {
-                    try {
-                        vanillaPlayer.close();
-                    } catch (Exception ignored) {
-                    }
-                }
-
-                vanillaPlayer = null;
-                busedPlayer = null;
-                enabled = false;
+                cleanupPlayersOnFailedInit();
 
                 throw new IllegalStateException(
                         "MusicBus initialization failed",
@@ -154,6 +128,75 @@ public final class MusicBusManager {
                 );
             }
         }
+    }
+
+    public static void initialize(
+            Instrumentation instrumentation
+    ) {
+
+        synchronized (TRANSITION_LOCK) {
+
+            if (initialized) {
+                return;
+            }
+
+            if (instrumentation == null) {
+                throw new IllegalArgumentException(
+                        "Instrumentation cannot be null"
+                );
+            }
+
+            initialize();
+
+            try {
+
+                instrumentation.addTransformer(
+                        new MusicBusTransformer(),
+                        false
+                );
+
+            } catch (Exception error) {
+
+                shutdown();
+
+                throw new IllegalStateException(
+                        "MusicBus instrumentation setup failed",
+                        error
+                );
+            }
+        }
+    }
+
+    private static void cleanupPlayersOnFailedInit() {
+        if (busedPlayer != null) {
+            try {
+                busedPlayer.close();
+            } catch (Exception ignored) {
+            }
+        }
+        if (vanillaPlayer != null) {
+            try {
+                vanillaPlayer.close();
+            } catch (Exception ignored) {
+            }
+        }
+
+        vanillaPlayer = null;
+        busedPlayer = null;
+        enabled = false;
+    }
+
+    private static void registerShutdownHook() {
+        if (shutdownHookRegistered) {
+            return;
+        }
+        shutdownHookRegistered = true;
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(
+                        MusicBusManager::shutdown,
+                        "MusicBus-Shutdown"
+                )
+        );
     }
 
     private static BusedAudioPlayer createBusedPlayer() {
@@ -188,6 +231,10 @@ public final class MusicBusManager {
             initialized = false;
             enabled = false;
         }
+    }
+
+    public static boolean isInitialized() {
+        return initialized;
     }
 
     public static boolean isEnabled() {

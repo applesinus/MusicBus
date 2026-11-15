@@ -29,6 +29,8 @@ public final class MusicBusAgent {
         log("OS: " + System.getProperty("os.name"));
         log("=================================");
 
+        System.setProperty("musicbus.agent.active", "true");
+
         // Initialize the central MusicBus manager.
         MusicBusManager.initialize(inst);
 

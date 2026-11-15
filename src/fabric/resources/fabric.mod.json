@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "musicbus",
+  "version": "${version}",
+  "name": "MusicBus",
+  "description": "Isolates Minecraft background music into a separate audio process for independent capture in OBS and recording software.",
+  "authors": [
+    "MusicBus"
+  ],
+  "icon": "assets/musicbus/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "preLaunch": [
+      "com.musicbus.fabric.MusicBusFabricEntrypoint"
+    ]
+  },
+  "mixins": [
+    "musicbus.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.1",
+    "minecraft": "~26.1",
+    "java": ">=25"
+  }
+}
