@@ -30,7 +30,7 @@ public final class MusicBusInstallService {
 
     public static final String PROFILE_KEY = "MusicBus";
     public static final String PROFILE_NAME = "MusicBus";
-    private static final String ICON_RESOURCE = "/assets/musicbus/icon.png";
+    private static final String ICON_RESOURCE = "/assets/musicbus/iconbg.png";
 
     private static final List<String> LAUNCHER_PROFILE_FILES = List.of(
             "launcher_profiles.json",
@@ -142,6 +142,16 @@ public final class MusicBusInstallService {
                 .set("_musicbus", musicBusMeta);
 
         writeJsonObject(versionJsonFile, versionJson);
+
+        // Copy icon to <versionId>.png so launcher installations list shows custom icon
+        Path versionIconFile = versionDir.resolve(versionId + ".png");
+        try (InputStream iconIn = MusicBusInstallService.class.getResourceAsStream(ICON_RESOURCE)) {
+            if (iconIn != null) {
+                Files.copy(iconIn, versionIconFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException ignored) {
+            // Non-critical if icon cannot be written
+        }
 
         List<Path> updatedProfiles = new ArrayList<>();
         if (createOrUpdateProfile) {

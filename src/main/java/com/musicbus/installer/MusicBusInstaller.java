@@ -228,9 +228,9 @@ public final class MusicBusInstaller {
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setResizable(false);
 
-            BufferedImage iconImage = loadIconImage();
-            if (iconImage != null) {
-                frame.setIconImage(iconImage);
+            BufferedImage windowIcon = loadResourceImage("/assets/musicbus/iconbg.png");
+            if (windowIcon != null) {
+                frame.setIconImage(windowIcon);
             }
 
             JPanel root = new JPanel(new BorderLayout(0, 14));
@@ -238,8 +238,9 @@ public final class MusicBusInstaller {
 
             // Header
             JPanel headerPanel = new JPanel(new BorderLayout(12, 0));
-            if (iconImage != null) {
-                Image scaled = iconImage.getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+            BufferedImage headerImage = loadResourceImage("/assets/musicbus/icon.png");
+            if (headerImage != null) {
+                Image scaled = headerImage.getScaledInstance(40, 40, Image.SCALE_SMOOTH);
                 JLabel iconLabel = new JLabel(new ImageIcon(scaled));
                 headerPanel.add(iconLabel, BorderLayout.WEST);
             }
@@ -601,13 +602,13 @@ public final class MusicBusInstaller {
             }
         }
 
-        private static BufferedImage loadIconImage() {
-            try (InputStream in = MusicBusInstaller.class.getResourceAsStream("/assets/musicbus/icon.png")) {
+        private static BufferedImage loadResourceImage(String resourcePath) {
+            try (InputStream in = MusicBusInstaller.class.getResourceAsStream(resourcePath)) {
                 if (in != null) {
                     return ImageIO.read(in);
                 }
             } catch (Exception ignored) {
-                // Ignore missing or unreadable icon.
+                // Ignore missing or unreadable image.
             }
             return null;
         }
