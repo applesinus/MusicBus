@@ -216,26 +216,11 @@ public final class OggResourceResolver {
         // Fast path: scan backwards for the final Ogg page belonging to this stream.
         for (int i = data.length - 27; i >= 0; i--) {
 
-            if (!isOggPageMagic(data, i) || data[i + 4] != 0) {
+            if (readOggPageEnd(data, i) < 0) {
                 continue;
             }
 
             if (readIntLE(data, i + 14) != streamSerial) {
-                continue;
-            }
-
-            int segments = data[i + 26] & 0xFF;
-            int headerEnd = i + 27 + segments;
-            if (headerEnd > data.length) {
-                continue;
-            }
-
-            int bodySize = 0;
-            for (int s = 0; s < segments; s++) {
-                bodySize += data[i + 27 + s] & 0xFF;
-            }
-
-            if (headerEnd + bodySize > data.length) {
                 continue;
             }
 
@@ -249,25 +234,10 @@ public final class OggResourceResolver {
         int offset = 0;
         long lastGranule = 0L;
 
-        while (offset + 27 <= data.length) {
+        while (true) {
 
-            if (!isOggPageMagic(data, offset) || data[offset + 4] != 0) {
-                break;
-            }
-
-            int segments = data[offset + 26] & 0xFF;
-            int headerEnd = offset + 27 + segments;
-            if (headerEnd > data.length) {
-                break;
-            }
-
-            int bodySize = 0;
-            for (int s = 0; s < segments; s++) {
-                bodySize += data[offset + 27 + s] & 0xFF;
-            }
-
-            int nextOffset = headerEnd + bodySize;
-            if (nextOffset > data.length) {
+            int nextOffset = readOggPageEnd(data, offset);
+            if (nextOffset < 0) {
                 break;
             }
 
@@ -282,6 +252,30 @@ public final class OggResourceResolver {
         }
 
         return lastGranule;
+    }
+
+    private static int readOggPageEnd(byte[] data, int offset) {
+        if (offset < 0 || offset + 27 > data.length) {
+            return -1;
+        }
+
+        if (!isOggPageMagic(data, offset) || data[offset + 4] != 0) {
+            return -1;
+        }
+
+        int segments = data[offset + 26] & 0xFF;
+        int headerEnd = offset + 27 + segments;
+        if (headerEnd > data.length) {
+            return -1;
+        }
+
+        int bodySize = 0;
+        for (int s = 0; s < segments; s++) {
+            bodySize += data[offset + 27 + s] & 0xFF;
+        }
+
+        int nextOffset = headerEnd + bodySize;
+        return nextOffset <= data.length ? nextOffset : -1;
     }
 
     private static boolean isOggPageMagic(byte[] data, int offset) {

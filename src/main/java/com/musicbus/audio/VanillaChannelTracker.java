@@ -110,28 +110,17 @@ public final class VanillaChannelTracker {
     }
 
     public static void onChannelStopping(Object channel) {
-        if (channel == null) {
-            return;
-        }
-
-        ChannelState state = getState(channel);
-        if (state == null) {
-            return;
-        }
-
-        synchronized (state) {
-            if (!state.destroyed && !state.stopped) {
-                double live = readLiveOffsetLocked(channel, state);
-                if (live >= 0.0) {
-                    state.frozenPositionSeconds = live;
-                    state.lastObservedSeconds = live;
-                }
-            }
-            state.stopped = true;
-        }
+        markChannelStopped(channel, false);
     }
 
     public static void onChannelDestroying(Object channel) {
+        markChannelStopped(channel, true);
+    }
+
+    private static void markChannelStopped(
+            Object channel,
+            boolean destroying
+    ) {
         if (channel == null) {
             return;
         }
@@ -150,7 +139,9 @@ public final class VanillaChannelTracker {
                 }
             }
             state.stopped = true;
-            state.destroyed = true;
+            if (destroying) {
+                state.destroyed = true;
+            }
         }
     }
 
@@ -191,13 +182,9 @@ public final class VanillaChannelTracker {
                 return null;
             }
 
-            double pos = state.frozenPositionSeconds >= 0.0
-                    ? state.frozenPositionSeconds
-                    : state.lastObservedSeconds;
-
             return new ChannelSnapshot(
                     ChannelPlaybackState.STOPPED,
-                    Math.max(0.0, pos)
+                    resolveStoppedPositionLocked(state)
             );
         }
     }
@@ -217,10 +204,7 @@ public final class VanillaChannelTracker {
         }
 
         synchronized (state) {
-            if (state.frozenPositionSeconds >= 0.0) {
-                return state.frozenPositionSeconds;
-            }
-            return Math.max(0.0, state.lastObservedSeconds);
+            return resolveStoppedPositionLocked(state);
         }
     }
 
@@ -240,70 +224,33 @@ public final class VanillaChannelTracker {
 
         synchronized (state) {
             if (state.destroyed || state.stopped) {
-                double pos = state.frozenPositionSeconds >= 0.0
-                        ? state.frozenPositionSeconds
-                        : state.lastObservedSeconds;
-
                 return new ChannelSnapshot(
                         ChannelPlaybackState.STOPPED,
-                        Math.max(0.0, pos)
+                        resolveStoppedPositionLocked(state)
                 );
             }
 
             try {
-                ReflectionCache cache = ensureReflection(channel);
-                AtomicBoolean initialized =
-                        (AtomicBoolean) cache.initializedField.get(channel);
-
-                if (initialized == null || !initialized.get()) {
-                    double pos = state.frozenPositionSeconds >= 0.0
-                            ? state.frozenPositionSeconds
-                            : state.lastObservedSeconds;
-
+                OpenAlSample sample = queryOpenAlSampleLocked(channel, state);
+                if (sample == null) {
                     return new ChannelSnapshot(
                             ChannelPlaybackState.STOPPED,
-                            Math.max(0.0, pos)
+                            resolveStoppedPositionLocked(state)
                     );
                 }
 
-                int source = cache.sourceField.getInt(channel);
-                int alState = (int) cache.alGetSourcei.invoke(
-                        null,
-                        source,
-                        AL_SOURCE_STATE
-                );
-
-                if (alState == AL_PLAYING) {
-                    float secOffset = (float) cache.alGetSourcef.invoke(
-                            null,
-                            source,
-                            AL_SEC_OFFSET
-                    );
-                    double pos = combineOffset(state, secOffset);
-                    state.lastObservedSeconds = pos;
-
+                if (sample.alState() == AL_PLAYING
+                        || sample.alState() == AL_PAUSED) {
+                    state.lastObservedSeconds = sample.positionSeconds();
                     return new ChannelSnapshot(
-                            ChannelPlaybackState.PLAYING,
-                            pos
+                            sample.alState() == AL_PLAYING
+                                    ? ChannelPlaybackState.PLAYING
+                                    : ChannelPlaybackState.PAUSED,
+                            sample.positionSeconds()
                     );
                 }
 
-                if (alState == AL_PAUSED) {
-                    float secOffset = (float) cache.alGetSourcef.invoke(
-                            null,
-                            source,
-                            AL_SEC_OFFSET
-                    );
-                    double pos = combineOffset(state, secOffset);
-                    state.lastObservedSeconds = pos;
-
-                    return new ChannelSnapshot(
-                            ChannelPlaybackState.PAUSED,
-                            pos
-                    );
-                }
-
-                if (alState == AL_INITIAL) {
+                if (sample.alState() == AL_INITIAL) {
                     return new ChannelSnapshot(
                             ChannelPlaybackState.INITIAL,
                             0.0
@@ -314,10 +261,8 @@ public final class VanillaChannelTracker {
                 double pos;
                 if (state.frozenPositionSeconds >= 0.0) {
                     pos = state.frozenPositionSeconds;
-                } else if (state.streaming) {
-                    pos = state.queuedTotalSeconds;
-                } else if (state.staticDurationSeconds > 0.0) {
-                    pos = state.staticDurationSeconds;
+                } else if (sample.positionSeconds() >= 0.0) {
+                    pos = sample.positionSeconds();
                 } else {
                     pos = state.lastObservedSeconds;
                 }
@@ -348,47 +293,66 @@ public final class VanillaChannelTracker {
             ChannelState state
     ) {
         try {
-            ReflectionCache cache = ensureReflection(channel);
-            AtomicBoolean initialized =
-                    (AtomicBoolean) cache.initializedField.get(channel);
-
-            if (initialized == null || !initialized.get()) {
-                return -1.0;
-            }
-
-            int source = cache.sourceField.getInt(channel);
-            int alState = (int) cache.alGetSourcei.invoke(
-                    null,
-                    source,
-                    AL_SOURCE_STATE
-            );
-
-            if (alState == AL_PLAYING || alState == AL_PAUSED) {
-                float secOffset = (float) cache.alGetSourcef.invoke(
-                        null,
-                        source,
-                        AL_SEC_OFFSET
-                );
-                return combineOffset(state, secOffset);
-            }
-
-            if (alState == AL_STOPPED) {
-                if (state.streaming) {
-                    return state.queuedTotalSeconds;
-                }
-                if (state.staticDurationSeconds > 0.0) {
-                    return state.staticDurationSeconds;
-                }
-            }
-
-            if (alState == AL_INITIAL) {
-                return 0.0;
-            }
+            OpenAlSample sample = queryOpenAlSampleLocked(channel, state);
+            return sample != null ? sample.positionSeconds() : -1.0;
         } catch (Exception ignored) {
+            return -1.0;
+        }
+    }
+
+    private static OpenAlSample queryOpenAlSampleLocked(
+            Object channel,
+            ChannelState state
+    ) throws Exception {
+        ReflectionCache cache = ensureReflection(channel);
+        AtomicBoolean initialized =
+                (AtomicBoolean) cache.initializedField.get(channel);
+
+        if (initialized == null || !initialized.get()) {
+            return null;
         }
 
-        return -1.0;
+        int source = cache.sourceField.getInt(channel);
+        int alState = (int) cache.alGetSourcei.invoke(
+                null,
+                source,
+                AL_SOURCE_STATE
+        );
+
+        if (alState == AL_PLAYING || alState == AL_PAUSED) {
+            float secOffset = (float) cache.alGetSourcef.invoke(
+                    null,
+                    source,
+                    AL_SEC_OFFSET
+            );
+            return new OpenAlSample(alState, combineOffset(state, secOffset));
+        }
+
+        if (alState == AL_INITIAL) {
+            return new OpenAlSample(alState, 0.0);
+        }
+
+        if (alState == AL_STOPPED) {
+            double endedPos = -1.0;
+            if (state.streaming) {
+                endedPos = state.queuedTotalSeconds;
+            } else if (state.staticDurationSeconds > 0.0) {
+                endedPos = state.staticDurationSeconds;
+            }
+            return new OpenAlSample(alState, endedPos);
+        }
+
+        return new OpenAlSample(alState, -1.0);
     }
+
+    private static double resolveStoppedPositionLocked(ChannelState state) {
+        double pos = state.frozenPositionSeconds >= 0.0
+                ? state.frozenPositionSeconds
+                : state.lastObservedSeconds;
+        return Math.max(0.0, pos);
+    }
+
+    private record OpenAlSample(int alState, double positionSeconds) {}
 
     private static double combineOffset(
             ChannelState state,

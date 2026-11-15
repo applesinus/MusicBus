@@ -115,27 +115,10 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     @Override
     public void play(PlaybackSession.Snapshot session) {
 
-        if (session == null) {
-            throw new IllegalArgumentException(
-                    "Session cannot be null"
-            );
-        }
-
-        if (session.state() == PlaybackSession.State.STOPPED) {
-            stop(session.id());
+        Entry entry = requireEntryForPlayback(session);
+        if (entry == null) {
             return;
         }
-
-        Entry entry = getEntry(session.id());
-
-        if (entry == null) {
-            throw new IllegalStateException(
-                    "No SoundInstance registered for session: "
-                            + session.id()
-            );
-        }
-
-        ensureClientThread();
 
         try {
 
@@ -145,17 +128,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
                         + "position. Restarting from zero.");
             }
 
-            synchronized (entry) {
-
-                entry.state = PlaybackSession.State.PLAYING;
-                entry.initialOffsetSeconds = 0.0;
-                entry.lastKnownPositionSeconds = 0.0;
-                entry.durationSeconds = session.durationSeconds();
-                entry.volume = session.volume();
-                entry.pitch = session.pitch();
-                entry.looping = session.looping();
-                entry.lastChannel = null;
-            }
+            initializeEntryForPlayback(entry, session, 0.0);
 
             MinecraftReflection.invokeSoundManager(
                     "play",
@@ -229,43 +202,16 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     @Override
     public void resume(PlaybackSession.Snapshot session) {
 
-        if (session == null) {
-            throw new IllegalArgumentException(
-                    "Session cannot be null"
-            );
-        }
-
-        if (session.state() == PlaybackSession.State.STOPPED) {
-            stop(session.id());
+        Entry entry = requireEntryForPlayback(session);
+        if (entry == null) {
             return;
         }
-
-        Entry entry = getEntry(session.id());
-
-        if (entry == null) {
-            throw new IllegalStateException(
-                    "No SoundInstance registered for session: "
-                            + session.id()
-            );
-        }
-
-        ensureClientThread();
 
         double targetPosition = Math.max(0.0, session.positionSeconds());
 
         try {
 
-            synchronized (entry) {
-
-                entry.state = PlaybackSession.State.PLAYING;
-                entry.initialOffsetSeconds = targetPosition;
-                entry.lastKnownPositionSeconds = targetPosition;
-                entry.durationSeconds = session.durationSeconds();
-                entry.volume = session.volume();
-                entry.pitch = session.pitch();
-                entry.looping = session.looping();
-                entry.lastChannel = null;
-            }
+            initializeEntryForPlayback(entry, session, targetPosition);
 
             MusicBusManager.setPendingResumeSeconds(targetPosition);
 
@@ -328,35 +274,22 @@ public final class VanillaAudioPlayer implements AudioPlayer {
                     );
                 }
 
+                PlaybackSession.State nextState;
                 if (!active) {
-                    entry.state = PlaybackSession.State.STOPPED;
-
-                    return Optional.of(
-                            new PlaybackStatus(
-                                    PlaybackSession.State.STOPPED,
-                                    entry.lastKnownPositionSeconds
-                            )
-                    );
-                }
-
-                if (snap != null
+                    nextState = PlaybackSession.State.STOPPED;
+                } else if (snap != null
                         && snap.state()
                         == VanillaChannelTracker.ChannelPlaybackState.PAUSED) {
-                    entry.state = PlaybackSession.State.PAUSED;
-
-                    return Optional.of(
-                            new PlaybackStatus(
-                                    PlaybackSession.State.PAUSED,
-                                    entry.lastKnownPositionSeconds
-                            )
-                    );
+                    nextState = PlaybackSession.State.PAUSED;
+                } else {
+                    nextState = PlaybackSession.State.PLAYING;
                 }
 
-                entry.state = PlaybackSession.State.PLAYING;
+                entry.state = nextState;
 
                 return Optional.of(
                         new PlaybackStatus(
-                                PlaybackSession.State.PLAYING,
+                                nextState,
                                 entry.lastKnownPositionSeconds
                         )
                 );
@@ -482,6 +415,50 @@ public final class VanillaAudioPlayer implements AudioPlayer {
     private synchronized Entry getEntry(UUID sessionId) {
 
         return sessions.get(sessionId);
+    }
+
+    private Entry requireEntryForPlayback(PlaybackSession.Snapshot session) {
+
+        if (session == null) {
+            throw new IllegalArgumentException(
+                    "Session cannot be null"
+            );
+        }
+
+        if (session.state() == PlaybackSession.State.STOPPED) {
+            stop(session.id());
+            return null;
+        }
+
+        Entry entry = getEntry(session.id());
+
+        if (entry == null) {
+            throw new IllegalStateException(
+                    "No SoundInstance registered for session: "
+                            + session.id()
+            );
+        }
+
+        ensureClientThread();
+        return entry;
+    }
+
+    private static void initializeEntryForPlayback(
+            Entry entry,
+            PlaybackSession.Snapshot session,
+            double startPosition
+    ) {
+
+        synchronized (entry) {
+            entry.state = PlaybackSession.State.PLAYING;
+            entry.initialOffsetSeconds = startPosition;
+            entry.lastKnownPositionSeconds = startPosition;
+            entry.durationSeconds = session.durationSeconds();
+            entry.volume = session.volume();
+            entry.pitch = session.pitch();
+            entry.looping = session.looping();
+            entry.lastChannel = null;
+        }
     }
 
     private static final class Entry {
@@ -629,19 +606,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
                     error
             );
         }
-    }
-
-    // --------------------------------------------------
-    // Unsupported operations
-    // --------------------------------------------------
-
-    private static UnsupportedOperationException unsupported(
-            String operation
-    ) {
-
-        return new UnsupportedOperationException(
-                operation + " is not supported by VanillaAudioPlayer"
-        );
     }
 
     // --------------------------------------------------

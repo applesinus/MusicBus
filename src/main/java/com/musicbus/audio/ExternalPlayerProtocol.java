@@ -89,10 +89,7 @@ final class ExternalPlayerProtocol {
             throw new IllegalArgumentException("Snapshot must contain OGG data for CMD_PLAY");
         }
 
-        int payloadLen = 38 + ogg.length;
-        ByteBuffer buf = ByteBuffer.allocate(5 + 38).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + payloadLen);
-        buf.put((byte) CMD_PLAY);
+        ByteBuffer buf = allocateFrame(CMD_PLAY, 38 + ogg.length, 38);
         putUuid(buf, session.id());
         buf.putDouble(Math.max(0.0, session.positionSeconds()));
         buf.putFloat(session.volume());
@@ -119,16 +116,13 @@ final class ExternalPlayerProtocol {
             PlaybackSession.Snapshot session
     ) throws IOException {
         Objects.requireNonNull(session, "session cannot be null");
-        ByteBuffer buf = ByteBuffer.allocate(5 + 33).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + 33);
-        buf.put((byte) CMD_RESUME);
+        ByteBuffer buf = allocateFrame(CMD_RESUME, 33);
         putUuid(buf, session.id());
         buf.putDouble(Math.max(0.0, session.positionSeconds()));
         buf.putFloat(session.volume());
         buf.putFloat(session.pitch());
         buf.put((byte) (session.looping() ? 1 : 0));
-        out.write(buf.array());
-        out.flush();
+        sendFrame(out, buf);
     }
 
     static void writeSeek(
@@ -136,13 +130,10 @@ final class ExternalPlayerProtocol {
             UUID sessionId,
             double positionSeconds
     ) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(5 + 24).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + 24);
-        buf.put((byte) CMD_SEEK);
+        ByteBuffer buf = allocateFrame(CMD_SEEK, 24);
         putUuid(buf, sessionId);
         buf.putDouble(Math.max(0.0, positionSeconds));
-        out.write(buf.array());
-        out.flush();
+        sendFrame(out, buf);
     }
 
     static void writeSetVolume(
@@ -150,13 +141,7 @@ final class ExternalPlayerProtocol {
             UUID sessionId,
             float volume
     ) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(5 + 20).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + 20);
-        buf.put((byte) CMD_SET_VOLUME);
-        putUuid(buf, sessionId);
-        buf.putFloat(volume);
-        out.write(buf.array());
-        out.flush();
+        writeUuidAndFloat(out, CMD_SET_VOLUME, sessionId, volume);
     }
 
     static void writeSetPitch(
@@ -164,13 +149,7 @@ final class ExternalPlayerProtocol {
             UUID sessionId,
             float pitch
     ) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(5 + 20).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + 20);
-        buf.put((byte) CMD_SET_PITCH);
-        putUuid(buf, sessionId);
-        buf.putFloat(pitch);
-        out.write(buf.array());
-        out.flush();
+        writeUuidAndFloat(out, CMD_SET_PITCH, sessionId, pitch);
     }
 
     static void writeSetLooping(
@@ -178,13 +157,10 @@ final class ExternalPlayerProtocol {
             UUID sessionId,
             boolean looping
     ) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(5 + 17).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + 17);
-        buf.put((byte) CMD_SET_LOOPING);
+        ByteBuffer buf = allocateFrame(CMD_SET_LOOPING, 17);
         putUuid(buf, sessionId);
         buf.put((byte) (looping ? 1 : 0));
-        out.write(buf.array());
-        out.flush();
+        sendFrame(out, buf);
     }
 
     static void writeSetDevice(OutputStream out, String deviceName) throws IOException {
@@ -192,23 +168,16 @@ final class ExternalPlayerProtocol {
         if (utf8.length > 511) {
             throw new IllegalArgumentException("Device name too long");
         }
-        int payloadLen = 2 + utf8.length;
-        ByteBuffer buf = ByteBuffer.allocate(5 + payloadLen).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + payloadLen);
-        buf.put((byte) CMD_SET_DEVICE);
+        ByteBuffer buf = allocateFrame(CMD_SET_DEVICE, 2 + utf8.length);
         buf.putShort((short) utf8.length);
         buf.put(utf8);
-        out.write(buf.array());
-        out.flush();
+        sendFrame(out, buf);
     }
 
     static void writePing(OutputStream out, long timestamp) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(5 + 8).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + 8);
-        buf.put((byte) CMD_PING);
+        ByteBuffer buf = allocateFrame(CMD_PING, 8);
         buf.putLong(timestamp);
-        out.write(buf.array());
-        out.flush();
+        sendFrame(out, buf);
     }
 
     static void writeListDevices(OutputStream out) throws IOException {
@@ -224,18 +193,43 @@ final class ExternalPlayerProtocol {
             int type,
             UUID sessionId
     ) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(5 + 16).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1 + 16);
-        buf.put((byte) type);
+        ByteBuffer buf = allocateFrame(type, 16);
         putUuid(buf, sessionId);
-        out.write(buf.array());
-        out.flush();
+        sendFrame(out, buf);
+    }
+
+    private static void writeUuidAndFloat(
+            OutputStream out,
+            int type,
+            UUID sessionId,
+            float value
+    ) throws IOException {
+        ByteBuffer buf = allocateFrame(type, 20);
+        putUuid(buf, sessionId);
+        buf.putFloat(value);
+        sendFrame(out, buf);
     }
 
     private static void writeEmpty(OutputStream out, int type) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(5).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(1);
+        sendFrame(out, allocateFrame(type, 0));
+    }
+
+    private static ByteBuffer allocateFrame(int type, int payloadLen) {
+        return allocateFrame(type, payloadLen, payloadLen);
+    }
+
+    private static ByteBuffer allocateFrame(
+            int type,
+            int totalPayloadLen,
+            int bufferPayloadLen
+    ) {
+        ByteBuffer buf = ByteBuffer.allocate(5 + bufferPayloadLen).order(ByteOrder.LITTLE_ENDIAN);
+        buf.putInt(1 + totalPayloadLen);
         buf.put((byte) type);
+        return buf;
+    }
+
+    private static void sendFrame(OutputStream out, ByteBuffer buf) throws IOException {
         out.write(buf.array());
         out.flush();
     }
@@ -250,7 +244,7 @@ final class ExternalPlayerProtocol {
     static Event readNextEvent(InputStream in) throws IOException {
         while (true) {
             byte[] header = new byte[5];
-            int headerRead = readFullyOrEof(in, header);
+            int headerRead = readFully(in, header, true, "Unexpected EOF mid-frame");
             if (headerRead == 0) {
                 return null;
             }
@@ -266,7 +260,7 @@ final class ExternalPlayerProtocol {
             int payloadLen = (int) (bodyLen - 1L);
             byte[] payload = new byte[payloadLen];
             if (payloadLen > 0) {
-                readFullyRequired(in, payload);
+                readFully(in, payload, false, "Unexpected EOF reading payload");
             }
 
             Event parsed = parseEvent(type, payload);
@@ -310,13 +304,7 @@ final class ExternalPlayerProtocol {
                 }
                 UUID uuid = getUuid(buf);
                 int code = buf.getInt();
-                int msgLen = Short.toUnsignedInt(buf.getShort());
-                if (msgLen > payload.length - 22) {
-                    msgLen = payload.length - 22;
-                }
-                byte[] msgBytes = new byte[msgLen];
-                buf.get(msgBytes);
-                yield new ErrorEvent(uuid, code, new String(msgBytes, StandardCharsets.UTF_8));
+                yield new ErrorEvent(uuid, code, readUtf8Clamped(buf));
             }
             case EVT_PONG -> {
                 if (payload.length < 8) {
@@ -339,12 +327,7 @@ final class ExternalPlayerProtocol {
                     if (nameLen > buf.remaining()) {
                         break;
                     }
-                    byte[] nameBytes = new byte[nameLen];
-                    buf.get(nameBytes);
-                    devices.add(new AudioDeviceInfo(
-                            isDefault,
-                            new String(nameBytes, StandardCharsets.UTF_8)
-                    ));
+                    devices.add(new AudioDeviceInfo(isDefault, readUtf8(buf, nameLen)));
                 }
                 yield new DevicesEvent(List.copyOf(devices));
             }
@@ -352,13 +335,7 @@ final class ExternalPlayerProtocol {
                 if (payload.length < 2) {
                     throw new IOException("Truncated EVT_LOG");
                 }
-                int msgLen = Short.toUnsignedInt(buf.getShort());
-                if (msgLen > payload.length - 2) {
-                    msgLen = payload.length - 2;
-                }
-                byte[] msgBytes = new byte[msgLen];
-                buf.get(msgBytes);
-                yield new LogEvent(new String(msgBytes, StandardCharsets.UTF_8));
+                yield new LogEvent(readUtf8Clamped(buf));
             }
             default -> null;
         };
@@ -380,29 +357,34 @@ final class ExternalPlayerProtocol {
         return new UUID(msb, lsb);
     }
 
-    private static int readFullyOrEof(InputStream in, byte[] dst) throws IOException {
+    private static String readUtf8Clamped(ByteBuffer buf) {
+        int len = Math.min(Short.toUnsignedInt(buf.getShort()), buf.remaining());
+        return readUtf8(buf, len);
+    }
+
+    private static String readUtf8(ByteBuffer buf, int len) {
+        byte[] bytes = new byte[len];
+        buf.get(bytes);
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    private static int readFully(
+            InputStream in,
+            byte[] dst,
+            boolean allowCleanEof,
+            String eofMessage
+    ) throws IOException {
         int offset = 0;
         while (offset < dst.length) {
             int n = in.read(dst, offset, dst.length - offset);
             if (n < 0) {
-                if (offset == 0) {
+                if (allowCleanEof && offset == 0) {
                     return 0;
                 }
-                throw new EOFException("Unexpected EOF mid-frame");
+                throw new EOFException(eofMessage);
             }
             offset += n;
         }
         return offset;
-    }
-
-    private static void readFullyRequired(InputStream in, byte[] dst) throws IOException {
-        int offset = 0;
-        while (offset < dst.length) {
-            int n = in.read(dst, offset, dst.length - offset);
-            if (n < 0) {
-                throw new EOFException("Unexpected EOF reading payload");
-            }
-            offset += n;
-        }
     }
 }
