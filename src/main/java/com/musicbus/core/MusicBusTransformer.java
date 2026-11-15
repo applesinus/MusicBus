@@ -150,7 +150,7 @@ public final class MusicBusTransformer
 
                             super.visitMethodInsn(
                                     Opcodes.INVOKESTATIC,
-                                    "com/musicbus/core/MusicBus",
+                                    "com/musicbus/core/OptionsScreenHook",
                                     "onSoundOptionsScreen",
                                     "(Ljava/lang/Object;)V",
                                     false
