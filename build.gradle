@@ -42,6 +42,9 @@ File miniaudioHeaderFile = new File(nativeDepsDir, 'miniaudio.h')
 File stbVorbisSourceFile = new File(nativeDepsDir, 'stb_vorbis.c')
 
 def nativeSourceFile = layout.projectDirectory.file('src/main/native/musicbus_player.c')
+def nativeRcFile = layout.projectDirectory.file('src/main/native/musicbus_player.rc')
+def nativeIconFile = layout.projectDirectory.file('src/main/native/musicbus.ico')
+def nativeOutputRes = layout.buildDirectory.file('generated/native-obj/musicbus_player.res')
 def generatedNativeResourcesDir = layout.buildDirectory.dir('generated/native-resources')
 def nativeOutputExe = generatedNativeResourcesDir.map {
     it.file('native/windows-x64/musicbus-player.exe')
@@ -65,14 +68,38 @@ def prepareNativeToolchain = tasks.register('prepareNativeToolchain', PrepareNat
     it.stbVorbisSource.set(stbVorbisSourceFile)
 }
 
+def compileNativeResources = tasks.register('compileNativeResources', Exec) {
+    group = 'build'
+    description = 'Compiles Windows .rc resources using portable zig rc.'
+
+    dependsOn(prepareNativeToolchain)
+
+    inputs.file(nativeRcFile)
+    inputs.file(nativeIconFile)
+    inputs.file(zigExeFile)
+    outputs.file(nativeOutputRes)
+
+    doFirst {
+        nativeOutputRes.get().asFile.parentFile.mkdirs()
+    }
+
+    executable = zigExeFile.absolutePath
+    args = [
+        'rc',
+        '/fo', nativeOutputRes.get().asFile.absolutePath,
+        nativeRcFile.asFile.absolutePath
+    ]
+}
+
 def compileNativePlayer = tasks.register('compileNativePlayer', Exec) {
     group = 'build'
     description = 'Compiles musicbus-player.exe using portable zig cc.'
 
-    dependsOn(prepareNativeToolchain)
+    dependsOn(prepareNativeToolchain, compileNativeResources)
 
     inputs.property('version', project.version.toString())
     inputs.file(nativeSourceFile)
+    inputs.file(nativeOutputRes)
     inputs.file(miniaudioHeaderFile)
     inputs.file(stbVorbisSourceFile)
     inputs.file(zigExeFile)
@@ -94,6 +121,7 @@ def compileNativePlayer = tasks.register('compileNativePlayer', Exec) {
         '-I', nativeDepsDir.absolutePath,
         '-Wl,--subsystem,windows',
         nativeSourceFile.asFile.absolutePath,
+        nativeOutputRes.get().asFile.absolutePath,
         '-o', nativeOutputExe.get().asFile.absolutePath,
         '-lole32',
         '-loleaut32',

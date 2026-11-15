@@ -87,6 +87,7 @@
 
 #define TRAY_ICON_ID     1u
 #define ID_TRAY_TOGGLE   1001u
+#define IDI_APP_ICON     101u
 
 #ifndef MUSICBUS_VERSION_RAW
 #define MUSICBUS_VERSION_RAW Error
@@ -159,6 +160,8 @@ static int              g_bootstrapMode = 0;
 static int              g_inTray = 1;
 static int              g_trayIconAdded = 0;
 static volatile LONG    g_audioDeviceGen = 0;
+static HICON            g_iconLarge = NULL;
+static HICON            g_iconSmall = NULL;
 
 static uint8_t          g_lastReportedUuid[16];
 static uint8_t          g_lastReportedState = 0xFFu;
@@ -1771,7 +1774,7 @@ static void add_tray_icon(HWND hwnd) {
     nid.uID = TRAY_ICON_ID;
     nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
     nid.uCallbackMessage = WM_APP_TRAY;
-    nid.hIcon = LoadIconW(NULL, IDI_APPLICATION);
+    nid.hIcon = g_iconSmall != NULL ? g_iconSmall : LoadIconW(NULL, IDI_APPLICATION);
     wcsncpy(nid.szTip, L"MusicBus Player", 64);
 
     if (Shell_NotifyIconW(NIM_ADD, &nid)) {
@@ -1941,6 +1944,30 @@ static HWND create_player_window(HINSTANCE hInstance) {
         NULL
     );
 
+    g_iconLarge = (HICON)LoadImageW(
+        hInstance,
+        MAKEINTRESOURCEW(IDI_APP_ICON),
+        IMAGE_ICON,
+        GetSystemMetrics(SM_CXICON),
+        GetSystemMetrics(SM_CYICON),
+        LR_DEFAULTCOLOR | LR_SHARED
+    );
+    if (g_iconLarge == NULL) {
+        g_iconLarge = LoadIconW(NULL, IDI_APPLICATION);
+    }
+
+    g_iconSmall = (HICON)LoadImageW(
+        hInstance,
+        MAKEINTRESOURCEW(IDI_APP_ICON),
+        IMAGE_ICON,
+        GetSystemMetrics(SM_CXSMICON),
+        GetSystemMetrics(SM_CYSMICON),
+        LR_DEFAULTCOLOR | LR_SHARED
+    );
+    if (g_iconSmall == NULL) {
+        g_iconSmall = g_iconLarge;
+    }
+
     WNDCLASSEXW wc;
     memset(&wc, 0, sizeof(wc));
     wc.cbSize = sizeof(wc);
@@ -1948,7 +1975,8 @@ static HWND create_player_window(HINSTANCE hInstance) {
     wc.lpfnWndProc = window_proc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
-    wc.hIcon = LoadIconW(NULL, IDI_APPLICATION);
+    wc.hIcon = g_iconLarge;
+    wc.hIconSm = g_iconSmall;
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszClassName = className;
 
