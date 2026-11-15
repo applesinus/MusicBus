@@ -40,6 +40,10 @@
 #define MA_NO_FLAC
 #define MA_NO_WAV
 #define MA_NO_GENERATION
+#define MA_NO_ENCODING
+#define MA_NO_ENGINE
+#define MA_NO_NODE_GRAPH
+#define MA_NO_RESOURCE_MANAGER
 #include "miniaudio.h"
 #pragma clang diagnostic pop
 
@@ -85,7 +89,7 @@
 #define ID_TRAY_TOGGLE   1001u
 
 #ifndef MUSICBUS_VERSION_RAW
-#define MUSICBUS_VERSION_RAW 0.3.7
+#define MUSICBUS_VERSION_RAW Error
 #endif
 #define MB_STR_HELPER(x) #x
 #define MB_STR(x)        MB_STR_HELPER(x)
@@ -142,6 +146,7 @@ static volatile LONG    g_running = 1;
 static volatile LONG    g_evtConnected = 0;
 static HANDLE           g_stopEvent = NULL;
 static HANDLE           g_pipeConnectedEvent = NULL;
+static HANDLE           g_statusWakeEvent = NULL;
 static HANDLE           g_cmdHandle = INVALID_HANDLE_VALUE;
 static HANDLE           g_evtHandle = INVALID_HANDLE_VALUE;
 static int              g_usingNamedPipes = 0;
@@ -1044,44 +1049,27 @@ static void request_shutdown(void) {
     }
 }
 
-static void handle_cmd_play(const uint8_t* payload, uint32_t len) {
-    if (len < 38u) {
-        send_error(NULL, ERR_PROTOCOL, "CMD_PLAY payload too short");
-        return;
-    }
-
-    const uint8_t* uuid = payload;
-    double position = read_f64_le(payload + 16);
-    float volume = read_f32_le(payload + 24);
-    float pitch = read_f32_le(payload + 28);
-    int looping = payload[32] != 0u;
-    uint8_t startPaused = payload[33];
-    uint32_t oggLen = read_u32_le(payload + 34);
-
-    if (oggLen == 0u || (uint64_t)oggLen > (uint64_t)(len - 38u)) {
-        send_error(uuid, ERR_PROTOCOL, "CMD_PLAY invalid OGG payload length");
-        return;
-    }
+static void handle_cmd_play(const uint8_t* hdr, uint8_t* oggData, uint32_t oggLen) {
+    const uint8_t* uuid = hdr;
+    double position = read_f64_le(hdr + 16);
+    float volume = read_f32_le(hdr + 24);
+    float pitch = read_f32_le(hdr + 28);
+    int looping = hdr[32] != 0u;
+    uint8_t startPaused = hdr[33];
 
     if (!g_maDeviceReady) {
         char devErr[256] = "";
         if (!open_audio_device(g_desiredDeviceName, devErr, sizeof(devErr))) {
+            free(oggData);
             send_error(uuid, ERR_AUDIO_DEVICE, devErr);
             return;
         }
     }
 
-    uint8_t* oggCopy = (uint8_t*)malloc((size_t)oggLen);
-    if (oggCopy == NULL) {
-        send_error(uuid, ERR_DECODE, "Out of memory allocating OGG buffer");
-        return;
-    }
-    memcpy(oggCopy, payload + 38, (size_t)oggLen);
-
     char errBuf[256] = "";
     TrackContext* newTrack = create_track(
         uuid,
-        oggCopy,
+        oggData,
         (size_t)oggLen,
         position,
         volume,
@@ -1331,6 +1319,18 @@ static int connect_named_pipe(HANDLE hPipe) {
     return err == ERROR_PIPE_CONNECTED;
 }
 
+static int drain_exact_cmd(size_t len) {
+    uint8_t sink[1024];
+    while (len > 0u) {
+        size_t chunk = len < sizeof(sink) ? len : sizeof(sink);
+        if (!read_exact_cmd(sink, chunk)) {
+            return 0;
+        }
+        len -= chunk;
+    }
+    return 1;
+}
+
 static DWORD WINAPI command_thread_proc(LPVOID param) {
     (void)param;
 
@@ -1363,6 +1363,52 @@ static DWORD WINAPI command_thread_proc(LPVOID param) {
         }
 
         uint32_t payloadLen = bodyLen - 1u;
+        if (type == CMD_PLAY) {
+            if (payloadLen < 38u) {
+                if (!drain_exact_cmd((size_t)payloadLen)) {
+                    break;
+                }
+                send_error(NULL, ERR_PROTOCOL, "CMD_PLAY payload too short");
+                continue;
+            }
+
+            uint8_t playHdr[38];
+            if (!read_exact_cmd(playHdr, sizeof(playHdr))) {
+                break;
+            }
+
+            uint32_t oggLen = read_u32_le(playHdr + 34);
+            if (oggLen == 0u || (uint64_t)oggLen > (uint64_t)(payloadLen - 38u)) {
+                if (!drain_exact_cmd((size_t)(payloadLen - 38u))) {
+                    break;
+                }
+                send_error(playHdr, ERR_PROTOCOL, "CMD_PLAY invalid OGG payload length");
+                continue;
+            }
+
+            uint8_t* oggData = (uint8_t*)malloc((size_t)oggLen);
+            if (oggData == NULL) {
+                send_error(playHdr, ERR_DECODE, "Out of memory allocating OGG buffer");
+                break;
+            }
+            if (!read_exact_cmd(oggData, (size_t)oggLen)) {
+                free(oggData);
+                break;
+            }
+
+            uint32_t trailing = payloadLen - 38u - oggLen;
+            if (trailing > 0u && !drain_exact_cmd((size_t)trailing)) {
+                free(oggData);
+                break;
+            }
+
+            handle_cmd_play(playHdr, oggData, oggLen);
+            if (g_statusWakeEvent != NULL) {
+                SetEvent(g_statusWakeEvent);
+            }
+            continue;
+        }
+
         uint8_t* payload = NULL;
         if (payloadLen > 0u) {
             payload = (uint8_t*)malloc((size_t)payloadLen);
@@ -1377,17 +1423,23 @@ static DWORD WINAPI command_thread_proc(LPVOID param) {
         }
 
         switch (type) {
-            case CMD_PLAY:
-                handle_cmd_play(payload, payloadLen);
-                break;
             case CMD_STOP:
                 handle_cmd_stop(payload, payloadLen);
+                if (g_statusWakeEvent != NULL) {
+                    SetEvent(g_statusWakeEvent);
+                }
                 break;
             case CMD_PAUSE:
                 handle_cmd_pause(payload, payloadLen);
+                if (g_statusWakeEvent != NULL) {
+                    SetEvent(g_statusWakeEvent);
+                }
                 break;
             case CMD_RESUME:
                 handle_cmd_resume(payload, payloadLen);
+                if (g_statusWakeEvent != NULL) {
+                    SetEvent(g_statusWakeEvent);
+                }
                 break;
             case CMD_SEEK:
                 handle_cmd_seek(payload, payloadLen);
@@ -1436,9 +1488,12 @@ static DWORD WINAPI status_thread_proc(LPVOID param) {
         return 0;
     }
 
+    DWORD waitTimeout = INFINITE;
+
     while (InterlockedCompareExchange(&g_running, 1, 1)) {
-        DWORD waitRes = WaitForSingleObject(g_stopEvent, 50);
-        if (waitRes == WAIT_OBJECT_0 || !InterlockedCompareExchange(&g_running, 1, 1)) {
+        HANDLE waitHandles[2] = { g_stopEvent, g_statusWakeEvent };
+        DWORD waitRes = WaitForMultipleObjects(2, waitHandles, FALSE, waitTimeout);
+        if (waitRes == WAIT_OBJECT_0 || waitRes == WAIT_FAILED || !InterlockedCompareExchange(&g_running, 1, 1)) {
             break;
         }
 
@@ -1458,6 +1513,7 @@ static DWORD WINAPI status_thread_proc(LPVOID param) {
         LeaveCriticalSection(&g_audioLock);
 
         if (!hasTrack) {
+            waitTimeout = INFINITE;
             continue;
         }
 
@@ -1470,6 +1526,8 @@ static DWORD WINAPI status_thread_proc(LPVOID param) {
             g_hasReportedOnce = 1;
             send_status(uuid, state, position);
         }
+
+        waitTimeout = (state == STATE_PLAYING) ? 50u : INFINITE;
     }
 
     return 0;
@@ -1506,11 +1564,12 @@ static DWORD WINAPI watchdog_thread_proc(LPVOID param) {
  * Windows Volume Mixer Sync (inherits Minecraft session volume & mute)
  * ========================================================================= */
 
-static int read_process_mixer_volume(
+static int access_process_mixer_volume(
     IMMDeviceEnumerator* pEnum,
     DWORD targetPid,
-    float* outVol,
-    BOOL* outMute
+    int writeMode,
+    float* ioVol,
+    BOOL* ioMute
 ) {
     if (pEnum == NULL || targetPid == 0u) {
         return 0;
@@ -1526,7 +1585,7 @@ static int read_process_mixer_volume(
     pColl->lpVtbl->GetCount(pColl, &devCount);
 
     int foundActive = 0;
-    int foundAny = 0;
+    int result = 0;
     float bestVol = 1.0f;
     BOOL bestMute = FALSE;
 
@@ -1573,15 +1632,22 @@ static int read_process_mixer_volume(
                                         pCtrl, &MB_IID_ISimpleAudioVolume, (void**)&pVol))
                                     && pVol != NULL) {
 
-                                    float v = 1.0f;
-                                    BOOL m = FALSE;
-                                    if (SUCCEEDED(pVol->lpVtbl->GetMasterVolume(pVol, &v))
-                                        && SUCCEEDED(pVol->lpVtbl->GetMute(pVol, &m))) {
-                                        bestVol = v;
-                                        bestMute = m;
-                                        foundAny = 1;
-                                        if (state == AudioSessionStateActive) {
-                                            foundActive = 1;
+                                    if (!writeMode) {
+                                        float v = 1.0f;
+                                        BOOL m = FALSE;
+                                        if (SUCCEEDED(pVol->lpVtbl->GetMasterVolume(pVol, &v))
+                                            && SUCCEEDED(pVol->lpVtbl->GetMute(pVol, &m))) {
+                                            bestVol = v;
+                                            bestMute = m;
+                                            result = 1;
+                                            if (state == AudioSessionStateActive) {
+                                                foundActive = 1;
+                                            }
+                                        }
+                                    } else {
+                                        if (SUCCEEDED(pVol->lpVtbl->SetMasterVolume(pVol, *ioVol, NULL))
+                                            && SUCCEEDED(pVol->lpVtbl->SetMute(pVol, *ioMute, NULL))) {
+                                            result = 1;
                                         }
                                     }
                                     pVol->lpVtbl->Release(pVol);
@@ -1601,12 +1667,20 @@ static int read_process_mixer_volume(
 
     pColl->lpVtbl->Release(pColl);
 
-    if (foundAny) {
-        *outVol = bestVol;
-        *outMute = bestMute;
-        return 1;
+    if (!writeMode && result) {
+        *ioVol = bestVol;
+        *ioMute = bestMute;
     }
-    return 0;
+    return result;
+}
+
+static int read_process_mixer_volume(
+    IMMDeviceEnumerator* pEnum,
+    DWORD targetPid,
+    float* outVol,
+    BOOL* outMute
+) {
+    return access_process_mixer_volume(pEnum, targetPid, 0, outVol, outMute);
 }
 
 static int apply_process_mixer_volume(
@@ -1615,84 +1689,7 @@ static int apply_process_mixer_volume(
     float vol,
     BOOL mute
 ) {
-    if (pEnum == NULL || targetPid == 0u) {
-        return 0;
-    }
-
-    IMMDeviceCollection* pColl = NULL;
-    if (FAILED(pEnum->lpVtbl->EnumAudioEndpoints(pEnum, eRender, DEVICE_STATE_ACTIVE, &pColl))
-        || pColl == NULL) {
-        return 0;
-    }
-
-    UINT devCount = 0;
-    pColl->lpVtbl->GetCount(pColl, &devCount);
-
-    int applied = 0;
-    for (UINT d = 0; d < devCount; d++) {
-        IMMDevice* pDev = NULL;
-        if (FAILED(pColl->lpVtbl->Item(pColl, d, &pDev)) || pDev == NULL) {
-            continue;
-        }
-
-        IAudioSessionManager2* pMgr = NULL;
-        if (SUCCEEDED(pDev->lpVtbl->Activate(
-                pDev, &MB_IID_IAudioSessionManager2, CLSCTX_ALL, NULL, (void**)&pMgr))
-            && pMgr != NULL) {
-
-            IAudioSessionEnumerator* pSessEnum = NULL;
-            if (SUCCEEDED(pMgr->lpVtbl->GetSessionEnumerator(pMgr, &pSessEnum))
-                && pSessEnum != NULL) {
-
-                int sessCount = 0;
-                pSessEnum->lpVtbl->GetCount(pSessEnum, &sessCount);
-
-                for (int s = 0; s < sessCount; s++) {
-                    IAudioSessionControl* pCtrl = NULL;
-                    if (FAILED(pSessEnum->lpVtbl->GetSession(pSessEnum, s, &pCtrl))
-                        || pCtrl == NULL) {
-                        continue;
-                    }
-
-                    AudioSessionState state = AudioSessionStateInactive;
-                    if (SUCCEEDED(pCtrl->lpVtbl->GetState(pCtrl, &state))
-                        && state != AudioSessionStateExpired) {
-
-                        IAudioSessionControl2* pCtrl2 = NULL;
-                        if (SUCCEEDED(pCtrl->lpVtbl->QueryInterface(
-                                pCtrl, &MB_IID_IAudioSessionControl2, (void**)&pCtrl2))
-                            && pCtrl2 != NULL) {
-
-                            DWORD pid = 0;
-                            if (SUCCEEDED(pCtrl2->lpVtbl->GetProcessId(pCtrl2, &pid))
-                                && pid == targetPid) {
-
-                                ISimpleAudioVolume* pVol = NULL;
-                                if (SUCCEEDED(pCtrl->lpVtbl->QueryInterface(
-                                        pCtrl, &MB_IID_ISimpleAudioVolume, (void**)&pVol))
-                                    && pVol != NULL) {
-
-                                    if (SUCCEEDED(pVol->lpVtbl->SetMasterVolume(pVol, vol, NULL))
-                                        && SUCCEEDED(pVol->lpVtbl->SetMute(pVol, mute, NULL))) {
-                                        applied = 1;
-                                    }
-                                    pVol->lpVtbl->Release(pVol);
-                                }
-                            }
-                            pCtrl2->lpVtbl->Release(pCtrl2);
-                        }
-                    }
-                    pCtrl->lpVtbl->Release(pCtrl);
-                }
-                pSessEnum->lpVtbl->Release(pSessEnum);
-            }
-            pMgr->lpVtbl->Release(pMgr);
-        }
-        pDev->lpVtbl->Release(pDev);
-    }
-
-    pColl->lpVtbl->Release(pColl);
-    return applied;
+    return access_process_mixer_volume(pEnum, targetPid, 1, &vol, &mute);
 }
 
 static DWORD WINAPI mixer_sync_thread_proc(LPVOID param) {
@@ -1956,6 +1953,10 @@ static HWND create_player_window(HINSTANCE hInstance) {
     wc.lpszClassName = className;
 
     if (!RegisterClassExW(&wc)) {
+        if (g_ownerHwnd != NULL) {
+            DestroyWindow(g_ownerHwnd);
+            g_ownerHwnd = NULL;
+        }
         return NULL;
     }
 
@@ -2076,6 +2077,7 @@ int main(int argc, char** argv) {
     InitializeCriticalSection(&g_evtLock);
     g_stopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     g_pipeConnectedEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    g_statusWakeEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     g_hwnd = create_player_window(hInstance);
@@ -2152,6 +2154,10 @@ int main(int argc, char** argv) {
     LeaveCriticalSection(&g_audioLock);
     destroy_track(remaining);
 
+    if (g_statusWakeEvent != NULL) {
+        CloseHandle(g_statusWakeEvent);
+        g_statusWakeEvent = NULL;
+    }
     if (g_pipeConnectedEvent != NULL) {
         CloseHandle(g_pipeConnectedEvent);
         g_pipeConnectedEvent = NULL;
