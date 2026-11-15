@@ -32,6 +32,10 @@ java {
     }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+}
+
 def zigVersion = '0.17.1'
 def zigArchiveName = "zig-x86_64-windows-${zigVersion}"
 def zigUrl = "https://ziglang.org/download/${zigVersion}/${zigArchiveName}.zip"
