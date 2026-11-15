@@ -24,6 +24,20 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Central runtime coordinator and instrumentation hook target for MusicBus.
+ *
+ * Owns agent initialization, configuration state, and live position-preserving
+ * transitions (with rollback) between {@link VanillaAudioPlayer} and
+ * {@link BusedAudioPlayer}, using {@link PlaybackSession} as a neutral state
+ * mediator.
+ *
+ * Handles {@code SoundEngine}, {@code AbstractSoundInstance}, and
+ * {@code SoundBufferLibrary} hooks to route {@code SoundSource.MUSIC} playback,
+ * synchronize volume and pause/stop lifecycle events, lock resolved random
+ * sound selections across handoffs, and seek vanilla {@code AudioStream}
+ * futures when returning playback to Minecraft.
+ */
 public final class MusicBusManager {
 
     private static volatile boolean enabled;

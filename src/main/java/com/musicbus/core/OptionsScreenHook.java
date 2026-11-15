@@ -7,11 +7,21 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-public final class MusicBus {
+/**
+ * UI hook entry point for Minecraft's {@code SoundOptionsScreen}.
+ *
+ * Injects a native {@code OptionInstance<Boolean>} toggle ("MusicBus")
+ * into the screen's {@code OptionsList} via reflection so players can
+ * switch music routing at runtime without compile-time Minecraft dependencies.
+ *
+ * Augmented screen instances are tracked in a {@code WeakHashMap} to
+ * keep injection idempotent without retaining closed GUI screens.
+ */
+public final class OptionsScreenHook {
     private static final Map<Object, Boolean> INJECTED =
             Collections.synchronizedMap(new WeakHashMap<>());
 
-    private MusicBus() {}
+    private OptionsScreenHook() {}
 
     public static void onSoundOptionsScreen(Object screen) {
         if (screen == null || INJECTED.containsKey(screen)) {
