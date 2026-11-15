@@ -52,12 +52,7 @@ public final class OggResourceResolver {
                 );
             }
 
-            if (!Double.isFinite(durationSeconds)
-                    || durationSeconds < 0.0) {
-                throw new IllegalArgumentException(
-                        "Invalid durationSeconds"
-                );
-            }
+            PlaybackMath.validateDuration(durationSeconds);
         }
     }
 

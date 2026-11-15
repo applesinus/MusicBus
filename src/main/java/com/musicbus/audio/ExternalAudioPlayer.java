@@ -243,9 +243,7 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
         if (sessionId == null || !isAvailable()) {
             return;
         }
-        if (!Double.isFinite(positionSeconds) || positionSeconds < 0.0) {
-            throw new IllegalArgumentException("Invalid playback position");
-        }
+        PlaybackMath.validatePosition(positionSeconds);
 
         long now = System.nanoTime();
         double normalized;
@@ -253,7 +251,7 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
             if (trackedSession == null || !trackedSession.sessionId.equals(sessionId)) {
                 return;
             }
-            normalized = normalizePosition(
+            normalized = PlaybackMath.normalizePosition(
                     positionSeconds,
                     trackedSession.durationSeconds,
                     trackedSession.looping
@@ -273,9 +271,7 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
         if (sessionId == null || !isAvailable()) {
             return;
         }
-        if (!Float.isFinite(volume) || volume < 0.0f) {
-            throw new IllegalArgumentException("Invalid volume");
-        }
+        PlaybackMath.validateVolume(volume);
 
         synchronized (stateLock) {
             if (trackedSession == null || !trackedSession.sessionId.equals(sessionId)) {
@@ -294,9 +290,7 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
         if (sessionId == null || !isAvailable()) {
             return;
         }
-        if (!Float.isFinite(pitch) || pitch < 0.0f) {
-            throw new IllegalArgumentException("Invalid pitch");
-        }
+        PlaybackMath.validatePitch(pitch);
 
         long now = System.nanoTime();
         synchronized (stateLock) {
@@ -326,7 +320,7 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
             if (trackedSession == null || !trackedSession.sessionId.equals(sessionId)) {
                 return;
             }
-            double pos = normalizePosition(
+            double pos = PlaybackMath.normalizePosition(
                     trackedSession.estimatePosition(now),
                     trackedSession.durationSeconds,
                     looping
@@ -951,7 +945,7 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
                     }
 
                     trackedSession.state = reportedState;
-                    trackedSession.positionSeconds = normalizePosition(
+                    trackedSession.positionSeconds = PlaybackMath.normalizePosition(
                             status.positionSeconds(),
                             trackedSession.durationSeconds,
                             trackedSession.looping
@@ -993,23 +987,6 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
     // --------------------------------------------------
     // Helpers
     // --------------------------------------------------
-
-    private static double normalizePosition(
-            double position,
-            double durationSeconds,
-            boolean looping
-    ) {
-        if (!Double.isFinite(position) || position < 0.0) {
-            return 0.0;
-        }
-        if (durationSeconds <= 0.0) {
-            return position;
-        }
-        if (looping) {
-            return position % durationSeconds;
-        }
-        return Math.min(position, durationSeconds);
-    }
 
     private static void closeQuietly(AutoCloseable closeable) {
         if (closeable != null) {
@@ -1064,12 +1041,15 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
         }
 
         double estimatePosition(long nowNanos) {
-            if (state != PlaybackSession.State.PLAYING) {
-                return positionSeconds;
-            }
-            double elapsed = Math.max(0L, nowNanos - anchorNanos) / 1_000_000_000.0;
-            double estimated = positionSeconds + elapsed * pitch;
-            return normalizePosition(estimated, durationSeconds, looping);
+            return PlaybackMath.estimatePosition(
+                    state,
+                    positionSeconds,
+                    durationSeconds,
+                    pitch,
+                    looping,
+                    anchorNanos,
+                    nowNanos
+            );
         }
     }
 

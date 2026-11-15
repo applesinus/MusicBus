@@ -191,10 +191,11 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
             if (snap != null) {
                 synchronized (entry) {
-                    entry.lastKnownPositionSeconds = normalizePosition(
-                            entry,
+                    entry.lastKnownPositionSeconds = PlaybackMath.normalizePosition(
                             entry.initialOffsetSeconds
-                                    + snap.positionSeconds()
+                                    + snap.positionSeconds(),
+                            entry.durationSeconds,
+                            entry.looping
                     );
                 }
             }
@@ -319,10 +320,11 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             synchronized (entry) {
 
                 if (snap != null) {
-                    entry.lastKnownPositionSeconds = normalizePosition(
-                            entry,
+                    entry.lastKnownPositionSeconds = PlaybackMath.normalizePosition(
                             entry.initialOffsetSeconds
-                                    + snap.positionSeconds()
+                                    + snap.positionSeconds(),
+                            entry.durationSeconds,
+                            entry.looping
                     );
                 }
 
@@ -471,27 +473,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
         synchronized (entry) {
             return entry.lastChannel;
         }
-    }
-
-    private static double normalizePosition(
-            Entry entry,
-            double position
-    ) {
-
-        if (!Double.isFinite(position) || position < 0.0) {
-            return 0.0;
-        }
-
-        if (entry.durationSeconds > 0.0) {
-
-            if (entry.looping) {
-                return position % entry.durationSeconds;
-            }
-
-            return Math.min(position, entry.durationSeconds);
-        }
-
-        return position;
     }
 
     // --------------------------------------------------

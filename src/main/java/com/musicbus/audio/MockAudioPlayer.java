@@ -77,7 +77,7 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
             return;
         }
 
-        double finalPosition = calculatePosition(
+        double finalPosition = PlaybackMath.estimatePosition(
                 currentSession,
                 anchorNanos,
                 System.nanoTime()
@@ -103,7 +103,7 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
             return;
         }
 
-        double currentPosition = calculatePosition(
+        double currentPosition = PlaybackMath.estimatePosition(
                 session,
                 anchorNanos,
                 System.nanoTime()
@@ -154,16 +154,10 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
             return;
         }
 
-        if (!Double.isFinite(positionSeconds)
-                || positionSeconds < 0.0) {
-
-            throw new IllegalArgumentException(
-                    "Invalid playback position"
-            );
-        }
+        PlaybackMath.validatePosition(positionSeconds);
 
         PlaybackSession.Snapshot session = currentSession;
-        double normalized = normalizePosition(
+        double normalized = PlaybackMath.normalizePosition(
                 positionSeconds,
                 session.durationSeconds(),
                 session.looping()
@@ -185,7 +179,7 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
             return;
         }
 
-        validateNonNegative(volume, "volume");
+        PlaybackMath.validateVolume(volume);
 
         PlaybackSession.Snapshot session = currentSession;
 
@@ -204,11 +198,11 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
             return;
         }
 
-        validateNonNegative(pitch, "pitch");
+        PlaybackMath.validatePitch(pitch);
 
         long now = System.nanoTime();
         PlaybackSession.Snapshot session = currentSession;
-        double currentPosition = calculatePosition(
+        double currentPosition = PlaybackMath.estimatePosition(
                 session,
                 anchorNanos,
                 now
@@ -235,8 +229,8 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
 
         long now = System.nanoTime();
         PlaybackSession.Snapshot session = currentSession;
-        double currentPosition = normalizePosition(
-                calculatePosition(session, anchorNanos, now),
+        double currentPosition = PlaybackMath.normalizePosition(
+                PlaybackMath.estimatePosition(session, anchorNanos, now),
                 session.durationSeconds(),
                 looping
         );
@@ -265,7 +259,7 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
 
         long now = System.nanoTime();
         PlaybackSession.Snapshot session = currentSession;
-        double position = calculatePosition(
+        double position = PlaybackMath.estimatePosition(
                 session,
                 anchorNanos,
                 now
@@ -303,67 +297,10 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
     // Internal helpers
     // --------------------------------------------------
 
-    private static double calculatePosition(
-            PlaybackSession.Snapshot session,
-            long anchorNanos,
-            long nowNanos
-    ) {
-
-        if (session.state() != PlaybackSession.State.PLAYING) {
-            return session.positionSeconds();
-        }
-
-        double elapsedSeconds =
-                Math.max(0L, nowNanos - anchorNanos)
-                        / 1_000_000_000.0;
-
-        double currentPosition =
-                session.positionSeconds()
-                        + elapsedSeconds * session.pitch();
-
-        return normalizePosition(
-                currentPosition,
-                session.durationSeconds(),
-                session.looping()
-        );
-    }
-
-    private static double normalizePosition(
-            double position,
-            double durationSeconds,
-            boolean looping
-    ) {
-
-        if (durationSeconds <= 0.0) {
-            return Math.max(0.0, position);
-        }
-
-        if (looping) {
-            return position % durationSeconds;
-        }
-
-        return Math.min(
-                Math.max(0.0, position),
-                durationSeconds
-        );
-    }
-
     private boolean isCurrentSession(UUID sessionId) {
 
         return currentSession != null
                 && currentSession.id().equals(sessionId);
-    }
-
-    private static void validateNonNegative(
-            float value,
-            String name
-    ) {
-
-        if (!Float.isFinite(value) || value < 0.0f) {
-            throw new IllegalArgumentException(
-                    "Invalid " + name
-            );
-        }
     }
 
     private static void log(String message) {
@@ -371,4 +308,6 @@ public final class MockAudioPlayer implements BusedAudioPlayer {
                 "[MusicBus] [MockAudioPlayer] " + message
         );
     }
+
+    
 }

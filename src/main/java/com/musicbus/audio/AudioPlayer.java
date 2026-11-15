@@ -121,13 +121,7 @@ public interface AudioPlayer extends AutoCloseable {
                 );
             }
 
-            if (!Double.isFinite(positionSeconds)
-                    || positionSeconds < 0.0) {
-
-                throw new IllegalArgumentException(
-                        "Invalid playback position"
-                );
-            }
+            PlaybackMath.validatePosition(positionSeconds);
         }
     }
 }

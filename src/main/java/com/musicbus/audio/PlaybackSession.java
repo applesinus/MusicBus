@@ -89,16 +89,10 @@ public final class PlaybackSession {
             );
         }
 
-        if (!Double.isFinite(durationSeconds)
-                || durationSeconds < 0.0) {
-            throw new IllegalArgumentException(
-                    "Invalid duration"
-            );
-        }
-
-        validatePosition(initialPositionSeconds);
-        validateVolume(volume);
-        validatePitch(pitch);
+        PlaybackMath.validateDuration(durationSeconds);
+        PlaybackMath.validatePosition(initialPositionSeconds);
+        PlaybackMath.validateVolume(volume);
+        PlaybackMath.validatePitch(pitch);
 
         this.oggPath = oggPath;
         this.oggData = oggData;
@@ -155,7 +149,7 @@ public final class PlaybackSession {
      */
     public synchronized void seek(double positionSeconds) {
 
-        validatePosition(positionSeconds);
+        PlaybackMath.validatePosition(positionSeconds);
 
         this.positionSeconds = normalizePosition(
                 positionSeconds
@@ -168,7 +162,7 @@ public final class PlaybackSession {
      */
     public synchronized void syncPosition(double positionSeconds) {
 
-        validatePosition(positionSeconds);
+        PlaybackMath.validatePosition(positionSeconds);
 
         this.positionSeconds = normalizePosition(
                 positionSeconds
@@ -192,18 +186,10 @@ public final class PlaybackSession {
     }
 
     private double normalizePosition(double position) {
-
-        if (durationSeconds <= 0.0) {
-            return Math.max(0.0, position);
-        }
-
-        if (looping) {
-            return position % durationSeconds;
-        }
-
-        return Math.min(
-                Math.max(0.0, position),
-                durationSeconds
+        return PlaybackMath.normalizePosition(
+                position,
+                durationSeconds,
+                looping
         );
     }
 
@@ -258,7 +244,7 @@ public final class PlaybackSession {
 
     public synchronized void setVolume(float volume) {
 
-        validateVolume(volume);
+        PlaybackMath.validateVolume(volume);
 
         this.volume = volume;
     }
@@ -269,7 +255,7 @@ public final class PlaybackSession {
 
     public synchronized void setPitch(float pitch) {
 
-        validatePitch(pitch);
+        PlaybackMath.validatePitch(pitch);
 
         this.pitch = pitch;
     }
@@ -307,37 +293,6 @@ public final class PlaybackSession {
                 looping,
                 state
         );
-    }
-
-    // ------------------------------------------
-    // Validation
-    // ------------------------------------------
-
-    private static void validatePosition(double position) {
-
-        if (!Double.isFinite(position) || position < 0.0) {
-            throw new IllegalArgumentException(
-                    "Invalid playback position"
-            );
-        }
-    }
-
-    private static void validateVolume(float volume) {
-
-        if (!Float.isFinite(volume) || volume < 0.0f) {
-            throw new IllegalArgumentException(
-                    "Invalid volume"
-            );
-        }
-    }
-
-    private static void validatePitch(float pitch) {
-
-        if (!Float.isFinite(pitch) || pitch < 0.0f) {
-            throw new IllegalArgumentException(
-                    "Invalid pitch"
-            );
-        }
     }
 
     // ------------------------------------------
