@@ -3,7 +3,7 @@
   "id": "musicbus",
   "version": "${version}",
   "name": "MusicBus",
-  "description": "Isolates Minecraft background music into a separate audio process for independent capture in OBS and recording software.",
+  "description": "Isolates Minecraft background music into a separate audio process for independent capture in OBS and other recording software to let creators a way to experience Minecraft as intended.",
   "authors": [
     "MusicBus"
   ],
