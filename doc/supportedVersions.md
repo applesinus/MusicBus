@@ -1,19 +1,19 @@
 ## Fabric Mod
 
-| №   | Minecraft | Fabric Loader | Profile                        | Expected result                                                                      | Got | Notes                           |
-| --- | --------- | ------------- | ------------------------------ | ------------------------------------------------------------------------------------ | --- | ------------------------------- |
-| 1   | `26.3`    | `0.20.1`      | `fabric-loader-0.20.1-26.3`    | ✅ Launch, `getOrResolve`, `ValueUpdateListener`, unobf `MOJANG`                      | ✅   |                                 |
-| 2   | `26.2`    | `0.19.0`      | `fabric-loader-0.19.0-26.2`    | ✅ Launch, `ValueUpdateListener`, `resolve`, unobf `MOJANG`                           | ✅   |                                 |
-| 3   | `26.1.2`  | `0.18.0`      | `fabric-loader-0.18.0-26.1.2`  | ✅ Launch, `Consumer<Boolean>`, `PlayResult`, unobf `MOJANG`                          | ✅   |                                 |
-| 4   | `1.21.11` | `0.17.3`      | `fabric-loader-0.17.3-1.21.11` | ✅ Launch, `Intermediary*Mixin`, `getIdentifier`, `refreshCategoryVolume`             | ✅   |                                 |
-| 5   | `1.21.10` | `0.17.0`      | `fabric-loader-0.17.0-1.21.10` | ✅ Launch, `updateCategoryVolume(SoundSource)` (1 arg), `getLocation`                 | ❌   | [log](crash-1.21.10.txt)        |
-| 6   | `1.21.6`  | `0.16.14`     | `fabric-loader-0.16.14-1.21.6` | ✅ Launch, `PlayResult`, `pauseAllExcept`, `updateCategoryVolume(SoundSource, float)` | ❌   | [log](crash-1.21.6.txt)         |
-| 7   | `1.21.4`  | `0.16.9`      | `fabric-loader-0.16.9-1.21.4`  | ✅ Launch, `play` → `void`, `pause()`, `SoundOptionsScreen.addOptions()`              | ❌   | [log](crash-1.21.4.txt)         |
-| 8   | `1.20.4`  | `0.16.0`      | `fabric-loader-0.16.0-1.20.4`  | ✅ Launch, `SoundOptionsScreen.init()`, `addSmall(OptionInstance[])`                  | ❌   | [log](crash-1.20.4.txt)         |
-| 9   | `1.19.4`  | `0.15.11`     | `fabric-loader-0.15.11-1.19.4` | ✅ Launch, `INTENTIONALLY_EMPTY_SOUND` присутствует                                   | ❌   | [log](crash-1.19.4.txt)         |
-| 10  | `1.19.2`  | `0.15.5`      | `fabric-loader-0.15.5-1.19.2`  | ✅ Launch, `HAS_INTENTIONALLY_EMPTY_SOUND = false`, `OptionInstance` есть             | ❌   | [log](crash-1.19.2.txt)         |
-| 11  | `1.18.2`  | `0.14.25`     | `fabric-loader-0.14.25-1.18.2` | ❌ Negative test: failure due to `fabricloader >= 0.15.0`                             | ❌   | [log](crash-1.18.2-0.14.25.txt) |
-| 12  | `1.17.1`  | `0.15.0`      | `fabric-loader-0.15.0-1.17.1`  | ❌ Negative test: failure due to `minecraft >= 1.18` / `java >= 17`                   | ❌   | [log](crash-1.17.1.txt)         |
+| №   | Minecraft | Fabric Loader | Profile                        | Expected result                                                                      | Got | Notes                                                   |
+| --- | --------- | ------------- | ------------------------------ | ------------------------------------------------------------------------------------ | --- | ------------------------------------------------------- |
+| 1   | `26.3`    | `0.20.1`      | `fabric-loader-0.20.1-26.3`    | ✅ Launch, `getOrResolve`, `ValueUpdateListener`, unobf `MOJANG`                      | ✅   |                                                         |
+| 2   | `26.2`    | `0.19.0`      | `fabric-loader-0.19.0-26.2`    | ✅ Launch, `ValueUpdateListener`, `resolve`, unobf `MOJANG`                           | ✅   |                                                         |
+| 3   | `26.1.2`  | `0.18.0`      | `fabric-loader-0.18.0-26.1.2`  | ✅ Launch, `Consumer<Boolean>`, `PlayResult`, unobf `MOJANG`                          | ✅   |                                                         |
+| 4   | `1.21.11` | `0.17.3`      | `fabric-loader-0.17.3-1.21.11` | ✅ Launch, `Intermediary*Mixin`, `getIdentifier`, `refreshCategoryVolume`             | ✅   |                                                         |
+| 5   | `1.21.10` | `0.17.0`      | `fabric-loader-0.17.0-1.21.10` | ✅ Launch, `updateCategoryVolume(SoundSource)` (1 arg), `getLocation`                 | ✅   |                                                         |
+| 6   | `1.21.6`  | `0.16.14`     | `fabric-loader-0.16.14-1.21.6` | ✅ Launch, `PlayResult`, `pauseAllExcept`, `updateCategoryVolume(SoundSource, float)` | ✅   |                                                         |
+| 7   | `1.21.4`  | `0.16.9`      | `fabric-loader-0.16.9-1.21.4`  | ✅ Launch, `play` → `void`, `pause()`, `SoundOptionsScreen.addOptions()`              | ⚠️  | no mixed volume calc [log](crash-1.21.4.txt)            |
+| 8   | `1.20.4`  | `0.16.0`      | `fabric-loader-0.16.0-1.20.4`  | ✅ Launch, `SoundOptionsScreen.init()`, `addSmall(OptionInstance[])`                  | ⚠️  | no mixed volume calc [log](crash-1.20.4.txt)            |
+| 9   | `1.19.4`  | `0.15.11`     | `fabric-loader-0.15.11-1.19.4` | ✅ Launch, `INTENTIONALLY_EMPTY_SOUND` присутствует                                   | ⚠️  | no mixed volume calc [log](crash-1.19.4.txt)            |
+| 10  | `1.19.2`  | `0.15.5`      | `fabric-loader-0.15.5-1.19.2`  | ✅ Launch, `HAS_INTENTIONALLY_EMPTY_SOUND = false`, `OptionInstance`                  | ⚠️  | no mixed volume calc, no button [log](crash-1.19.2.txt) |
+| 11  | `1.18.2`  | `0.14.25`     | `fabric-loader-0.14.25-1.18.2` | ❌ Negative test: failure due to `fabricloader >= 0.15.0`                             | ❌   | [log](crash-1.18.2-0.14.25.txt)                         |
+| 12  | `1.17.1`  | `0.15.0`      | `fabric-loader-0.15.0-1.17.1`  | ❌ Negative test: failure due to `minecraft >= 1.18` / `java >= 17`                   | ❌   | [log](crash-1.17.1.txt)                                 |
 
 ---
 
@@ -23,7 +23,7 @@
 | --- | --------- | ---------------- | --------------------------------------------------------------------------------------------------------- | --- | ----- |
 | 1   | `26.3`    | `MOJANG` (unobf) | ✅ Launch, `getOrResolve`, `ValueUpdateListener`, `detectChannelLambdas`                                   | ⏳   |       |
 | 2   | `26.2`    | `MOJANG` (unobf) | ✅ Launch, `ValueUpdateListener` (`26.2+`)                                                                 | ⏳   |       |
-| 3   | `26.1.2`  | `MOJANG` (unobf) | ✅ Launch, базовый таргет, `Consumer<Boolean>`                                                             | ⏳   |       |
+| 3   | `26.1.2`  | `MOJANG` (unobf) | ✅ Launch, basic target, `Consumer<Boolean>`                                                               | ⏳   |       |
 | 4   | `1.21.11` | `OBF`            | ✅ Launch, `getIdentifier`, `refreshCategoryVolume`                                                        | ⏳   |       |
 | 5   | `1.21.10` | `OBF`            | ✅ Launch, `updateCategoryVolume(SoundSource)` (1 arg), `getLocation`                                      | ⏳   |       |
 | 6   | `1.21.6`  | `OBF`            | ✅ Launch, `PlayResult`, `pauseAllExcept`, `updateCategoryVolume(SoundSource, float)`                      | ⏳   |       |

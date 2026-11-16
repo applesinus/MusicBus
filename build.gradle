@@ -7,7 +7,7 @@ plugins {
 
 group = 'com.musicbus'
 version = '0.3.3'
-def minMcVersion = '1.21.11'
+def minMcVersion = '1.19.2'
 def maxMcVersion = '26.3'
 
 def configureJarArtifact = { Jar jarTask, String loaderName ->

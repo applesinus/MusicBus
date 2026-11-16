@@ -1,27 +1,49 @@
-<...>
-
-Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [musicbus.mixins.json:intermediary.IntermediarySoundEngineMixin from mod musicbus] from phase [DEFAULT] in config [musicbus.mixins.json] FAILED during APPLY
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:638)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:589)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:379)
-	... 13 more
-Caused by: org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException: Unexpecteded IllegalStateException whilst transforming the mixin class: [PostApply Phase -> musicbus.mixins.json:intermediary.IntermediarySoundEngineMixin from mod musicbus -> Plugin Post-Application]
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.postApply(MixinTargetContext.java:1356)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:266)
-	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
-	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:363)
-	... 13 more
-Caused by: java.lang.IllegalStateException: [MusicBus] Failed to transform target class via Fabric Mixin: net.minecraft.class_1140
-	at com.musicbus.fabric.MusicBusMixinPlugin.postApply(MusicBusMixinPlugin.java:176)
-	at org.spongepowered.asm.mixin.transformer.PluginHandle.postApply(PluginHandle.java:189)
-	at org.spongepowered.asm.mixin.transformer.MixinInfo.postApply(MixinInfo.java:1372)
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.postApply(MixinTargetContext.java:1345)
-	... 17 more
-<...>
-
-	Minecraft Version: 1.20.4
-	Java Version: 17.0.15, Microsoft
-	Launched Version: fabric-loader-0.16.0-1.20.4
-
-<...>
+[21:06:00] [main/INFO]: Loading Minecraft 1.20.4 with Fabric Loader 0.16.0
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine category volume refresh (method_4844(Lnet/minecraft/class_3419;F)V).
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.stop().
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.stopAll().
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.isActive().
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.play().
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.method_19761()V
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.resume().
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.stop(Id, Source).
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] SoundEngine fully transformed.
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked SoundBufferLibrary.method_19744(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;
+[21:06:15] [Render thread/INFO]: [STDOUT]: [MusicBus] SoundBufferLibrary transformed.
+[21:06:18] [Render thread/INFO]: OpenAL initialized on device OpenAL Soft on �������� (Realtek(R) Audio)
+[21:06:18] [Render thread/INFO]: Sound engine started
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] Hooked AbstractSoundInstance.method_4783(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] AbstractSoundInstance transformed.
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] Channel transformed.
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] SoundInstance registered: 1f144e34-e22f-47bc-8581-e83f8eec5689
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] Sound locked: minecraft:music/game/echo_in_the_wind
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] Session created: 1f144e34-e22f-47bc-8581-e83f8eec5689
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] Resource: minecraft:music.menu
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] OGG: minecraft:sounds/music/game/echo_in_the_wind.ogg (296.18s)
+[21:06:21] [Render thread/INFO]: [STDOUT]: [MusicBus] Music intercepted: minecraft:music.menu
+[21:06:56] [Render thread/INFO]: [STDOUT]: [MusicBus] Found SoundOptionsScreen.method_25426()V
+[21:06:56] [Render thread/INFO]: [STDOUT]: [MusicBus] SoundOptionsScreen transformed.
+[21:07:00] [Render thread/INFO]: [STDOUT]: [MusicBus] onSoundOptionsScreen invoked. Screen loader: net.fabricmc.loader.impl.launch.knot.KnotClassLoader@62e136d3
+[21:07:00] [Render thread/INFO]: [STDOUT]: [MusicBus] MusicBus toggle injected successfully.
+[21:07:02] [Render thread/INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] Vanilla playback resumed: 1f144e34-e22f-47bc-8581-e83f8eec5689 at 40.97s
+[21:07:02] [Render thread/INFO]: [STDOUT]: [MusicBus] Bused -> Vanilla transition successful.
+[21:07:02] [Render thread/INFO]: [STDOUT]: [MusicBus] Session: 1f144e34-e22f-47bc-8581-e83f8eec5689
+[21:07:02] [Render thread/INFO]: [STDOUT]: [MusicBus] MusicBus state changed: false
+[21:07:03] [Worker-Main-8/INFO]: [STDOUT]: [MusicBus] AudioStream skipped to 40.97s (bytes skipped: 7865300)
+[21:07:04] [Render thread/INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] Vanilla playback stopped: 1f144e34-e22f-47bc-8581-e83f8eec5689 at 42.81s
+[21:07:04] [Render thread/INFO]: [STDOUT]: [MusicBus] Vanilla -> Bused transition successful.
+[21:07:04] [Render thread/INFO]: [STDOUT]: [MusicBus] Session: 1f144e34-e22f-47bc-8581-e83f8eec5689
+[21:07:04] [Render thread/INFO]: [STDOUT]: [MusicBus] MusicBus state changed: true
+[21:07:07] [Render thread/INFO]: [STDOUT]: [MusicBus] Restored locked sound: minecraft:music/game/echo_in_the_wind
+[21:07:07] [Render thread/INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] Vanilla playback resumed: 1f144e34-e22f-47bc-8581-e83f8eec5689 at 45.23s
+[21:07:07] [Render thread/INFO]: [STDOUT]: [MusicBus] Bused -> Vanilla transition successful.
+[21:07:07] [Render thread/INFO]: [STDOUT]: [MusicBus] Session: 1f144e34-e22f-47bc-8581-e83f8eec5689
+[21:07:07] [Render thread/INFO]: [STDOUT]: [MusicBus] MusicBus state changed: false
+[21:07:07] [Worker-Main-8/INFO]: [STDOUT]: [MusicBus] AudioStream skipped to 45.23s (bytes skipped: 8683532)
+[21:07:09] [Render thread/INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] Vanilla playback stopped: 1f144e34-e22f-47bc-8581-e83f8eec5689 at 46.93s
+[21:07:09] [Render thread/INFO]: [STDOUT]: [MusicBus] Vanilla -> Bused transition successful.
+[21:07:09] [Render thread/INFO]: [STDOUT]: [MusicBus] Session: 1f144e34-e22f-47bc-8581-e83f8eec5689
+[21:07:09] [Render thread/INFO]: [STDOUT]: [MusicBus] MusicBus state changed: true
+[21:07:23] [Render thread/INFO]: Stopping!
+[21:07:23] [Render thread/INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] SoundInstance unregistered: 1f144e34-e22f-47bc-8581-e83f8eec5689
+[21:07:23] [MusicBus-Shutdown/INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] VanillaAudioPlayer closed.

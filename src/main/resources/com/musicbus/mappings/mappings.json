@@ -2873,7 +2873,7 @@
                     "Lyq;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -2888,7 +2888,7 @@
                     "Laaj;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -2903,7 +2903,7 @@
                     "Lacm;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -2918,7 +2918,7 @@
                     "Ladp;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -2933,7 +2933,7 @@
                     "Ladr;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -2948,7 +2948,7 @@
                     "Laff;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -2963,7 +2963,7 @@
                     "Lagw;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -2978,7 +2978,7 @@
                     "Lahl;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -2993,7 +2993,7 @@
                     "Lajf;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3008,7 +3008,7 @@
                     "Lajx;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3023,7 +3023,7 @@
                     "Lalp;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3038,7 +3038,7 @@
                     "Lams;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3053,7 +3053,7 @@
                     "Lami;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3068,7 +3068,7 @@
                     "Lape;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3083,7 +3083,7 @@
                     "Lart;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3098,7 +3098,7 @@
                     "Lawb;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3113,7 +3113,7 @@
                     "Lavq;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3128,7 +3128,7 @@
                     "Laxg;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3143,7 +3143,7 @@
                     "Lawz;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3158,7 +3158,7 @@
                     "Laza;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3173,7 +3173,7 @@
                     "Lbcf;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3188,7 +3188,7 @@
                     "Lbdb;"
                 ],
                 "intermediary": [
-                    "MUSIC",
+                    "field_15253",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3216,7 +3216,7 @@
                     "Lyq;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3231,7 +3231,7 @@
                     "Laaj;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3246,7 +3246,7 @@
                     "Lacm;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3261,7 +3261,7 @@
                     "Ladp;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3276,7 +3276,7 @@
                     "Ladr;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3291,7 +3291,7 @@
                     "Laff;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3306,7 +3306,7 @@
                     "Lagw;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3321,7 +3321,7 @@
                     "Lahl;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3336,7 +3336,7 @@
                     "Lajf;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3351,7 +3351,7 @@
                     "Lajx;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3366,7 +3366,7 @@
                     "Lalp;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3381,7 +3381,7 @@
                     "Lams;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3396,7 +3396,7 @@
                     "Lami;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3411,7 +3411,7 @@
                     "Lape;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3426,7 +3426,7 @@
                     "Lart;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3441,7 +3441,7 @@
                     "Lawb;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3456,7 +3456,7 @@
                     "Lavq;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3471,7 +3471,7 @@
                     "Laxg;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3486,7 +3486,7 @@
                     "Lawz;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3501,7 +3501,7 @@
                     "Laza;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3516,7 +3516,7 @@
                     "Lbcf;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3531,7 +3531,7 @@
                     "Lbdb;"
                 ],
                 "intermediary": [
-                    "MASTER",
+                    "field_15250",
                     "Lnet/minecraft/class_3419;"
                 ]
             },
@@ -3559,7 +3559,7 @@
                     "Ldzm;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3574,7 +3574,7 @@
                     "Lect;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3589,7 +3589,7 @@
                     "Lecw;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3604,7 +3604,7 @@
                     "Leoj;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3619,7 +3619,7 @@
                     "Lemi;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3634,7 +3634,7 @@
                     "Lemq;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3649,7 +3649,7 @@
                     "Lezz;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3664,7 +3664,7 @@
                     "Lfaa;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3679,7 +3679,7 @@
                     "Lfcf;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3694,7 +3694,7 @@
                     "Lfdm;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3709,7 +3709,7 @@
                     "Lfku;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3724,7 +3724,7 @@
                     "Lfms;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3739,7 +3739,7 @@
                     "Lfrk;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3754,7 +3754,7 @@
                     "Lfwc;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3769,7 +3769,7 @@
                     "Lfxv;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3784,7 +3784,7 @@
                     "Lgcj;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3799,7 +3799,7 @@
                     "Lghx;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3814,7 +3814,7 @@
                     "Lgsl;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3829,7 +3829,7 @@
                     "Lgsm;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3844,7 +3844,7 @@
                     "Lgtx;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3859,7 +3859,7 @@
                     "Lhfe;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3874,7 +3874,7 @@
                     "Lhff;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3889,7 +3889,7 @@
                     "Lhin;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3904,7 +3904,7 @@
                     "Lhok;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3919,7 +3919,7 @@
                     "Lhvm;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3934,7 +3934,7 @@
                     "Lhvn;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3949,7 +3949,7 @@
                     "Lhvo;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3964,7 +3964,7 @@
                     "Ligh;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -3979,7 +3979,7 @@
                     "Lipj;"
                 ],
                 "intermediary": [
-                    "EMPTY_SOUND",
+                    "field_5592",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4007,7 +4007,7 @@
                     "Ldzm;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4022,7 +4022,7 @@
                     "Lect;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4037,7 +4037,7 @@
                     "Lecw;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4052,7 +4052,7 @@
                     "Leoj;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4067,7 +4067,7 @@
                     "Lemi;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4082,7 +4082,7 @@
                     "Lemq;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4097,7 +4097,7 @@
                     "Lezz;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4112,7 +4112,7 @@
                     "Lfaa;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4127,7 +4127,7 @@
                     "Lfcf;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4142,7 +4142,7 @@
                     "Lfdm;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4157,7 +4157,7 @@
                     "Lfku;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4172,7 +4172,7 @@
                     "Lfms;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4187,7 +4187,7 @@
                     "Lfrk;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4202,7 +4202,7 @@
                     "Lfwc;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4217,7 +4217,7 @@
                     "Lfxv;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4232,7 +4232,7 @@
                     "Lgcj;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4247,7 +4247,7 @@
                     "Lghx;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4262,7 +4262,7 @@
                     "Lgsl;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4277,7 +4277,7 @@
                     "Lgsm;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4292,7 +4292,7 @@
                     "Lgtx;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4307,7 +4307,7 @@
                     "Lhfe;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4322,7 +4322,7 @@
                     "Lhff;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4337,7 +4337,7 @@
                     "Lhin;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4352,7 +4352,7 @@
                     "Lhok;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4367,7 +4367,7 @@
                     "Lhvm;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4382,7 +4382,7 @@
                     "Lhvn;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4397,7 +4397,7 @@
                     "Lhvo;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4412,7 +4412,7 @@
                     "Ligh;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4427,7 +4427,7 @@
                     "Lipj;"
                 ],
                 "intermediary": [
-                    "sound",
+                    "field_5444",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -4455,7 +4455,7 @@
                     "Ldzp;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4470,7 +4470,7 @@
                     "Lecw;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4485,7 +4485,7 @@
                     "Lecz;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4500,7 +4500,7 @@
                     "Leom;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4515,7 +4515,7 @@
                     "Leml;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4530,7 +4530,7 @@
                     "Lemt;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4545,7 +4545,7 @@
                     "Lfac;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4560,7 +4560,7 @@
                     "Lfad;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4575,7 +4575,7 @@
                     "Lfci;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4590,7 +4590,7 @@
                     "Lfdp;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4605,7 +4605,7 @@
                     "Lfkx;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4620,7 +4620,7 @@
                     "Lfmv;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4635,7 +4635,7 @@
                     "Lfrn;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4650,7 +4650,7 @@
                     "Lfwf;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4665,7 +4665,7 @@
                     "Lfxy;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4680,7 +4680,7 @@
                     "Lgcm;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4695,7 +4695,7 @@
                     "Lgia;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4710,7 +4710,7 @@
                     "Lgso;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4725,7 +4725,7 @@
                     "Lgsp;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4740,7 +4740,7 @@
                     "Lgua;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4755,7 +4755,7 @@
                     "Lhfh;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4770,7 +4770,7 @@
                     "Lhfi;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4785,7 +4785,7 @@
                     "Lhiq;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4800,7 +4800,7 @@
                     "Lhon;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4815,7 +4815,7 @@
                     "Lhvp;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4830,7 +4830,7 @@
                     "Lhvq;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4845,7 +4845,7 @@
                     "Lhvr;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4860,7 +4860,7 @@
                     "Ligk;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4875,7 +4875,7 @@
                     "Lipm;"
                 ],
                 "intermediary": [
-                    "currentMusic",
+                    "field_5574",
                     "Lnet/minecraft/class_1113;"
                 ]
             },
@@ -4903,7 +4903,7 @@
                     "Ljava/util/Map;"
                 ],
                 "intermediary": [
-                    "instanceToChannel",
+                    "field_18950",
                     "Ljava/util/Map;"
                 ]
             },
@@ -4918,7 +4918,7 @@
                     "Ljava/util/Map;"
                 ],
                 "intermediary": [
-                    "instanceToChannel",
+                    "field_18950",
                     "Ljava/util/Map;"
                 ]
             },
@@ -4933,7 +4933,7 @@
                     "Ljava/util/Map;"
                 ],
                 "intermediary": [
-                    "instanceToChannel",
+                    "field_18950",
                     "Ljava/util/Map;"
                 ]
             },
@@ -4948,7 +4948,7 @@
                     "Ljava/util/Map;"
                 ],
                 "intermediary": [
-                    "instanceToChannel",
+                    "field_18950",
                     "Ljava/util/Map;"
                 ]
             },
@@ -4976,7 +4976,7 @@
                     "Lctp;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -4991,7 +4991,7 @@
                     "Lcwp;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5006,7 +5006,7 @@
                     "Lcws;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5021,7 +5021,7 @@
                     "Ldft;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5036,7 +5036,7 @@
                     "Lddr;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5051,7 +5051,7 @@
                     "Lddu;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5066,7 +5066,7 @@
                     "Ldoi;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5081,7 +5081,7 @@
                     "Ldqh;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5096,7 +5096,7 @@
                     "Ldrj;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5111,7 +5111,7 @@
                     "Ldxo;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5126,7 +5126,7 @@
                     "Ldyl;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5141,7 +5141,7 @@
                     "Lebz;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5156,7 +5156,7 @@
                     "Lefa;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5171,7 +5171,7 @@
                     "Lege;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5186,7 +5186,7 @@
                     "Lejk;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5201,7 +5201,7 @@
                     "Lenv;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5216,7 +5216,7 @@
                     "Lexu;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5231,7 +5231,7 @@
                     "Lexv;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5246,7 +5246,7 @@
                     "Leze;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5261,7 +5261,7 @@
                     "Lfed;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5276,7 +5276,7 @@
                     "Lfee;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5291,7 +5291,7 @@
                     "Lfdh;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5306,7 +5306,7 @@
                     "Lfij;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5321,7 +5321,7 @@
                     "Lflg;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5336,7 +5336,7 @@
                     "Lflh;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5351,7 +5351,7 @@
                     "Lfqz;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5366,7 +5366,7 @@
                     "Lfwg;"
                 ],
                 "intermediary": [
-                    "channel",
+                    "field_18941",
                     "Lnet/minecraft/class_4224;"
                 ]
             },
@@ -5394,7 +5394,7 @@
                     "I"
                 ],
                 "intermediary": [
-                    "source",
+                    "field_18893",
                     "I"
                 ]
             },
@@ -5409,7 +5409,7 @@
                     "I"
                 ],
                 "intermediary": [
-                    "source",
+                    "field_18893",
                     "I"
                 ]
             },
@@ -5437,7 +5437,7 @@
                     "Ljava/util/concurrent/atomic/AtomicBoolean;"
                 ],
                 "intermediary": [
-                    "initialized",
+                    "field_18894",
                     "Ljava/util/concurrent/atomic/AtomicBoolean;"
                 ]
             },
@@ -5452,7 +5452,7 @@
                     "Ljava/util/concurrent/atomic/AtomicBoolean;"
                 ],
                 "intermediary": [
-                    "initialized",
+                    "field_18894",
                     "Ljava/util/concurrent/atomic/AtomicBoolean;"
                 ]
             },
@@ -5480,7 +5480,7 @@
                     "Lfwc;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5495,7 +5495,7 @@
                     "Lfxv;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5510,7 +5510,7 @@
                     "Lgcj;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5525,7 +5525,7 @@
                     "Lghx;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5540,7 +5540,7 @@
                     "Lgsl;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5555,7 +5555,7 @@
                     "Lgsm;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5570,7 +5570,7 @@
                     "Lgtx;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5585,7 +5585,7 @@
                     "Lhfe;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5600,7 +5600,7 @@
                     "Lhff;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5615,7 +5615,7 @@
                     "Lhin;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5630,7 +5630,7 @@
                     "Lhok;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5645,7 +5645,7 @@
                     "Lhvm;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5660,7 +5660,7 @@
                     "Lhvn;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5675,7 +5675,7 @@
                     "Lhvo;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5690,7 +5690,7 @@
                     "Ligh;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5705,7 +5705,7 @@
                     "Lipj;"
                 ],
                 "intermediary": [
-                    "INTENTIONALLY_EMPTY_SOUND",
+                    "field_42936",
                     "Lnet/minecraft/class_1111;"
                 ]
             },
@@ -5733,7 +5733,7 @@
                     "Lhws$b;"
                 ],
                 "intermediary": [
-                    "STARTED",
+                    "field_60954",
                     "Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -5748,7 +5748,7 @@
                     "Lhwt$b;"
                 ],
                 "intermediary": [
-                    "STARTED",
+                    "field_60954",
                     "Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -5763,7 +5763,7 @@
                     "Lhwu$b;"
                 ],
                 "intermediary": [
-                    "STARTED",
+                    "field_60954",
                     "Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -5778,7 +5778,7 @@
                     "Lihn$b;"
                 ],
                 "intermediary": [
-                    "STARTED",
+                    "field_60954",
                     "Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -5793,7 +5793,7 @@
                     "Liqo$b;"
                 ],
                 "intermediary": [
-                    "STARTED",
+                    "field_60954",
                     "Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -5823,7 +5823,7 @@
                     "()Lcyc;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5838,7 +5838,7 @@
                     "()Ldbl;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5853,7 +5853,7 @@
                     "()Ldbn;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5868,7 +5868,7 @@
                     "()Ldlx;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5883,7 +5883,7 @@
                     "()Ldjw;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5898,7 +5898,7 @@
                     "()Ldjz;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5913,7 +5913,7 @@
                     "()Ldvo;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5928,7 +5928,7 @@
                     "()Ldvp;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5943,7 +5943,7 @@
                     "()Ldxo;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5958,7 +5958,7 @@
                     "()Ldyr;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5973,7 +5973,7 @@
                     "()Leev;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -5988,7 +5988,7 @@
                     "()Lefu;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6003,7 +6003,7 @@
                     "()Lejf;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6018,7 +6018,7 @@
                     "()Lemh;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6033,7 +6033,7 @@
                     "()Lenn;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6048,7 +6048,7 @@
                     "()Leqv;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6063,7 +6063,7 @@
                     "()Levi;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6078,7 +6078,7 @@
                     "()Lffg;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6093,7 +6093,7 @@
                     "()Lffh;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6108,7 +6108,7 @@
                     "()Lfgo;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6123,7 +6123,7 @@
                     "()Lfmf;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6138,7 +6138,7 @@
                     "()Lfmg;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6153,7 +6153,7 @@
                     "()Lflk;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6168,7 +6168,7 @@
                     "()Lfqq;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6183,7 +6183,7 @@
                     "()Lfud;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6198,7 +6198,7 @@
                     "()Lfue;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6213,7 +6213,7 @@
                     "()Lfzz;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6228,7 +6228,7 @@
                     "()Lgfj;"
                 ],
                 "intermediary": [
-                    "getInstance",
+                    "method_1551",
                     "()Lnet/minecraft/class_310;"
                 ]
             },
@@ -6256,7 +6256,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6271,7 +6271,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6286,7 +6286,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6301,7 +6301,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6316,7 +6316,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6331,7 +6331,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6346,7 +6346,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6361,7 +6361,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6376,7 +6376,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6391,7 +6391,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6406,7 +6406,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6421,7 +6421,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6436,7 +6436,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isSameThread",
+                    "method_18854",
                     "()Z"
                 ]
             },
@@ -6464,7 +6464,7 @@
                     "(Ldzp;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6479,7 +6479,7 @@
                     "(Lecw;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6494,7 +6494,7 @@
                     "(Lecz;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6509,7 +6509,7 @@
                     "(Leom;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6524,7 +6524,7 @@
                     "(Leml;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6539,7 +6539,7 @@
                     "(Lemt;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6554,7 +6554,7 @@
                     "(Lfac;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6569,7 +6569,7 @@
                     "(Lfad;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6584,7 +6584,7 @@
                     "(Lfci;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6599,7 +6599,7 @@
                     "(Lfdp;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6614,7 +6614,7 @@
                     "(Lfkx;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6629,7 +6629,7 @@
                     "(Lfmv;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6644,7 +6644,7 @@
                     "(Lfrn;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6659,7 +6659,7 @@
                     "(Lfwf;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6674,7 +6674,7 @@
                     "(Lfxy;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6689,7 +6689,7 @@
                     "(Lgcm;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6704,7 +6704,7 @@
                     "(Lgia;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6719,7 +6719,7 @@
                     "(Lgso;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6734,7 +6734,7 @@
                     "(Lgsp;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6749,7 +6749,7 @@
                     "(Lgua;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6764,7 +6764,7 @@
                     "(Lhfh;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6779,7 +6779,7 @@
                     "(Lhfi;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6794,7 +6794,7 @@
                     "(Lhiq;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6809,7 +6809,7 @@
                     "(Lhon;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6824,7 +6824,7 @@
                     "(Lhvp;)Lhws$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -6839,7 +6839,7 @@
                     "(Lhvq;)Lhwt$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -6854,7 +6854,7 @@
                     "(Lhvr;)Lhwu$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -6869,7 +6869,7 @@
                     "(Ligk;)Lihn$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -6884,7 +6884,7 @@
                     "(Lipm;)Liqo$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4873",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -6912,7 +6912,7 @@
                     "(Ldzp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6927,7 +6927,7 @@
                     "(Lecw;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6942,7 +6942,7 @@
                     "(Lecz;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6957,7 +6957,7 @@
                     "(Leom;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6972,7 +6972,7 @@
                     "(Leml;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -6987,7 +6987,7 @@
                     "(Lemt;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7002,7 +7002,7 @@
                     "(Lfac;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7017,7 +7017,7 @@
                     "(Lfad;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7032,7 +7032,7 @@
                     "(Lfci;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7047,7 +7047,7 @@
                     "(Lfdp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7062,7 +7062,7 @@
                     "(Lfkx;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7077,7 +7077,7 @@
                     "(Lfmv;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7092,7 +7092,7 @@
                     "(Lfrn;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7107,7 +7107,7 @@
                     "(Lfwf;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7122,7 +7122,7 @@
                     "(Lfxy;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7137,7 +7137,7 @@
                     "(Lgcm;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7152,7 +7152,7 @@
                     "(Lgia;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7167,7 +7167,7 @@
                     "(Lgso;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7182,7 +7182,7 @@
                     "(Lgsp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7197,7 +7197,7 @@
                     "(Lgua;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7212,7 +7212,7 @@
                     "(Lhfh;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7227,7 +7227,7 @@
                     "(Lhfi;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7242,7 +7242,7 @@
                     "(Lhiq;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7257,7 +7257,7 @@
                     "(Lhon;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7272,7 +7272,7 @@
                     "(Lhvp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7287,7 +7287,7 @@
                     "(Lhvq;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7302,7 +7302,7 @@
                     "(Lhvr;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7317,7 +7317,7 @@
                     "(Ligk;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7332,7 +7332,7 @@
                     "(Lipm;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4870",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7360,7 +7360,7 @@
                     "(Ldzp;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7375,7 +7375,7 @@
                     "(Lecw;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7390,7 +7390,7 @@
                     "(Lecz;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7405,7 +7405,7 @@
                     "(Leom;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7420,7 +7420,7 @@
                     "(Leml;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7435,7 +7435,7 @@
                     "(Lemt;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7450,7 +7450,7 @@
                     "(Lfac;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7465,7 +7465,7 @@
                     "(Lfad;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7480,7 +7480,7 @@
                     "(Lfci;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7495,7 +7495,7 @@
                     "(Lfdp;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7510,7 +7510,7 @@
                     "(Lfkx;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7525,7 +7525,7 @@
                     "(Lfmv;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7540,7 +7540,7 @@
                     "(Lfrn;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7555,7 +7555,7 @@
                     "(Lfwf;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7570,7 +7570,7 @@
                     "(Lfxy;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7585,7 +7585,7 @@
                     "(Lgcm;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7600,7 +7600,7 @@
                     "(Lgia;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7615,7 +7615,7 @@
                     "(Lgso;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7630,7 +7630,7 @@
                     "(Lgsp;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7645,7 +7645,7 @@
                     "(Lgua;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7660,7 +7660,7 @@
                     "(Lhfh;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7675,7 +7675,7 @@
                     "(Lhfi;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7690,7 +7690,7 @@
                     "(Lhiq;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7705,7 +7705,7 @@
                     "(Lhon;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7720,7 +7720,7 @@
                     "(Lhvp;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7735,7 +7735,7 @@
                     "(Lhvq;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7750,7 +7750,7 @@
                     "(Lhvr;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7765,7 +7765,7 @@
                     "(Ligk;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7780,7 +7780,7 @@
                     "(Lipm;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4877",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -7808,7 +7808,7 @@
                     "(Ldzp;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7823,7 +7823,7 @@
                     "(Lecw;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7838,7 +7838,7 @@
                     "(Lecz;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7853,7 +7853,7 @@
                     "(Leom;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7868,7 +7868,7 @@
                     "(Leml;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7883,7 +7883,7 @@
                     "(Lemt;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7898,7 +7898,7 @@
                     "(Lfac;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7913,7 +7913,7 @@
                     "(Lfad;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7928,7 +7928,7 @@
                     "(Lfci;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7943,7 +7943,7 @@
                     "(Lfdp;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7958,7 +7958,7 @@
                     "(Lfkx;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7973,7 +7973,7 @@
                     "(Lfmv;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -7988,7 +7988,7 @@
                     "(Lfrn;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8003,7 +8003,7 @@
                     "(Lfwf;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8018,7 +8018,7 @@
                     "(Lfxy;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8033,7 +8033,7 @@
                     "(Lgcm;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8048,7 +8048,7 @@
                     "(Lgia;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8063,7 +8063,7 @@
                     "(Lgso;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8078,7 +8078,7 @@
                     "(Lgsp;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8093,7 +8093,7 @@
                     "(Lgua;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8108,7 +8108,7 @@
                     "(Lhfh;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8123,7 +8123,7 @@
                     "(Lhfi;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8138,7 +8138,7 @@
                     "(Lhiq;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8153,7 +8153,7 @@
                     "(Lhon;)V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8168,7 +8168,7 @@
                     "(Lhvp;)Lhws$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -8183,7 +8183,7 @@
                     "(Lhvq;)Lhwt$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -8198,7 +8198,7 @@
                     "(Lhvr;)Lhwu$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -8213,7 +8213,7 @@
                     "(Ligk;)Lihn$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -8228,7 +8228,7 @@
                     "(Lipm;)Liqo$b;"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_4854",
                     "(Lnet/minecraft/class_1113;)Lnet/minecraft/class_1140$class_11518;"
                 ]
             },
@@ -8256,7 +8256,7 @@
                     "(Ldzp;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8271,7 +8271,7 @@
                     "(Lecw;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8286,7 +8286,7 @@
                     "(Lecz;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8301,7 +8301,7 @@
                     "(Leom;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8316,7 +8316,7 @@
                     "(Leml;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8331,7 +8331,7 @@
                     "(Lemt;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8346,7 +8346,7 @@
                     "(Lfac;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8361,7 +8361,7 @@
                     "(Lfad;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8376,7 +8376,7 @@
                     "(Lfci;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8391,7 +8391,7 @@
                     "(Lfdp;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8406,7 +8406,7 @@
                     "(Lfkx;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8421,7 +8421,7 @@
                     "(Lfmv;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8436,7 +8436,7 @@
                     "(Lfrn;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8451,7 +8451,7 @@
                     "(Lfwf;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8466,7 +8466,7 @@
                     "(Lfxy;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8481,7 +8481,7 @@
                     "(Lgcm;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8496,7 +8496,7 @@
                     "(Lgia;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8511,7 +8511,7 @@
                     "(Lgso;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8526,7 +8526,7 @@
                     "(Lgsp;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8541,7 +8541,7 @@
                     "(Lgua;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8556,7 +8556,7 @@
                     "(Lhfh;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8571,7 +8571,7 @@
                     "(Lhfi;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8586,7 +8586,7 @@
                     "(Lhiq;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8601,7 +8601,7 @@
                     "(Lhon;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8616,7 +8616,7 @@
                     "(Lhvp;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8631,7 +8631,7 @@
                     "(Lhvq;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8646,7 +8646,7 @@
                     "(Lhvr;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8661,7 +8661,7 @@
                     "(Ligk;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8676,7 +8676,7 @@
                     "(Lipm;)Z"
                 ],
                 "intermediary": [
-                    "isActive",
+                    "method_4835",
                     "(Lnet/minecraft/class_1113;)Z"
                 ]
             },
@@ -8704,7 +8704,7 @@
                     "(Ldzp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8719,7 +8719,7 @@
                     "(Lecw;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8734,7 +8734,7 @@
                     "(Lecz;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8749,7 +8749,7 @@
                     "(Leom;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8764,7 +8764,7 @@
                     "(Leml;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8779,7 +8779,7 @@
                     "(Lemt;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8794,7 +8794,7 @@
                     "(Lfac;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8809,7 +8809,7 @@
                     "(Lfad;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8824,7 +8824,7 @@
                     "(Lfci;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8839,7 +8839,7 @@
                     "(Lfdp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8854,7 +8854,7 @@
                     "(Lfkx;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8869,7 +8869,7 @@
                     "(Lfmv;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8884,7 +8884,7 @@
                     "(Lfrn;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8899,7 +8899,7 @@
                     "(Lfwf;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8914,7 +8914,7 @@
                     "(Lfxy;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8929,7 +8929,7 @@
                     "(Lgcm;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8944,7 +8944,7 @@
                     "(Lgia;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8959,7 +8959,7 @@
                     "(Lgso;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8974,7 +8974,7 @@
                     "(Lgsp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -8989,7 +8989,7 @@
                     "(Lgua;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9004,7 +9004,7 @@
                     "(Lhfh;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9019,7 +9019,7 @@
                     "(Lhfi;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9034,7 +9034,7 @@
                     "(Lhiq;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9049,7 +9049,7 @@
                     "(Lhon;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9064,7 +9064,7 @@
                     "(Lhvp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9079,7 +9079,7 @@
                     "(Lhvq;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9094,7 +9094,7 @@
                     "(Lhvr;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9109,7 +9109,7 @@
                     "(Ligk;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9124,7 +9124,7 @@
                     "(Lipm;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19753",
                     "(Lnet/minecraft/class_1113;)V"
                 ]
             },
@@ -9152,7 +9152,7 @@
                     "(Lqv;Lyq;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9167,7 +9167,7 @@
                     "(Lsm;Laaj;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9182,7 +9182,7 @@
                     "(Luh;Lacm;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9197,7 +9197,7 @@
                     "(Lvk;Ladp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9212,7 +9212,7 @@
                     "(Lvk;Ladr;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9227,7 +9227,7 @@
                     "(Lww;Laff;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9242,7 +9242,7 @@
                     "(Lyh;Lagw;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9257,7 +9257,7 @@
                     "(Lyt;Lahl;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9272,7 +9272,7 @@
                     "(Laaj;Lajf;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9287,7 +9287,7 @@
                     "(Labb;Lajx;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9302,7 +9302,7 @@
                     "(Lacf;Lalp;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9317,7 +9317,7 @@
                     "(Ladd;Lams;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9332,7 +9332,7 @@
                     "(Lacq;Lami;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9347,7 +9347,7 @@
                     "(Laew;Lape;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9362,7 +9362,7 @@
                     "(Lahg;Lart;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9377,7 +9377,7 @@
                     "(Lalf;Lawb;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9392,7 +9392,7 @@
                     "(Lakr;Lavq;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9407,7 +9407,7 @@
                     "(Lalz;Laxg;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9422,7 +9422,7 @@
                     "(Lakv;Lawb;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9437,7 +9437,7 @@
                     "(Lalr;Lawz;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9452,7 +9452,7 @@
                     "(Lame;Laza;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9467,7 +9467,7 @@
                     "(Lamj;Lbcf;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9482,7 +9482,7 @@
                     "(Lamo;Lbdb;)V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_4838",
                     "(Lnet/minecraft/class_2960;Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9510,7 +9510,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "stopAll",
+                    "method_4843",
                     "()V"
                 ]
             },
@@ -9525,7 +9525,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "stopAll",
+                    "method_4843",
                     "()V"
                 ]
             },
@@ -9553,7 +9553,7 @@
                     "(Lyq;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9568,7 +9568,7 @@
                     "(Laaj;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9583,7 +9583,7 @@
                     "(Lacm;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9598,7 +9598,7 @@
                     "(Ladp;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9613,7 +9613,7 @@
                     "(Ladr;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9628,7 +9628,7 @@
                     "(Laff;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9643,7 +9643,7 @@
                     "(Lagw;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9658,7 +9658,7 @@
                     "(Lahl;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9673,7 +9673,7 @@
                     "(Lajf;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9688,7 +9688,7 @@
                     "(Lajx;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9703,7 +9703,7 @@
                     "(Lalp;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9718,7 +9718,7 @@
                     "(Lams;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9733,7 +9733,7 @@
                     "(Lami;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9748,7 +9748,7 @@
                     "(Lape;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9763,7 +9763,7 @@
                     "(Lart;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9778,7 +9778,7 @@
                     "(Lawb;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9793,7 +9793,7 @@
                     "(Lavq;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9808,7 +9808,7 @@
                     "(Laxg;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9823,7 +9823,7 @@
                     "(Lawz;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9838,7 +9838,7 @@
                     "(Laza;F)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;F)V"
                 ]
             },
@@ -9853,7 +9853,7 @@
                     "(Lbcf;)V"
                 ],
                 "intermediary": [
-                    "updateCategoryVolume",
+                    "method_4844",
                     "(Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9868,7 +9868,7 @@
                     "(Lbdb;)V"
                 ],
                 "intermediary": [
-                    "refreshCategoryVolume",
+                    "method_76566",
                     "(Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9896,7 +9896,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "pause",
+                    "method_19761",
                     "()V"
                 ]
             },
@@ -9911,7 +9911,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "pause",
+                    "method_19761",
                     "()V"
                 ]
             },
@@ -9926,7 +9926,7 @@
                     "([Laza;)V"
                 ],
                 "intermediary": [
-                    "pauseAllExcept",
+                    "method_71937",
                     "([Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9941,7 +9941,7 @@
                     "([Lbcf;)V"
                 ],
                 "intermediary": [
-                    "pauseAllExcept",
+                    "method_71937",
                     "([Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9956,7 +9956,7 @@
                     "([Lbdb;)V"
                 ],
                 "intermediary": [
-                    "pauseAllExcept",
+                    "method_71937",
                     "([Lnet/minecraft/class_3419;)V"
                 ]
             },
@@ -9984,7 +9984,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "resume",
+                    "method_19762",
                     "()V"
                 ]
             },
@@ -9999,7 +9999,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "resume",
+                    "method_19762",
                     "()V"
                 ]
             },
@@ -10027,7 +10027,7 @@
                     "(Ldzp;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10042,7 +10042,7 @@
                     "(Lecw;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10057,7 +10057,7 @@
                     "(Lecz;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10072,7 +10072,7 @@
                     "(Leom;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10087,7 +10087,7 @@
                     "(Leml;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10102,7 +10102,7 @@
                     "(Lemt;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10117,7 +10117,7 @@
                     "(Lfac;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10132,7 +10132,7 @@
                     "(Lfad;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10147,7 +10147,7 @@
                     "(Lfci;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10162,7 +10162,7 @@
                     "(Lfdp;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_4853",
                     "(Lnet/minecraft/class_1113;)F"
                 ]
             },
@@ -10177,7 +10177,7 @@
                     "(FLajf;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10192,7 +10192,7 @@
                     "(FLajx;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10207,7 +10207,7 @@
                     "(FLalp;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10222,7 +10222,7 @@
                     "(FLams;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10237,7 +10237,7 @@
                     "(FLami;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10252,7 +10252,7 @@
                     "(FLape;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10267,7 +10267,7 @@
                     "(FLart;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10282,7 +10282,7 @@
                     "(FLawb;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10297,7 +10297,7 @@
                     "(FLavq;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10312,7 +10312,7 @@
                     "(FLaxg;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10327,7 +10327,7 @@
                     "(FLawz;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10342,7 +10342,7 @@
                     "(FLaza;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10357,7 +10357,7 @@
                     "(FLbcf;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10372,7 +10372,7 @@
                     "(FLbdb;)F"
                 ],
                 "intermediary": [
-                    "calculateVolume",
+                    "method_43222",
                     "(FLnet/minecraft/class_3419;)F"
                 ]
             },
@@ -10400,7 +10400,7 @@
                     "()Lyq;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10415,7 +10415,7 @@
                     "()Laaj;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10430,7 +10430,7 @@
                     "()Lacm;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10445,7 +10445,7 @@
                     "()Ladp;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10460,7 +10460,7 @@
                     "()Ladr;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10475,7 +10475,7 @@
                     "()Laff;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10490,7 +10490,7 @@
                     "()Lagw;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10505,7 +10505,7 @@
                     "()Lahl;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10520,7 +10520,7 @@
                     "()Lajf;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10535,7 +10535,7 @@
                     "()Lajx;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10550,7 +10550,7 @@
                     "()Lalp;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10565,7 +10565,7 @@
                     "()Lams;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10580,7 +10580,7 @@
                     "()Lami;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10595,7 +10595,7 @@
                     "()Lape;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10610,7 +10610,7 @@
                     "()Lart;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10625,7 +10625,7 @@
                     "()Lawb;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10640,7 +10640,7 @@
                     "()Lavq;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10655,7 +10655,7 @@
                     "()Laxg;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10670,7 +10670,7 @@
                     "()Lawz;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10685,7 +10685,7 @@
                     "()Laza;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10700,7 +10700,7 @@
                     "()Lbcf;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10715,7 +10715,7 @@
                     "()Lbdb;"
                 ],
                 "intermediary": [
-                    "getSource",
+                    "method_4774",
                     "()Lnet/minecraft/class_3419;"
                 ]
             },
@@ -10743,7 +10743,7 @@
                     "()Lqv;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10758,7 +10758,7 @@
                     "()Lsm;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10773,7 +10773,7 @@
                     "()Luh;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10788,7 +10788,7 @@
                     "()Lvk;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10803,7 +10803,7 @@
                     "()Lww;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10818,7 +10818,7 @@
                     "()Lyh;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10833,7 +10833,7 @@
                     "()Lyt;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10848,7 +10848,7 @@
                     "()Laaj;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10863,7 +10863,7 @@
                     "()Labb;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10878,7 +10878,7 @@
                     "()Lacf;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10893,7 +10893,7 @@
                     "()Ladd;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10908,7 +10908,7 @@
                     "()Lacq;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10923,7 +10923,7 @@
                     "()Laew;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10938,7 +10938,7 @@
                     "()Lahg;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10953,7 +10953,7 @@
                     "()Lalf;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10968,7 +10968,7 @@
                     "()Lakr;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10983,7 +10983,7 @@
                     "()Lalz;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -10998,7 +10998,7 @@
                     "()Lakv;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -11013,7 +11013,7 @@
                     "()Lalr;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -11028,7 +11028,7 @@
                     "()Lame;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -11043,7 +11043,7 @@
                     "()Lamj;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -11058,7 +11058,7 @@
                     "()Lamo;"
                 ],
                 "intermediary": [
-                    "getIdentifier",
+                    "method_4775",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -11086,7 +11086,7 @@
                     "()F"
                 ],
                 "intermediary": [
-                    "getVolume",
+                    "method_4781",
                     "()F"
                 ]
             },
@@ -11114,7 +11114,7 @@
                     "()F"
                 ],
                 "intermediary": [
-                    "getPitch",
+                    "method_4782",
                     "()F"
                 ]
             },
@@ -11142,7 +11142,7 @@
                     "()Z"
                 ],
                 "intermediary": [
-                    "isLooping",
+                    "method_4786",
                     "()Z"
                 ]
             },
@@ -11170,7 +11170,7 @@
                     "()Ldzm;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11185,7 +11185,7 @@
                     "()Lect;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11200,7 +11200,7 @@
                     "()Lecw;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11215,7 +11215,7 @@
                     "()Leoj;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11230,7 +11230,7 @@
                     "()Lemi;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11245,7 +11245,7 @@
                     "()Lemq;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11260,7 +11260,7 @@
                     "()Lezz;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11275,7 +11275,7 @@
                     "()Lfaa;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11290,7 +11290,7 @@
                     "()Lfcf;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11305,7 +11305,7 @@
                     "()Lfdm;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11320,7 +11320,7 @@
                     "()Lfku;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11335,7 +11335,7 @@
                     "()Lfms;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11350,7 +11350,7 @@
                     "()Lfrk;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11365,7 +11365,7 @@
                     "()Lfwc;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11380,7 +11380,7 @@
                     "()Lfxv;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11395,7 +11395,7 @@
                     "()Lgcj;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11410,7 +11410,7 @@
                     "()Lghx;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11425,7 +11425,7 @@
                     "()Lgsl;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11440,7 +11440,7 @@
                     "()Lgsm;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11455,7 +11455,7 @@
                     "()Lgtx;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11470,7 +11470,7 @@
                     "()Lhfe;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11485,7 +11485,7 @@
                     "()Lhff;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11500,7 +11500,7 @@
                     "()Lhin;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11515,7 +11515,7 @@
                     "()Lhok;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11530,7 +11530,7 @@
                     "()Lhvm;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11545,7 +11545,7 @@
                     "()Lhvn;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11560,7 +11560,7 @@
                     "()Lhvo;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11575,7 +11575,7 @@
                     "()Ligh;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11590,7 +11590,7 @@
                     "()Lipj;"
                 ],
                 "intermediary": [
-                    "getSound",
+                    "method_4776",
                     "()Lnet/minecraft/class_1111;"
                 ]
             },
@@ -11618,7 +11618,7 @@
                     "(Leap;)Leaq;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11633,7 +11633,7 @@
                     "(Ledw;)Ledx;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11648,7 +11648,7 @@
                     "(Ledz;)Leea;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11663,7 +11663,7 @@
                     "(Lepn;)Lepo;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11678,7 +11678,7 @@
                     "(Lenm;)Lenn;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11693,7 +11693,7 @@
                     "(Lenu;)Lenv;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11708,7 +11708,7 @@
                     "(Lfbc;)Lfbd;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11723,7 +11723,7 @@
                     "(Lfbd;)Lfbe;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11738,7 +11738,7 @@
                     "(Lfdi;)Lfdj;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11753,7 +11753,7 @@
                     "(Lfep;)Lfeq;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11768,7 +11768,7 @@
                     "(Lfmb;)Lfmc;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11783,7 +11783,7 @@
                     "(Lfnz;)Lfoa;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11798,7 +11798,7 @@
                     "(Lfsr;)Lfss;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11813,7 +11813,7 @@
                     "(Lfxj;)Lfxk;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11828,7 +11828,7 @@
                     "(Lfzc;)Lfzd;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11843,7 +11843,7 @@
                     "(Lgdq;)Lgdr;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11858,7 +11858,7 @@
                     "(Lgje;)Lgjf;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11873,7 +11873,7 @@
                     "(Lgtw;)Lgtx;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11888,7 +11888,7 @@
                     "(Lgtx;)Lgty;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11903,7 +11903,7 @@
                     "(Lgvf;)Lgvg;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11918,7 +11918,7 @@
                     "(Lhgm;)Lhgn;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11933,7 +11933,7 @@
                     "(Lhgn;)Lhgo;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11948,7 +11948,7 @@
                     "(Lhjw;)Lhjx;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11963,7 +11963,7 @@
                     "(Lhpt;)Lhpu;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11978,7 +11978,7 @@
                     "(Lhwv;)Lhww;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -11993,7 +11993,7 @@
                     "(Lhww;)Lhwx;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -12008,7 +12008,7 @@
                     "(Lhwx;)Lhwy;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -12023,7 +12023,7 @@
                     "(Lihq;)Lihs;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -12038,7 +12038,7 @@
                     "(Liqr;)Liqt;"
                 ],
                 "intermediary": [
-                    "resolve",
+                    "method_4783",
                     "(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;"
                 ]
             },
@@ -12077,7 +12077,7 @@
                     "()Lqv;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12092,7 +12092,7 @@
                     "()Lsm;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12107,7 +12107,7 @@
                     "()Luh;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12122,7 +12122,7 @@
                     "()Lvk;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12137,7 +12137,7 @@
                     "()Lww;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12152,7 +12152,7 @@
                     "()Lyh;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12167,7 +12167,7 @@
                     "()Lyt;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12182,7 +12182,7 @@
                     "()Laaj;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12197,7 +12197,7 @@
                     "()Labb;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12212,7 +12212,7 @@
                     "()Lacf;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12227,7 +12227,7 @@
                     "()Ladd;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12242,7 +12242,7 @@
                     "()Lacq;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12257,7 +12257,7 @@
                     "()Laew;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12272,7 +12272,7 @@
                     "()Lahg;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12287,7 +12287,7 @@
                     "()Lalf;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12302,7 +12302,7 @@
                     "()Lakr;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12317,7 +12317,7 @@
                     "()Lalz;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12332,7 +12332,7 @@
                     "()Lakv;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12347,7 +12347,7 @@
                     "()Lalr;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12362,7 +12362,7 @@
                     "()Lame;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12377,7 +12377,7 @@
                     "()Lamj;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12392,7 +12392,7 @@
                     "()Lamo;"
                 ],
                 "intermediary": [
-                    "getLocation",
+                    "method_4767",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12420,7 +12420,7 @@
                     "()Lqv;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12435,7 +12435,7 @@
                     "()Lsm;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12450,7 +12450,7 @@
                     "()Luh;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12465,7 +12465,7 @@
                     "()Lvk;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12480,7 +12480,7 @@
                     "()Lww;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12495,7 +12495,7 @@
                     "()Lyh;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12510,7 +12510,7 @@
                     "()Lyt;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12525,7 +12525,7 @@
                     "()Laaj;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12540,7 +12540,7 @@
                     "()Labb;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12555,7 +12555,7 @@
                     "()Lacf;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12570,7 +12570,7 @@
                     "()Ladd;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12585,7 +12585,7 @@
                     "()Lacq;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12600,7 +12600,7 @@
                     "()Laew;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12615,7 +12615,7 @@
                     "()Lahg;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12630,7 +12630,7 @@
                     "()Lalf;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12645,7 +12645,7 @@
                     "()Lakr;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12660,7 +12660,7 @@
                     "()Lalz;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12675,7 +12675,7 @@
                     "()Lakv;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12690,7 +12690,7 @@
                     "()Lalr;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12705,7 +12705,7 @@
                     "()Lame;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12720,7 +12720,7 @@
                     "()Lamj;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12735,7 +12735,7 @@
                     "()Lamo;"
                 ],
                 "intermediary": [
-                    "getPath",
+                    "method_4766",
                     "()Lnet/minecraft/class_2960;"
                 ]
             },
@@ -12763,7 +12763,7 @@
                     "(Lqv;)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12778,7 +12778,7 @@
                     "(Lsm;)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12793,7 +12793,7 @@
                     "(Luh;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12808,7 +12808,7 @@
                     "(Lvk;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12823,7 +12823,7 @@
                     "(Lww;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12838,7 +12838,7 @@
                     "(Lyh;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12853,7 +12853,7 @@
                     "(Lyt;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12868,7 +12868,7 @@
                     "(Laaj;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12883,7 +12883,7 @@
                     "(Labb;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12898,7 +12898,7 @@
                     "(Lacf;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12913,7 +12913,7 @@
                     "(Ladd;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12928,7 +12928,7 @@
                     "(Lacq;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12943,7 +12943,7 @@
                     "(Laew;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12958,7 +12958,7 @@
                     "(Lahg;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12973,7 +12973,7 @@
                     "(Lalf;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -12988,7 +12988,7 @@
                     "(Lakr;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -13003,7 +13003,7 @@
                     "(Lalz;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -13018,7 +13018,7 @@
                     "(Lakv;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -13033,7 +13033,7 @@
                     "(Lalr;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -13048,7 +13048,7 @@
                     "(Lame;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -13063,7 +13063,7 @@
                     "(Lamj;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -13078,7 +13078,7 @@
                     "(Lamo;Z)Ljava/util/concurrent/CompletableFuture;"
                 ],
                 "intermediary": [
-                    "getStream",
+                    "method_19744",
                     "(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;"
                 ]
             },
@@ -13106,7 +13106,7 @@
                     "()Ljavax/sound/sampled/AudioFormat;"
                 ],
                 "intermediary": [
-                    "getFormat",
+                    "method_19719",
                     "()Ljavax/sound/sampled/AudioFormat;"
                 ]
             },
@@ -13134,7 +13134,7 @@
                     "(I)Ljava/nio/ByteBuffer;"
                 ],
                 "intermediary": [
-                    "read",
+                    "method_19720",
                     "(I)Ljava/nio/ByteBuffer;"
                 ]
             },
@@ -13162,7 +13162,7 @@
                     "(Lqv;)Lxh;"
                 ],
                 "intermediary": [
-                    "getResource",
+                    "method_14486",
                     "(Lnet/minecraft/class_2960;)Lnet/minecraft/class_3298;"
                 ]
             },
@@ -13177,7 +13177,7 @@
                     "(Lsm;)Lza;"
                 ],
                 "intermediary": [
-                    "getResource",
+                    "method_14486",
                     "(Lnet/minecraft/class_2960;)Lnet/minecraft/class_3298;"
                 ]
             },
@@ -13192,7 +13192,7 @@
                     "(Luh;)Labb;"
                 ],
                 "intermediary": [
-                    "getResource",
+                    "method_14486",
                     "(Lnet/minecraft/class_2960;)Lnet/minecraft/class_3298;"
                 ]
             },
@@ -13207,7 +13207,7 @@
                     "(Lvk;)Lace;"
                 ],
                 "intermediary": [
-                    "getResource",
+                    "method_14486",
                     "(Lnet/minecraft/class_2960;)Lnet/minecraft/class_3298;"
                 ]
             },
@@ -13222,7 +13222,7 @@
                     "(Lvk;)Lacg;"
                 ],
                 "intermediary": [
-                    "getResource",
+                    "method_14486",
                     "(Lnet/minecraft/class_2960;)Lnet/minecraft/class_3298;"
                 ]
             },
@@ -13237,7 +13237,7 @@
                     "(Lww;)Lads;"
                 ],
                 "intermediary": [
-                    "getResource",
+                    "method_14486",
                     "(Lnet/minecraft/class_2960;)Lnet/minecraft/class_3298;"
                 ]
             },
@@ -13252,7 +13252,7 @@
                     "(Lyh;)Lafj;"
                 ],
                 "intermediary": [
-                    "getResource",
+                    "method_14486",
                     "(Lnet/minecraft/class_2960;)Lnet/minecraft/class_3298;"
                 ]
             },
@@ -13267,7 +13267,7 @@
                     "(Lyt;)Lafz;"
                 ],
                 "intermediary": [
-                    "getResource",
+                    "method_14486",
                     "(Lnet/minecraft/class_2960;)Lnet/minecraft/class_3298;"
                 ]
             },
@@ -13520,7 +13520,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "play",
+                    "method_19650",
                     "()V"
                 ]
             },
@@ -13548,7 +13548,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "stop",
+                    "method_19655",
                     "()V"
                 ]
             },
@@ -13576,7 +13576,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "destroy",
+                    "method_19646",
                     "()V"
                 ]
             },
@@ -13604,7 +13604,7 @@
                     "()I"
                 ],
                 "intermediary": [
-                    "removeProcessedBuffers",
+                    "method_19660",
                     "()I"
                 ]
             },
@@ -13619,7 +13619,7 @@
                     "()I"
                 ],
                 "intermediary": [
-                    "removeProcessedBuffers",
+                    "method_19660",
                     "()I"
                 ]
             },
@@ -13662,7 +13662,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "init",
+                    "method_25426",
                     "()V"
                 ]
             },
@@ -13677,7 +13677,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "init",
+                    "method_25426",
                     "()V"
                 ]
             },
@@ -13692,7 +13692,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "init",
+                    "method_25426",
                     "()V"
                 ]
             },
@@ -13707,7 +13707,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "init",
+                    "method_25426",
                     "()V"
                 ]
             },
@@ -13722,7 +13722,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "addOptions",
+                    "method_60325",
                     "()V"
                 ]
             },
@@ -13737,7 +13737,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "addOptions",
+                    "method_60325",
                     "()V"
                 ]
             },
@@ -13752,7 +13752,7 @@
                     "()V"
                 ],
                 "intermediary": [
-                    "addOptions",
+                    "method_60325",
                     "()V"
                 ]
             },
@@ -13780,7 +13780,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Leey;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13795,7 +13795,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lefx;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13810,7 +13810,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Leji;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13825,7 +13825,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lemk;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13840,7 +13840,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lenq;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13855,7 +13855,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Leqy;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13870,7 +13870,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Levl;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13885,7 +13885,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lffj;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13900,7 +13900,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lffk;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13915,7 +13915,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lfgr;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13930,7 +13930,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lfmi;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13945,7 +13945,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lfmj;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13960,7 +13960,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lfln;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13975,7 +13975,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lfqt;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -13990,7 +13990,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lfug;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -14005,7 +14005,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lfuh;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -14020,7 +14020,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lgac;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -14035,7 +14035,7 @@
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lgfn;"
                 ],
                 "intermediary": [
-                    "createBoolean",
+                    "method_41751",
                     "(Ljava/lang/String;ZLjava/util/function/Consumer;)Lnet/minecraft/class_7172;"
                 ]
             },
@@ -14074,7 +14074,7 @@
                     "([Leey;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14089,7 +14089,7 @@
                     "([Lefx;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14104,7 +14104,7 @@
                     "([Leji;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14119,7 +14119,7 @@
                     "([Lemk;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14134,7 +14134,7 @@
                     "([Lenq;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14149,7 +14149,7 @@
                     "([Leqy;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14164,7 +14164,7 @@
                     "([Levl;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14179,7 +14179,7 @@
                     "([Lffj;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14194,7 +14194,7 @@
                     "([Lffk;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14209,7 +14209,7 @@
                     "([Lfgr;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14224,7 +14224,7 @@
                     "([Lfmi;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14239,7 +14239,7 @@
                     "([Lfmj;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14254,7 +14254,7 @@
                     "([Lfln;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14269,7 +14269,7 @@
                     "([Lfqt;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14284,7 +14284,7 @@
                     "([Lfug;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14299,7 +14299,7 @@
                     "([Lfuh;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14314,7 +14314,7 @@
                     "([Lgac;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },
@@ -14329,7 +14329,7 @@
                     "([Lgfn;)V"
                 ],
                 "intermediary": [
-                    "addSmall",
+                    "method_20408",
                     "([Lnet/minecraft/class_7172;)V"
                 ]
             },

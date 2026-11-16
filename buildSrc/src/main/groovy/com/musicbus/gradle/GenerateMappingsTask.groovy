@@ -460,13 +460,13 @@ abstract class GenerateMappingsTask extends DefaultTask {
                     String descOff = p[2]
                     String nameOff = p[3 + offIdx]
                     String nameInt = p[3 + intIdx]
-                    tm.fieldOffToInt["${curOff}#${nameOff}:${descOff}"] = nameInt
+                    tm.fieldOffToInt.put(curOff + '#' + nameOff + ':' + descOff, nameInt)
                 } else if (line.startsWith('\tm\t') && curOff != null) {
                     String[] p = line.split('\t', -1)
                     String descOff = p[2]
                     String nameOff = p[3 + offIdx]
                     String nameInt = p[3 + intIdx]
-                    tm.methodOffToInt["${curOff}#${nameOff}${descOff}"] = nameInt
+                    tm.methodOffToInt.put(curOff + '#' + nameOff + descOff, nameInt)
                 }
             }
         } else if (hParts[0] == 'v1') {
@@ -485,13 +485,13 @@ abstract class GenerateMappingsTask extends DefaultTask {
                     String descOff = p[2]
                     String nameOff = p[3 + offIdx]
                     String nameInt = p[3 + intIdx]
-                    tm.fieldOffToInt["${ownerOff}#${nameOff}:${descOff}"] = nameInt
+                    tm.fieldOffToInt.put(ownerOff + '#' + nameOff + ':' + descOff, nameInt)
                 } else if (p[0] == 'METHOD') {
                     String ownerOff = p[1]
                     String descOff = p[2]
                     String nameOff = p[3 + offIdx]
                     String nameInt = p[3 + intIdx]
-                    tm.methodOffToInt["${ownerOff}#${nameOff}${descOff}"] = nameInt
+                    tm.methodOffToInt.put(ownerOff + '#' + nameOff + descOff, nameInt)
                 }
             }
         }
@@ -501,6 +501,17 @@ abstract class GenerateMappingsTask extends DefaultTask {
     // -------------------------------------------------------------------------
     // ProGuard client.txt + Tiny merge
     // -------------------------------------------------------------------------
+
+    private static final Map<String, List<String>> INTERMEDIARY_SUPERCLASS_FALLBACKS = [
+            'net/minecraft/client/gui/screens/options/SoundOptionsScreen': [
+                    'net/minecraft/client/gui/screens/options/OptionsSubScreen',
+                    'net/minecraft/client/gui/screens/Screen'
+            ],
+            'net/minecraft/client/gui/screens/SoundOptionsScreen': [
+                    'net/minecraft/client/gui/screens/OptionsSubScreen',
+                    'net/minecraft/client/gui/screens/Screen'
+            ]
+    ]
 
     private static VersionSymbolSource parseObfuscatedMappings(Path clientTxt, TinyMappings tiny) {
         VersionSymbolSource src = new VersionSymbolSource()
@@ -583,7 +594,21 @@ abstract class GenerateMappingsTask extends DefaultTask {
 
                 String interName = null
                 if (tiny != null && currentObfClass != null) {
-                    interName = tiny.methodOffToInt.get("${currentObfClass}#${obfMember}${descObf}")
+                    interName = tiny.methodOffToInt.get(currentObfClass + '#' + obfMember + descObf)
+                    if (interName == null) {
+                        List<String> supers = INTERMEDIARY_SUPERCLASS_FALLBACKS.get(currentMojangClass)
+                        if (supers != null) {
+                            for (String supMojang : supers) {
+                                String supObf = src.classMojangToObf.get(supMojang)
+                                if (supObf != null) {
+                                    interName = tiny.methodOffToInt.get(supObf + '#' + obfMember + descObf)
+                                    if (interName != null) {
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
                     if (interName == null) {
                         interName = mojangMethodName // e.g. inherited JDK / interface method not renamed
                     }
@@ -611,7 +636,7 @@ abstract class GenerateMappingsTask extends DefaultTask {
 
                 String interName = null
                 if (tiny != null && currentObfClass != null) {
-                    interName = tiny.fieldOffToInt.get("${currentObfClass}#${obfMember}:${descObf}")
+                    interName = tiny.fieldOffToInt.get(currentObfClass + '#' + obfMember + ':' + descObf)
                     if (interName == null) {
                         interName = mojangFieldName
                     }

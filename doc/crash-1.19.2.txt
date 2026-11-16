@@ -1,28 +1,75 @@
-<...>
-
-Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [musicbus.mixins.json:intermediary.IntermediarySoundEngineMixin from mod musicbus] from phase [DEFAULT] in config [musicbus.mixins.json] FAILED during APPLY
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:638)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:589)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:379)
-	... 14 more
-Caused by: org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException: Unexpecteded IllegalStateException whilst transforming the mixin class: [PostApply Phase -> musicbus.mixins.json:intermediary.IntermediarySoundEngineMixin from mod musicbus -> Plugin Post-Application]
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.postApply(MixinTargetContext.java:1286)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:346)
-	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:421)
-	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:403)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:363)
-	... 14 more
-Caused by: java.lang.IllegalStateException: [MusicBus] Failed to transform target class via Fabric Mixin: net.minecraft.class_1140
-	at com.musicbus.fabric.MusicBusMixinPlugin.postApply(MusicBusMixinPlugin.java:176)
-	at org.spongepowered.asm.mixin.transformer.PluginHandle.postApply(PluginHandle.java:189)
-	at org.spongepowered.asm.mixin.transformer.MixinInfo.postApply(MixinInfo.java:1372)
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.postApply(MixinTargetContext.java:1275)
-	... 18 more
-
-<...>
-
-	Minecraft Version: 1.19.2
-	Java Version: 17.0.15, Microsoft
-	Launched Version: fabric-loader-0.15.5-1.19.2
-
-<...>
+[21:09:41] [main/INFO]: Loading Minecraft 1.19.2 with Fabric Loader 0.15.5
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine category volume refresh (method_4844(Lnet/minecraft/class_3419;F)V).
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.stop().
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.stopAll().
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.isActive().
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.play().
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.method_19761()V
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.resume().
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundEngine.stop(Id, Source).
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] SoundEngine fully transformed.
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] Hooked SoundBufferLibrary.method_19744(Lnet/minecraft/class_2960;Z)Ljava/util/concurrent/CompletableFuture;
+[21:09:59] [INFO]: [STDOUT]: [MusicBus] SoundBufferLibrary transformed.
+[21:10:06] [INFO]: OpenAL initialized on device OpenAL Soft on �������� (Realtek(R) Audio)
+[21:10:06] [INFO]: Sound engine started
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] Hooked AbstractSoundInstance.method_4783(Lnet/minecraft/class_1144;)Lnet/minecraft/class_1146;
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] AbstractSoundInstance transformed.
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] Channel transformed.
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] SoundInstance registered: f32e3bc6-65b8-477f-aa1b-82ff55be8db5
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] Sound locked: minecraft:music/game/swamp/aerie
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] Session created: f32e3bc6-65b8-477f-aa1b-82ff55be8db5
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] Resource: minecraft:music.menu
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] OGG: minecraft:sounds/music/game/swamp/aerie.ogg (296.79s)
+[21:10:09] [INFO]: [STDOUT]: [MusicBus] Music intercepted: minecraft:music.menu
+[21:10:12] [INFO]: [STDOUT]: [MusicBus] Found SoundOptionsScreen.method_25426()V
+[21:10:12] [INFO]: [STDOUT]: [MusicBus] SoundOptionsScreen transformed.
+[21:10:14] [INFO]: [STDOUT]: [MusicBus] onSoundOptionsScreen invoked. Screen loader: net.fabricmc.loader.impl.launch.knot.KnotClassLoader@62e136d3
+[21:10:14] [INFO]: [STDOUT]: [MusicBus] ERROR: OptionsList not found.
+[21:10:15] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:15] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:15] [INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] SoundInstance unregistered: f32e3bc6-65b8-477f-aa1b-82ff55be8db5
+[21:10:15] [INFO]: OpenAL initialized on device OpenAL Soft on �������� (Realtek(R) Audio)
+[21:10:15] [INFO]: Sound engine started
+[21:10:15] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:15] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:15] [INFO]: OpenAL initialized on device OpenAL Soft on �������� (Samson Meteor Mic)
+[21:10:15] [INFO]: Sound engine started
+[21:10:15] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:15] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:15] [INFO]: OpenAL initialized on device OpenAL Soft on 4 - MACROSILICON (AMD High Definition Audio Device)
+[21:10:15] [INFO]: Sound engine started
+[21:10:15] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:15] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:16] [INFO]: OpenAL initialized on device OpenAL Soft on 4 - MACROSILICON (AMD High Definition Audio Device)
+[21:10:16] [INFO]: Sound engine started
+[21:10:17] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:17] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:17] [INFO]: OpenAL initialized on device OpenAL Soft on �������� (Samson Meteor Mic)
+[21:10:17] [INFO]: Sound engine started
+[21:10:17] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:17] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:17] [INFO]: OpenAL initialized on device OpenAL Soft on �������� (Realtek(R) Audio)
+[21:10:17] [INFO]: Sound engine started
+[21:10:17] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:17] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:17] [INFO]: OpenAL initialized on device OpenAL Soft on �������� (Realtek(R) Audio)
+[21:10:17] [INFO]: Sound engine started
+[21:10:18] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:18] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:18] [INFO]: OpenAL initialized on device OpenAL Soft on Realtek Digital Output (Realtek(R) Audio)
+[21:10:18] [INFO]: Sound engine started
+[21:10:18] [WARN]: Missing sound for event: minecraft:item.goat_horn.play
+[21:10:18] [WARN]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[21:10:19] [INFO]: OpenAL initialized on device OpenAL Soft on �������� (Realtek(R) Audio)
+[21:10:19] [INFO]: Sound engine started
+[21:10:19] [INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] SoundInstance registered: 82c907ef-64c9-4805-89e7-17d45ac95dfc
+[21:10:19] [INFO]: [STDOUT]: [MusicBus] Sound locked: minecraft:music/game/swamp/aerie
+[21:10:19] [INFO]: [STDOUT]: [MusicBus] Session created: 82c907ef-64c9-4805-89e7-17d45ac95dfc
+[21:10:19] [INFO]: [STDOUT]: [MusicBus] Resource: minecraft:music.menu
+[21:10:19] [INFO]: [STDOUT]: [MusicBus] OGG: minecraft:sounds/music/game/swamp/aerie.ogg (296.79s)
+[21:10:19] [INFO]: [STDOUT]: [MusicBus] Music intercepted: minecraft:music.menu
+[21:10:25] [Worker-Bootstrap-5/INFO]: 4283 Datafixer optimizations took 36035 milliseconds
+[21:10:27] [INFO]: [STDOUT]: [MusicBus] onSoundOptionsScreen invoked. Screen loader: net.fabricmc.loader.impl.launch.knot.KnotClassLoader@62e136d3
+[21:10:27] [INFO]: [STDOUT]: [MusicBus] ERROR: OptionsList not found.
+[21:10:41] [INFO]: Stopping!
+[21:10:41] [INFO]: [STDOUT]: [MusicBus] [VanillaAudioPlayer] SoundInstance unregistered: 82c907ef-64c9-4805-89e7-17d45ac95dfc
