@@ -1,7 +1,13 @@
 ## Compatibility
 ### Minecraft
-- Min `26.1`
-- Max `26.1.2`
+- Min `1.18.2`
+- Max `26.3`
 ### Fabric
-- Min `0.18.0`
+- Min `0.15.0`
 - Max `latest`
+
+## TODO
+- Directional audio support
+- Add compatibility for lower versions
+- Codebase refactor
+- Standalone agent testing
