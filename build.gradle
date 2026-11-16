@@ -1,3 +1,4 @@
+import com.musicbus.gradle.GenerateMappingsTask
 import com.musicbus.gradle.PrepareNativeToolchainTask
 
 plugins {
@@ -233,4 +234,30 @@ def fabricJar = tasks.register('fabricJar', Jar) {
 
 tasks.named('assemble') {
     dependsOn(fabricJar)
+}
+
+def mappingsCacheDir = new File(gradle.gradleUserHomeDir, 'caches/musicbus-mappings')
+
+tasks.register('generateMappings', GenerateMappingsTask) {
+    group = 'musicbus'
+    description = 'Generates offline mappings.json and API diff report from Mojang + Fabric Intermediary.'
+
+    minVersion.set(providers.gradleProperty('mappingsMinVersion').orElse('1.14.4'))
+    maxVersion.set(providers.gradleProperty('mappingsMaxVersion'))
+    includeSnapshots.set(
+        providers.gradleProperty('mappingsSnapshots').map { it.toBoolean() }.orElse(false)
+    )
+    refreshManifest.set(
+        providers.gradleProperty('refreshMappings').map { it.toBoolean() }.orElse(false)
+    )
+    cacheRootPath.set(mappingsCacheDir.absolutePath)
+    localMinecraftDir.set(
+        providers.environmentVariable('APPDATA').map { new File(it, '.minecraft').absolutePath }
+    )
+    outputMappingsFile.set(
+        layout.projectDirectory.file('src/main/resources/com/musicbus/mappings/mappings.json')
+    )
+    outputReportFile.set(
+        layout.buildDirectory.file('reports/musicbus-mappings-report.txt')
+    )
 }
