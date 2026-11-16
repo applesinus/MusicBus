@@ -1,8 +1,14 @@
 package com.musicbus.core;
 
+import com.musicbus.mappings.McClass;
+import com.musicbus.mappings.McFeature;
+import com.musicbus.mappings.McMappings;
+import com.musicbus.mappings.McMethod;
+
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -28,20 +34,27 @@ public final class OptionsScreenHook {
             return;
         }
 
-        log(
-            "onSoundOptionsScreen invoked. Screen loader: "
-            + screen.getClass().getClassLoader()
-        );
+        ClassLoader loader = screen.getClass().getClassLoader();
+        McMappings.ensureInitialized(loader);
+
+        if (!McMappings.hasFeature(McFeature.HAS_OPTION_INSTANCE)
+                || !McMappings.hasClass(McClass.OPTION_INSTANCE)
+                || !McMappings.hasClass(McClass.OPTIONS_LIST)
+                || !McMappings.hasMethod(McMethod.OPTION_INSTANCE_CREATE_BOOLEAN)
+                || !McMappings.hasMethod(McMethod.OPTIONS_LIST_ADD_SMALL)) {
+            return;
+        }
+
+        log("onSoundOptionsScreen invoked. Screen loader: " + loader);
 
         try {
-            Class<?> optionClass = Class.forName(
-                    "net.minecraft.client.OptionInstance",
-                    true,
-                    screen.getClass().getClassLoader()
-            );
+            Class<?> optionClass = McMappings.resolveClass(McClass.OPTION_INSTANCE);
 
             // Locate OptionsList in SoundOptionsScreen
-            Object list = findOptionsList(screen);
+            Object list = MinecraftReflection.findObjectByType(
+                    screen,
+                    McClass.OPTIONS_LIST
+            );
 
             if (list == null) {
                 log("ERROR: OptionsList not found.");
@@ -49,57 +62,34 @@ public final class OptionsScreenHook {
             }
 
             // Create a native Minecraft OptionInstance<Boolean>
-            Method createBoolean = null;
-
-            for (Method method : optionClass.getDeclaredMethods()) {
-                if (method.getName().equals("createBoolean")
-                        && method.getParameterCount() == 3
-                        && method.getParameterTypes()[0] == String.class
-                        && method.getParameterTypes()[1] == boolean.class) {
-                    createBoolean = method;
-                    break;
-                }
-            }
-
-            if (createBoolean == null) {
-                throw new NoSuchMethodException(
-                        "OptionInstance.createBoolean"
-                );
-            }
-
-            createBoolean.setAccessible(true);
+            Method createBoolean = McMappings.resolveMethod(
+                    McMethod.OPTION_INSTANCE_CREATE_BOOLEAN
+            );
+            Object listener = createBooleanListener(
+                    createBoolean.getParameterTypes()[2],
+                    loader
+            );
 
             Object option = createBoolean.invoke(
                     null,
                     "MusicBus",
-                    MusicBusManager.isEnabled(),
-                    (java.util.function.Consumer<Boolean>)
-                            MusicBusManager::setEnabled
+                    Boolean.valueOf(MusicBusManager.isEnabled()),
+                    listener
             );
 
-            // Create OptionInstance[] array
-            Object optionsArray = Array.newInstance(optionClass, 1);
-            Array.set(optionsArray, 0, option);
-
-            // Invoke OptionsList.addSmall(OptionInstance[])
-            Method addSmall = null;
-
-            for (Method method : list.getClass().getMethods()) {
-                if (method.getName().equals("addSmall")
-                        && method.getParameterCount() == 1
-                        && method.getParameterTypes()[0].isArray()) {
-                    addSmall = method;
-                    break;
-                }
+            // Invoke OptionsList.addSmall(...)
+            Method addSmall = McMappings.resolveMethod(
+                    McMethod.OPTIONS_LIST_ADD_SMALL
+            );
+            if (McMappings.hasFeature(McFeature.OPTIONS_LIST_ADD_SMALL_ARRAY)) {
+                Object optionsArray = Array.newInstance(optionClass, 1);
+                Array.set(optionsArray, 0, option);
+                addSmall.invoke(list, (Object) optionsArray);
+            } else if (addSmall.getParameterCount() == 2) {
+                addSmall.invoke(list, option, null);
+            } else {
+                addSmall.invoke(list, option);
             }
-
-            if (addSmall == null) {
-                throw new NoSuchMethodException(
-                        "OptionsList.addSmall"
-                );
-            }
-
-            addSmall.invoke(list, optionsArray);
 
             INJECTED.put(screen, Boolean.TRUE);
 
@@ -111,25 +101,41 @@ public final class OptionsScreenHook {
         }
     }
 
-    private static Object findOptionsList(Object screen)
-            throws IllegalAccessException {
-
-        Class<?> current = screen.getClass();
-
-        while (current != null) {
-            for (Field field : current.getDeclaredFields()) {
-                if (field.getType().getSimpleName()
-                        .equals("OptionsList")) {
-
-                    field.setAccessible(true);
-                    return field.get(screen);
+    private static Object createBooleanListener(
+            Class<?> listenerType,
+            ClassLoader loader
+    ) {
+        return Proxy.newProxyInstance(
+                loader,
+                new Class<?>[] { listenerType },
+                new InvocationHandler() {
+                    @Override
+                    public Object invoke(
+                            Object proxy,
+                            Method method,
+                            Object[] args
+                    ) {
+                        if (method.getDeclaringClass() == Object.class) {
+                            String name = method.getName();
+                            if ("equals".equals(name)) {
+                                return Boolean.valueOf(
+                                        args != null && args.length == 1 && proxy == args[0]
+                                );
+                            }
+                            if ("hashCode".equals(name)) {
+                                return Integer.valueOf(System.identityHashCode(proxy));
+                            }
+                            if ("toString".equals(name)) {
+                                return "MusicBusOptionListener";
+                            }
+                        }
+                        if (args != null && args.length == 1 && args[0] instanceof Boolean) {
+                            MusicBusManager.setEnabled(((Boolean) args[0]).booleanValue());
+                        }
+                        return null;
+                    }
                 }
-            }
-
-            current = current.getSuperclass();
-        }
-
-        return null;
+        );
     }
 
     private static void log(String message) {

@@ -1,10 +1,15 @@
 package com.musicbus.audio;
 
 import com.musicbus.core.MinecraftReflection;
+import com.musicbus.mappings.McClass;
+import com.musicbus.mappings.McFeature;
+import com.musicbus.mappings.McField;
+import com.musicbus.mappings.McMappings;
+import com.musicbus.mappings.McMethod;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
@@ -13,15 +18,6 @@ import java.util.Optional;
  * Minecraft SoundInstance via SoundBufferLibrary's ResourceProvider.
  */
 public final class OggResourceResolver {
-
-    private static final String RESOURCE_PROVIDER_CLASS =
-            "net.minecraft.server.packs.resources.ResourceProvider";
-
-    private static final String IDENTIFIER_CLASS =
-            "net.minecraft.resources.Identifier";
-
-    private static final String SOUND_MANAGER_CLASS =
-            "net.minecraft.client.sounds.SoundManager";
 
     private OggResourceResolver() {}
 
@@ -69,31 +65,33 @@ public final class OggResourceResolver {
 
         try {
 
-            Object eventIdentifier = MinecraftReflection.invokeNoArgs(
-                    soundInstance,
-                    "getIdentifier"
+            ClassLoader mcLoader = soundInstance.getClass().getClassLoader();
+            McMappings.ensureInitialized(mcLoader);
+
+            Object eventIdentifier = McMappings.invokeMethod(
+                    McMethod.SOUND_INSTANCE_GET_ID,
+                    soundInstance
             );
 
             if (eventIdentifier == null) {
                 return Optional.empty();
             }
 
-            Object sound = MinecraftReflection.invokeNoArgs(
-                    soundInstance,
-                    "getSound"
+            Object sound = McMappings.invokeMethod(
+                    McMethod.SOUND_INSTANCE_GET_SOUND,
+                    soundInstance
             );
             if (sound == null) {
                 return Optional.empty();
             }
 
-            ClassLoader mcLoader = soundInstance.getClass().getClassLoader();
-            if (isEmptySound(sound, mcLoader)) {
+            if (isEmptySound(sound)) {
                 return Optional.empty();
             }
 
-            Object pathIdentifier = MinecraftReflection.invokeNoArgs(
-                    sound,
-                    "getPath"
+            Object pathIdentifier = McMappings.invokeMethod(
+                    McMethod.SOUND_RESOURCE_GET_PATH,
+                    sound
             );
             if (pathIdentifier == null) {
                 return Optional.empty();
@@ -106,8 +104,7 @@ public final class OggResourceResolver {
 
             byte[] oggData = readResourceBytes(
                     resourceProvider,
-                    pathIdentifier,
-                    mcLoader
+                    pathIdentifier
             );
 
             if (oggData.length == 0) {
@@ -309,29 +306,29 @@ public final class OggResourceResolver {
     // Minecraft ResourceProvider reflection
     // --------------------------------------------------
 
-    private static boolean isEmptySound(
-            Object sound,
-            ClassLoader loader
-    ) {
+    private static boolean isEmptySound(Object sound) {
 
         try {
 
-            Class<?> soundManagerClass = Class.forName(
-                    SOUND_MANAGER_CLASS,
-                    false,
-                    loader
-            );
-
-            Field emptyField = soundManagerClass.getField("EMPTY_SOUND");
-            if (sound == emptyField.get(null)) {
-                return true;
+            if (McMappings.hasField(McField.SOUND_MANAGER_EMPTY_SOUND)) {
+                Object emptySound = McMappings.getFieldValue(
+                        McField.SOUND_MANAGER_EMPTY_SOUND,
+                        null
+                );
+                if (sound == emptySound) {
+                    return true;
+                }
             }
 
-            Field intentionallyEmptyField =
-                    soundManagerClass.getField("INTENTIONALLY_EMPTY_SOUND");
-
-            if (sound == intentionallyEmptyField.get(null)) {
-                return true;
+            if (McMappings.hasFeature(McFeature.HAS_INTENTIONALLY_EMPTY_SOUND)
+                    && McMappings.hasField(McField.SOUND_MANAGER_INTENTIONALLY_EMPTY_SOUND)) {
+                Object intentionallyEmpty = McMappings.getFieldValue(
+                        McField.SOUND_MANAGER_INTENTIONALLY_EMPTY_SOUND,
+                        null
+                );
+                if (sound == intentionallyEmpty) {
+                    return true;
+                }
             }
 
         } catch (Exception ignored) {
@@ -351,7 +348,7 @@ public final class OggResourceResolver {
 
         Object soundManager = MinecraftReflection.findObjectByType(
                 minecraft,
-                "SoundManager"
+                McClass.SOUND_MANAGER
         );
         if (soundManager == null) {
             return null;
@@ -359,7 +356,7 @@ public final class OggResourceResolver {
 
         Object soundEngine = MinecraftReflection.findObjectByType(
                 soundManager,
-                "SoundEngine"
+                McClass.SOUND_ENGINE
         );
         if (soundEngine == null) {
             return null;
@@ -367,7 +364,7 @@ public final class OggResourceResolver {
 
         Object soundBuffers = MinecraftReflection.findObjectByType(
                 soundEngine,
-                "SoundBufferLibrary"
+                McClass.SOUND_BUFFER_LIBRARY
         );
 
         if (soundBuffers == null) {
@@ -376,47 +373,79 @@ public final class OggResourceResolver {
 
         return MinecraftReflection.findObjectByType(
                 soundBuffers,
-                "ResourceProvider"
+                McClass.RESOURCE_PROVIDER
         );
     }
 
     private static byte[] readResourceBytes(
             Object resourceProvider,
-            Object pathIdentifier,
-            ClassLoader loader
+            Object pathIdentifier
     ) throws Exception {
 
-        Class<?> providerInterface = Class.forName(
-                RESOURCE_PROVIDER_CLASS,
-                false,
-                loader
-        );
+        if (!McMappings.hasMethod(McMethod.RESOURCE_PROVIDER_OPEN)) {
+            throw new IOException(
+                    "ResourceProvider open/getResource method is not available"
+            );
+        }
 
-        Class<?> identifierClass = Class.forName(
-                IDENTIFIER_CLASS,
-                false,
-                loader
-        );
-
-        Method openMethod = providerInterface.getMethod(
-                "open",
-                identifierClass
-        );
-
-        try (InputStream input = (InputStream) openMethod.invoke(
+        Object opened = McMappings.invokeMethod(
+                McMethod.RESOURCE_PROVIDER_OPEN,
                 resourceProvider,
                 pathIdentifier
-        )) {
+        );
 
+        if (opened == null) {
+            throw new IOException(
+                    "ResourceProvider returned null for " + pathIdentifier
+            );
+        }
+
+        if (McMappings.hasFeature(McFeature.RESOURCE_PROVIDER_OPEN)
+                || opened instanceof InputStream) {
+            try (InputStream input = (InputStream) opened) {
+                return input.readAllBytes();
+            }
+        }
+
+        try {
+            InputStream input = extractResourceInputStream(opened);
             if (input == null) {
                 throw new IOException(
-                        "ResourceProvider.open returned null for "
+                        "Resource.getInputStream returned null for "
                                 + pathIdentifier
                 );
             }
-
-            return input.readAllBytes();
+            try (InputStream stream = input) {
+                return stream.readAllBytes();
+            }
+        } finally {
+            if (opened instanceof Closeable) {
+                try {
+                    ((Closeable) opened).close();
+                } catch (IOException ignored) {
+                }
+            }
         }
+    }
+
+    private static InputStream extractResourceInputStream(Object resource)
+            throws Exception {
+        Method[] methods = resource.getClass().getMethods();
+        for (int i = 0; i < methods.length; i++) {
+            Method method = methods[i];
+            if (method.getParameterCount() == 0
+                    && method.getReturnType() == InputStream.class) {
+                try {
+                    method.setAccessible(true);
+                } catch (Exception ignored) {
+                }
+                return (InputStream) method.invoke(resource);
+            }
+        }
+        throw new IOException(
+                "No InputStream accessor found on resource "
+                        + resource.getClass().getName()
+        );
     }
 
     private static void log(String message) {

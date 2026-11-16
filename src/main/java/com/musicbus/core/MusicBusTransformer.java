@@ -1,10 +1,16 @@
 package com.musicbus.core;
 
+import com.musicbus.mappings.McClass;
+import com.musicbus.mappings.McFeature;
+import com.musicbus.mappings.McField;
+import com.musicbus.mappings.McMappings;
+import com.musicbus.mappings.McMethod;
+
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.lang.instrument.ClassFileTransformer;
@@ -13,45 +19,14 @@ import java.security.ProtectionDomain;
 public final class MusicBusTransformer
         implements ClassFileTransformer {
 
-    private static final String SOUND_OPTIONS_SCREEN =
-            "net/minecraft/client/gui/screens/options/SoundOptionsScreen";
-
-    private static final String SOUND_ENGINE =
-            "net/minecraft/client/sounds/SoundEngine";
-
-    private static final String SOUND_INSTANCE =
-            "net/minecraft/client/resources/sounds/SoundInstance";
-
-    private static final String ABSTRACT_SOUND_INSTANCE =
-            "net/minecraft/client/resources/sounds/AbstractSoundInstance";
-
-    private static final String SOUND_BUFFER_LIBRARY =
-            "net/minecraft/client/sounds/SoundBufferLibrary";
-
-    private static final String CHANNEL =
-            "com/mojang/blaze3d/audio/Channel";
-
-    private static final String SOUND_SOURCE =
-            "net/minecraft/sounds/SoundSource";
-
-    private static final String PLAY_RESULT =
-            "net/minecraft/client/sounds/SoundEngine$PlayResult";
-
     private static final String MANAGER =
             "com/musicbus/core/MusicBusManager";
 
     private static final String CHANNEL_TRACKER =
             "com/musicbus/audio/VanillaChannelTracker";
 
-    private static final String PLAY_DESCRIPTOR =
-            "(Lnet/minecraft/client/resources/sounds/SoundInstance;)"
-            + "Lnet/minecraft/client/sounds/SoundEngine$PlayResult;";
-
-    private static final String IS_ACTIVE_DESCRIPTOR =
-            "(Lnet/minecraft/client/resources/sounds/SoundInstance;)Z";
-
-    private static final String STOP_DESCRIPTOR =
-            "(Lnet/minecraft/client/resources/sounds/SoundInstance;)V";
+    private static final String OPTIONS_SCREEN_HOOK =
+            "com/musicbus/core/OptionsScreenHook";
 
     private static final MusicBusTransformer INSTANCE =
             new MusicBusTransformer();
@@ -60,11 +35,17 @@ public final class MusicBusTransformer
         if (internalClassName == null) {
             return false;
         }
-        return SOUND_OPTIONS_SCREEN.equals(internalClassName)
-                || SOUND_ENGINE.equals(internalClassName)
-                || ABSTRACT_SOUND_INSTANCE.equals(internalClassName)
-                || SOUND_BUFFER_LIBRARY.equals(internalClassName)
-                || CHANNEL.equals(internalClassName);
+        if (!McMappings.tryInitialize(
+                Thread.currentThread().getContextClassLoader()
+        )) {
+            return false;
+        }
+        McClass target = McMappings.findClassByInternalName(internalClassName);
+        return target == McClass.SOUND_OPTIONS_SCREEN
+                || target == McClass.SOUND_ENGINE
+                || target == McClass.ABSTRACT_SOUND_INSTANCE
+                || target == McClass.SOUND_BUFFER_LIBRARY
+                || target == McClass.AUDIO_CHANNEL;
     }
 
     public static byte[] transformClassBytes(
@@ -72,6 +53,11 @@ public final class MusicBusTransformer
             byte[] classfileBuffer
     ) {
         if (internalClassName == null || classfileBuffer == null) {
+            return null;
+        }
+        if (!McMappings.tryInitialize(
+                Thread.currentThread().getContextClassLoader()
+        )) {
             return null;
         }
         return INSTANCE.transformInternal(
@@ -88,30 +74,50 @@ public final class MusicBusTransformer
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
     ) {
+        if (className == null || classfileBuffer == null) {
+            return null;
+        }
+        if (loader != null && shouldAttemptInit(className)) {
+            McMappings.tryInitialize(loader);
+        }
         return transformClassBytes(className, classfileBuffer);
+    }
+
+    private static boolean shouldAttemptInit(String className) {
+        return !className.startsWith("java/")
+                && !className.startsWith("javax/")
+                && !className.startsWith("sun/")
+                && !className.startsWith("jdk/")
+                && !className.startsWith("com/musicbus/")
+                && !className.startsWith("org/objectweb/asm/");
     }
 
     private byte[] transformInternal(
             String className,
             byte[] classfileBuffer
     ) {
-        if (SOUND_OPTIONS_SCREEN.equals(className)) {
+        McClass target = McMappings.findClassByInternalName(className);
+        if (target == null) {
+            return null;
+        }
+
+        if (target == McClass.SOUND_OPTIONS_SCREEN) {
             return transformSoundOptions(classfileBuffer);
         }
 
-        if (SOUND_ENGINE.equals(className)) {
+        if (target == McClass.SOUND_ENGINE) {
             return transformSoundEngine(classfileBuffer);
         }
 
-        if (ABSTRACT_SOUND_INSTANCE.equals(className)) {
+        if (target == McClass.ABSTRACT_SOUND_INSTANCE) {
             return transformAbstractSoundInstance(classfileBuffer);
         }
 
-        if (SOUND_BUFFER_LIBRARY.equals(className)) {
+        if (target == McClass.SOUND_BUFFER_LIBRARY) {
             return transformSoundBufferLibrary(classfileBuffer);
         }
 
-        if (CHANNEL.equals(className)) {
+        if (target == McClass.AUDIO_CHANNEL) {
             return transformChannel(classfileBuffer);
         }
 
@@ -123,6 +129,11 @@ public final class MusicBusTransformer
      */
     private byte[] transformSoundOptions(byte[] originalBytes) {
 
+        if (!McMappings.hasFeature(McFeature.HAS_OPTION_INSTANCE)
+                || !McMappings.hasMethod(McMethod.SOUND_OPTIONS_SCREEN_POPULATE)) {
+            return null;
+        }
+
         ClassReader reader = new ClassReader(originalBytes);
 
         ClassWriter writer = new ClassWriter(
@@ -130,7 +141,7 @@ public final class MusicBusTransformer
                 ClassWriter.COMPUTE_MAXS
         );
 
-        boolean[] found = {false};
+        final boolean[] found = {false};
 
         ClassVisitor visitor = new ClassVisitor(
                 Opcodes.ASM9,
@@ -154,15 +165,18 @@ public final class MusicBusTransformer
                         exceptions
                 );
 
-                if (!name.equals("addOptions")
-                        || !descriptor.equals("()V")) {
+                if (!McMappings.matchesMethod(
+                        McMethod.SOUND_OPTIONS_SCREEN_POPULATE,
+                        name,
+                        descriptor
+                )) {
                     return mv;
                 }
 
                 found[0] = true;
 
                 System.out.println(
-                        "[MusicBus] Found SoundOptionsScreen.addOptions()"
+                        "[MusicBus] Found SoundOptionsScreen." + name + descriptor
                 );
 
                 return new MethodVisitor(Opcodes.ASM9, mv) {
@@ -179,7 +193,7 @@ public final class MusicBusTransformer
 
                             super.visitMethodInsn(
                                     Opcodes.INVOKESTATIC,
-                                    "com/musicbus/core/OptionsScreenHook",
+                                    OPTIONS_SCREEN_HOOK,
                                     "onSoundOptionsScreen",
                                     "(Ljava/lang/Object;)V",
                                     false
@@ -196,7 +210,7 @@ public final class MusicBusTransformer
 
         if (!found[0]) {
             System.err.println(
-                    "[MusicBus] addOptions() not found!"
+                    "[MusicBus] SoundOptionsScreen populate method not found!"
             );
             return null;
         }
@@ -216,6 +230,49 @@ public final class MusicBusTransformer
      */
     private byte[] transformSoundEngine(byte[] originalBytes) {
 
+        final String soundInstanceInternal =
+                McMappings.internalName(McClass.SOUND_INSTANCE);
+        final String soundSourceInternal =
+                McMappings.internalName(McClass.SOUND_CATEGORY);
+        final String getCategoryName =
+                McMappings.methodName(McMethod.SOUND_INSTANCE_GET_CATEGORY);
+        final String getCategoryDesc =
+                McMappings.methodDescriptor(McMethod.SOUND_INSTANCE_GET_CATEGORY);
+        final String musicFieldName =
+                McMappings.fieldName(McField.SOUND_CATEGORY_MUSIC);
+        final String musicFieldDesc =
+                McMappings.fieldDescriptor(McField.SOUND_CATEGORY_MUSIC);
+
+        final boolean playReturnsResult =
+                McMappings.hasFeature(McFeature.PLAY_RETURNS_RESULT);
+        final String playResultInternal = playReturnsResult
+                ? McMappings.internalName(McClass.PLAY_RESULT)
+                : null;
+        final String playResultStartedName = playReturnsResult
+                ? McMappings.fieldName(McField.PLAY_RESULT_STARTED)
+                : null;
+        final String playResultStartedDesc = playReturnsResult
+                ? McMappings.fieldDescriptor(McField.PLAY_RESULT_STARTED)
+                : null;
+
+        final boolean pauseAllExcept =
+                McMappings.hasFeature(McFeature.SOUND_ENGINE_PAUSE_ALL_EXCEPT);
+
+        if (soundInstanceInternal == null
+                || soundSourceInternal == null
+                || getCategoryName == null
+                || getCategoryDesc == null
+                || musicFieldName == null
+                || musicFieldDesc == null
+                || (playReturnsResult && (playResultInternal == null
+                        || playResultStartedName == null
+                        || playResultStartedDesc == null))) {
+            System.err.println(
+                    "[MusicBus] SoundEngine mappings incomplete!"
+            );
+            return null;
+        }
+
         ClassReader reader = new ClassReader(originalBytes);
 
         ClassWriter writer = new ClassWriter(
@@ -223,7 +280,7 @@ public final class MusicBusTransformer
                 ClassWriter.COMPUTE_MAXS
         );
 
-        boolean[] found = new boolean[8];
+        final boolean[] found = new boolean[8];
 
         ClassVisitor visitor = new ClassVisitor(
                 Opcodes.ASM9,
@@ -251,8 +308,11 @@ public final class MusicBusTransformer
                 // 1. SoundEngine.play(SoundInstance)
                 // ------------------------------------------
 
-                if (name.equals("play")
-                        && descriptor.equals(PLAY_DESCRIPTOR)) {
+                if (McMappings.matchesMethod(
+                        McMethod.SOUND_ENGINE_PLAY,
+                        name,
+                        descriptor
+                )) {
 
                     found[0] = true;
 
@@ -274,18 +334,18 @@ public final class MusicBusTransformer
 
                             super.visitMethodInsn(
                                     Opcodes.INVOKEINTERFACE,
-                                    SOUND_INSTANCE,
-                                    "getSource",
-                                    "()Lnet/minecraft/sounds/SoundSource;",
+                                    soundInstanceInternal,
+                                    getCategoryName,
+                                    getCategoryDesc,
                                     true
                             );
 
                             // Compare with SoundSource.MUSIC.
                             super.visitFieldInsn(
                                     Opcodes.GETSTATIC,
-                                    SOUND_SOURCE,
-                                    "MUSIC",
-                                    "Lnet/minecraft/sounds/SoundSource;"
+                                    soundSourceInternal,
+                                    musicFieldName,
+                                    musicFieldDesc
                             );
 
                             super.visitJumpInsn(
@@ -309,15 +369,18 @@ public final class MusicBusTransformer
                                     vanilla
                             );
 
-                            // Return STARTED instead of NOT_STARTED.
-                            super.visitFieldInsn(
-                                    Opcodes.GETSTATIC,
-                                    PLAY_RESULT,
-                                    "STARTED",
-                                    "Lnet/minecraft/client/sounds/SoundEngine$PlayResult;"
-                            );
-
-                            super.visitInsn(Opcodes.ARETURN);
+                            if (playReturnsResult) {
+                                // Return STARTED instead of NOT_STARTED.
+                                super.visitFieldInsn(
+                                        Opcodes.GETSTATIC,
+                                        playResultInternal,
+                                        playResultStartedName,
+                                        playResultStartedDesc
+                                );
+                                super.visitInsn(Opcodes.ARETURN);
+                            } else {
+                                super.visitInsn(Opcodes.RETURN);
+                            }
 
                             super.visitLabel(vanilla);
 
@@ -336,8 +399,11 @@ public final class MusicBusTransformer
                 // 2. SoundEngine.isActive(SoundInstance)
                 // ------------------------------------------
 
-                if (name.equals("isActive")
-                        && descriptor.equals(IS_ACTIVE_DESCRIPTOR)) {
+                if (McMappings.matchesMethod(
+                        McMethod.SOUND_ENGINE_IS_ACTIVE,
+                        name,
+                        descriptor
+                )) {
 
                     found[1] = true;
 
@@ -393,8 +459,11 @@ public final class MusicBusTransformer
                 // 3. SoundEngine.stop(SoundInstance)
                 // ------------------------------------------
 
-                if (name.equals("stop")
-                        && descriptor.equals(STOP_DESCRIPTOR)) {
+                if (McMappings.matchesMethod(
+                        McMethod.SOUND_ENGINE_STOP_INSTANCE,
+                        name,
+                        descriptor
+                )) {
 
                     found[2] = true;
 
@@ -419,17 +488,17 @@ public final class MusicBusTransformer
 
                             super.visitMethodInsn(
                                     Opcodes.INVOKEINTERFACE,
-                                    SOUND_INSTANCE,
-                                    "getSource",
-                                    "()Lnet/minecraft/sounds/SoundSource;",
+                                    soundInstanceInternal,
+                                    getCategoryName,
+                                    getCategoryDesc,
                                     true
                             );
 
                             super.visitFieldInsn(
                                     Opcodes.GETSTATIC,
-                                    SOUND_SOURCE,
-                                    "MUSIC",
-                                    "Lnet/minecraft/sounds/SoundSource;"
+                                    soundSourceInternal,
+                                    musicFieldName,
+                                    musicFieldDesc
                             );
 
                             super.visitJumpInsn(
@@ -473,18 +542,20 @@ public final class MusicBusTransformer
                 }
 
                 // ------------------------------------------
-                // 4. SoundEngine.refreshCategoryVolume(SoundSource)
+                // 4. SoundEngine.refreshCategoryVolume / updateCategoryVolume
                 // ------------------------------------------
 
-                if (name.equals("refreshCategoryVolume")
-                        && descriptor.equals(
-                                "(Lnet/minecraft/sounds/SoundSource;)V"
-                        )) {
+                if (McMappings.matchesMethod(
+                        McMethod.SOUND_ENGINE_UPDATE_CATEGORY_VOLUME,
+                        name,
+                        descriptor
+                )) {
 
                     found[3] = true;
 
                     System.out.println(
-                            "[MusicBus] Hooked SoundEngine.refreshCategoryVolume()."
+                            "[MusicBus] Hooked SoundEngine category volume refresh ("
+                                    + name + descriptor + ")."
                     );
 
                     return new MethodVisitor(Opcodes.ASM9, mv) {
@@ -509,18 +580,19 @@ public final class MusicBusTransformer
                 }
 
                 // ------------------------------------------
-                // 5. SoundEngine.pauseAllExcept(SoundSource...)
+                // 5. SoundEngine.pauseAllExcept(SoundSource...) / pause()
                 // ------------------------------------------
 
-                if (name.equals("pauseAllExcept")
-                        && descriptor.equals(
-                                "([Lnet/minecraft/sounds/SoundSource;)V"
-                        )) {
+                if (McMappings.matchesMethod(
+                        McMethod.SOUND_ENGINE_PAUSE,
+                        name,
+                        descriptor
+                )) {
 
                     found[4] = true;
 
                     System.out.println(
-                            "[MusicBus] Hooked SoundEngine.pauseAllExcept()."
+                            "[MusicBus] Hooked SoundEngine." + name + descriptor
                     );
 
                     return new MethodVisitor(Opcodes.ASM9, mv) {
@@ -530,7 +602,11 @@ public final class MusicBusTransformer
 
                             super.visitCode();
 
-                            super.visitVarInsn(Opcodes.ALOAD, 1);
+                            if (pauseAllExcept) {
+                                super.visitVarInsn(Opcodes.ALOAD, 1);
+                            } else {
+                                super.visitInsn(Opcodes.ACONST_NULL);
+                            }
 
                             super.visitMethodInsn(
                                     Opcodes.INVOKESTATIC,
@@ -547,8 +623,11 @@ public final class MusicBusTransformer
                 // 6. SoundEngine.resume()
                 // ------------------------------------------
 
-                if (name.equals("resume")
-                        && descriptor.equals("()V")) {
+                if (McMappings.matchesMethod(
+                        McMethod.SOUND_ENGINE_RESUME,
+                        name,
+                        descriptor
+                )) {
 
                     found[5] = true;
 
@@ -578,16 +657,16 @@ public final class MusicBusTransformer
                 // 7. SoundEngine.stop(Identifier, SoundSource)
                 // ------------------------------------------
 
-                if (name.equals("stop")
-                        && descriptor.equals(
-                                "(Lnet/minecraft/resources/Identifier;"
-                                + "Lnet/minecraft/sounds/SoundSource;)V"
-                        )) {
+                if (McMappings.matchesMethod(
+                        McMethod.SOUND_ENGINE_STOP_BY_ID,
+                        name,
+                        descriptor
+                )) {
 
                     found[6] = true;
 
                     System.out.println(
-                            "[MusicBus] Hooked SoundEngine.stop(Identifier, SoundSource)."
+                            "[MusicBus] Hooked SoundEngine.stop(Id, Source)."
                     );
 
                     return new MethodVisitor(Opcodes.ASM9, mv) {
@@ -615,8 +694,11 @@ public final class MusicBusTransformer
                 // 8. SoundEngine.stopAll()
                 // ------------------------------------------
 
-                if (name.equals("stopAll")
-                        && descriptor.equals("()V")) {
+                if (McMappings.matchesMethod(
+                        McMethod.SOUND_ENGINE_STOP_ALL,
+                        name,
+                        descriptor
+                )) {
 
                     found[7] = true;
 
@@ -654,38 +736,14 @@ public final class MusicBusTransformer
             System.err.println(
                     "[MusicBus] SoundEngine transformation incomplete!"
             );
-
-            System.err.println(
-                    "[MusicBus] play found: " + found[0]
-            );
-
-            System.err.println(
-                    "[MusicBus] isActive found: " + found[1]
-            );
-
-            System.err.println(
-                    "[MusicBus] stop found: " + found[2]
-            );
-
-            System.err.println(
-                    "[MusicBus] refreshCategoryVolume found: " + found[3]
-            );
-
-            System.err.println(
-                    "[MusicBus] pauseAllExcept found: " + found[4]
-            );
-
-            System.err.println(
-                    "[MusicBus] resume found: " + found[5]
-            );
-
-            System.err.println(
-                    "[MusicBus] stop(Id, Source) found: " + found[6]
-            );
-
-            System.err.println(
-                    "[MusicBus] stopAll found: " + found[7]
-            );
+            System.err.println("[MusicBus] play found: " + found[0]);
+            System.err.println("[MusicBus] isActive found: " + found[1]);
+            System.err.println("[MusicBus] stop found: " + found[2]);
+            System.err.println("[MusicBus] updateCategoryVolume found: " + found[3]);
+            System.err.println("[MusicBus] pause found: " + found[4]);
+            System.err.println("[MusicBus] resume found: " + found[5]);
+            System.err.println("[MusicBus] stop(Id, Source) found: " + found[6]);
+            System.err.println("[MusicBus] stopAll found: " + found[7]);
 
             // Do not install a partially functioning interceptor.
             return null;
@@ -711,7 +769,7 @@ public final class MusicBusTransformer
                 ClassWriter.COMPUTE_MAXS
         );
 
-        boolean[] found = {false};
+        final boolean[] found = {false};
 
         ClassVisitor visitor = new ClassVisitor(
                 Opcodes.ASM9,
@@ -735,18 +793,19 @@ public final class MusicBusTransformer
                         exceptions
                 );
 
-                if (!name.equals("resolve")
-                        || !descriptor.equals(
-                                "(Lnet/minecraft/client/sounds/SoundManager;)"
-                                + "Lnet/minecraft/client/sounds/WeighedSoundEvents;"
-                        )) {
+                if (!McMappings.matchesMethod(
+                        McMethod.SOUND_INSTANCE_RESOLVE,
+                        name,
+                        descriptor
+                )) {
                     return mv;
                 }
 
                 found[0] = true;
 
                 System.out.println(
-                        "[MusicBus] Hooked AbstractSoundInstance.resolve()."
+                        "[MusicBus] Hooked AbstractSoundInstance."
+                                + name + descriptor
                 );
 
                 return new MethodVisitor(Opcodes.ASM9, mv) {
@@ -806,7 +865,7 @@ public final class MusicBusTransformer
                 ClassWriter.COMPUTE_MAXS
         );
 
-        boolean[] found = {false};
+        final boolean[] found = {false};
 
         ClassVisitor visitor = new ClassVisitor(
                 Opcodes.ASM9,
@@ -830,18 +889,19 @@ public final class MusicBusTransformer
                         exceptions
                 );
 
-                if (!name.equals("getStream")
-                        || !descriptor.equals(
-                                "(Lnet/minecraft/resources/Identifier;Z)"
-                                + "Ljava/util/concurrent/CompletableFuture;"
-                        )) {
+                if (!McMappings.matchesMethod(
+                        McMethod.SOUND_BUFFER_LIBRARY_GET_STREAM,
+                        name,
+                        descriptor
+                )) {
                     return mv;
                 }
 
                 found[0] = true;
 
                 System.out.println(
-                        "[MusicBus] Hooked SoundBufferLibrary.getStream()."
+                        "[MusicBus] Hooked SoundBufferLibrary."
+                                + name + descriptor
                 );
 
                 return new MethodVisitor(Opcodes.ASM9, mv) {
@@ -889,6 +949,10 @@ public final class MusicBusTransformer
      */
     private byte[] transformChannel(byte[] originalBytes) {
 
+        String[] lambdas = detectChannelLambdas(originalBytes);
+        final String queueBuffersLambda = lambdas[0];
+        final String attachStaticLambda = lambdas[1];
+
         ClassReader reader = new ClassReader(originalBytes);
 
         ClassWriter writer = new ClassWriter(
@@ -896,7 +960,7 @@ public final class MusicBusTransformer
                 ClassWriter.COMPUTE_MAXS
         );
 
-        boolean[] found = new boolean[6];
+        final boolean[] found = new boolean[6];
 
         ClassVisitor visitor = new ClassVisitor(
                 Opcodes.ASM9,
@@ -920,8 +984,9 @@ public final class MusicBusTransformer
                         exceptions
                 );
 
-                if (name.equals("lambda$pumpBuffers$0")
-                        && descriptor.equals("(I)V")) {
+                if (queueBuffersLambda != null
+                        && queueBuffersLambda.equals(name)
+                        && "(I)V".equals(descriptor)) {
 
                     found[0] = true;
 
@@ -943,8 +1008,9 @@ public final class MusicBusTransformer
                     };
                 }
 
-                if (name.equals("lambda$attachStaticBuffer$0")
-                        && descriptor.equals("(I)V")) {
+                if (attachStaticLambda != null
+                        && attachStaticLambda.equals(name)
+                        && "(I)V".equals(descriptor)) {
 
                     found[1] = true;
 
@@ -966,8 +1032,11 @@ public final class MusicBusTransformer
                     };
                 }
 
-                if (name.equals("removeProcessedBuffers")
-                        && descriptor.equals("()I")) {
+                if (McMappings.matchesMethod(
+                        McMethod.AUDIO_CHANNEL_REMOVE_PROCESSED_BUFFERS,
+                        name,
+                        descriptor
+                )) {
 
                     found[2] = true;
 
@@ -992,8 +1061,11 @@ public final class MusicBusTransformer
                     };
                 }
 
-                if (name.equals("play")
-                        && descriptor.equals("()V")) {
+                if (McMappings.matchesMethod(
+                        McMethod.AUDIO_CHANNEL_PLAY,
+                        name,
+                        descriptor
+                )) {
 
                     found[3] = true;
 
@@ -1014,8 +1086,11 @@ public final class MusicBusTransformer
                     };
                 }
 
-                if (name.equals("stop")
-                        && descriptor.equals("()V")) {
+                if (McMappings.matchesMethod(
+                        McMethod.AUDIO_CHANNEL_STOP,
+                        name,
+                        descriptor
+                )) {
 
                     found[4] = true;
 
@@ -1036,8 +1111,11 @@ public final class MusicBusTransformer
                     };
                 }
 
-                if (name.equals("destroy")
-                        && descriptor.equals("()V")) {
+                if (McMappings.matchesMethod(
+                        McMethod.AUDIO_CHANNEL_DESTROY,
+                        name,
+                        descriptor
+                )) {
 
                     found[5] = true;
 
@@ -1064,10 +1142,10 @@ public final class MusicBusTransformer
 
         reader.accept(visitor, 0);
 
-        for (boolean ok : found) {
-            if (!ok) {
+        for (int i = 0; i < found.length; i++) {
+            if (!found[i]) {
                 System.err.println(
-                        "[MusicBus] Channel transformation incomplete!"
+                        "[MusicBus] Channel transformation incomplete! Missing hook index: " + i
                 );
                 return null;
             }
@@ -1078,5 +1156,45 @@ public final class MusicBusTransformer
         );
 
         return writer.toByteArray();
+    }
+
+    private static String[] detectChannelLambdas(byte[] originalBytes) {
+        final String[] result = new String[2];
+        ClassReader reader = new ClassReader(originalBytes);
+        reader.accept(new ClassVisitor(Opcodes.ASM9) {
+            @Override
+            public MethodVisitor visitMethod(
+                    int access,
+                    final String name,
+                    String descriptor,
+                    String signature,
+                    String[] exceptions
+            ) {
+                if ((access & Opcodes.ACC_SYNTHETIC) == 0
+                        || (access & Opcodes.ACC_STATIC) != 0
+                        || !"(I)V".equals(descriptor)) {
+                    return null;
+                }
+                return new MethodVisitor(Opcodes.ASM9) {
+                    @Override
+                    public void visitMethodInsn(
+                            int opcode,
+                            String owner,
+                            String insnName,
+                            String insnDescriptor,
+                            boolean isInterface
+                    ) {
+                        if ("org/lwjgl/openal/AL10".equals(owner)) {
+                            if ("alSourceQueueBuffers".equals(insnName)) {
+                                result[0] = name;
+                            } else if ("alSourcei".equals(insnName)) {
+                                result[1] = name;
+                            }
+                        }
+                    }
+                };
+            }
+        }, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        return result;
     }
 }

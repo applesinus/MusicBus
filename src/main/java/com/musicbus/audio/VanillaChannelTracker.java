@@ -1,5 +1,8 @@
 package com.musicbus.audio;
 
+import com.musicbus.mappings.McField;
+import com.musicbus.mappings.McMappings;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
@@ -439,19 +442,20 @@ public final class VanillaChannelTracker {
         }
 
         ClassLoader loader = channel.getClass().getClassLoader();
-        Class<?> channelClass = channel.getClass();
+        McMappings.ensureInitialized(loader);
+
         Class<?> al10Class = Class.forName(
                 "org.lwjgl.openal.AL10",
                 true,
                 loader
         );
 
-        Field sourceField = channelClass.getDeclaredField("source");
-        sourceField.setAccessible(true);
-
-        Field initializedField =
-                channelClass.getDeclaredField("initialized");
-        initializedField.setAccessible(true);
+        Field sourceField = McMappings.resolveField(
+                McField.AUDIO_CHANNEL_SOURCE
+        );
+        Field initializedField = McMappings.resolveField(
+                McField.AUDIO_CHANNEL_INITIALIZED
+        );
 
         Method alGetBufferi = al10Class.getMethod(
                 "alGetBufferi",

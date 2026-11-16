@@ -1,7 +1,11 @@
 package com.musicbus.audio;
 
-import com.musicbus.core.MusicBusManager;
 import com.musicbus.core.MinecraftReflection;
+import com.musicbus.core.MusicBusManager;
+import com.musicbus.mappings.McClass;
+import com.musicbus.mappings.McField;
+import com.musicbus.mappings.McMappings;
+import com.musicbus.mappings.McMethod;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -25,7 +29,6 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
     private final Map<UUID, Entry> sessions = new HashMap<>();
 
-    private static final String MUSIC_SOURCE = "MUSIC";
     private static final long QUERY_TIMEOUT_MS = 50L;
 
     // --------------------------------------------------
@@ -131,7 +134,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             initializeEntryForPlayback(entry, session, 0.0);
 
             MinecraftReflection.invokeSoundManager(
-                    "play",
+                    McMethod.SOUND_MANAGER_PLAY,
                     entry.soundInstance
             );
 
@@ -174,7 +177,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             }
 
             MinecraftReflection.invokeSoundManager(
-                    "stop",
+                    McMethod.SOUND_MANAGER_STOP,
                     entry.soundInstance
             );
 
@@ -217,7 +220,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
             try {
                 MinecraftReflection.invokeSoundManager(
-                        "play",
+                        McMethod.SOUND_MANAGER_PLAY,
                         entry.soundInstance
                 );
             } finally {
@@ -256,7 +259,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
         try {
 
             boolean active = MinecraftReflection.invokeSoundManagerBoolean(
-                    "isActive",
+                    McMethod.SOUND_MANAGER_IS_ACTIVE,
                     entry.soundInstance
             );
 
@@ -497,10 +500,10 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         Object value = MinecraftReflection.findObjectByType(
                 soundEngine,
-                "SoundEngineExecutor"
+                McClass.SOUND_ENGINE_EXECUTOR
         );
 
-        return value instanceof Executor executor ? executor : null;
+        return value instanceof Executor ? (Executor) value : null;
     }
 
     private static Map<?, ?> getInstanceToChannel(Object soundEngine)
@@ -510,12 +513,12 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             return null;
         }
 
-        Object value = MinecraftReflection.getFieldValue(
-                soundEngine,
-                "instanceToChannel"
+        Object value = McMappings.getFieldValue(
+                McField.SOUND_ENGINE_INSTANCE_TO_CHANNEL,
+                soundEngine
         );
 
-        return value instanceof Map<?, ?> map ? map : null;
+        return value instanceof Map<?, ?> ? (Map<?, ?>) value : null;
     }
 
     private static Object getChannelFromHandle(Object handle)
@@ -525,13 +528,13 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             return null;
         }
 
-        return MinecraftReflection.getFieldValue(
-                handle,
-                "channel"
+        return McMappings.getFieldValue(
+                McField.CHANNEL_HANDLE_CHANNEL,
+                handle
         );
     }
 
-        // --------------------------------------------------
+    // --------------------------------------------------
     // SoundInstance inspection
     // --------------------------------------------------
 
@@ -543,13 +546,18 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
         try {
 
-            Object source = MinecraftReflection.invokeNoArgs(
-                    instance,
-                    "getSource"
+            McMappings.ensureInitialized(instance.getClass().getClassLoader());
+
+            Object source = McMappings.invokeMethod(
+                    McMethod.SOUND_INSTANCE_GET_CATEGORY,
+                    instance
+            );
+            Object musicCategory = McMappings.getFieldValue(
+                    McField.SOUND_CATEGORY_MUSIC,
+                    null
             );
 
-            return source instanceof Enum<?> category
-                    && MUSIC_SOURCE.equals(category.name());
+            return musicCategory != null && musicCategory.equals(source);
 
         } catch (Exception ignored) {
 
@@ -571,10 +579,7 @@ public final class VanillaAudioPlayer implements AudioPlayer {
 
             Object minecraft = MinecraftReflection.getMinecraftInstance();
 
-            if (MinecraftReflection.findNoArgMethod(
-                    minecraft.getClass(),
-                    "isSameThread"
-            ) == null) {
+            if (!McMappings.hasMethod(McMethod.EVENT_LOOP_IS_SAME_THREAD)) {
 
                 throw new IllegalStateException(
                         "Minecraft thread check is unavailable"
@@ -582,9 +587,9 @@ public final class VanillaAudioPlayer implements AudioPlayer {
             }
 
             boolean correctThread = Boolean.TRUE.equals(
-                    MinecraftReflection.invokeNoArgs(
-                            minecraft,
-                            "isSameThread"
+                    McMappings.invokeMethod(
+                            McMethod.EVENT_LOOP_IS_SAME_THREAD,
+                            minecraft
                     )
             );
 

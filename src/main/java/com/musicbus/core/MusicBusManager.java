@@ -8,10 +8,14 @@ import com.musicbus.audio.OggResourceResolver;
 import com.musicbus.audio.PlaybackSession;
 import com.musicbus.audio.VanillaAudioPlayer;
 import com.musicbus.config.MusicBusConfig;
+import com.musicbus.mappings.McClass;
+import com.musicbus.mappings.McFeature;
+import com.musicbus.mappings.McField;
+import com.musicbus.mappings.McMappings;
+import com.musicbus.mappings.McMethod;
 
 import javax.sound.sampled.AudioFormat;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -64,9 +68,6 @@ public final class MusicBusManager {
 
     private static final Set<Object> BUS_ROUTED_INSTANCES =
             Collections.newSetFromMap(new IdentityHashMap<>());
-
-    private static volatile Method calculateVolumeMethod;
-    private static volatile Object musicSoundSource;
 
     private static BusedAudioPlayer busedPlayer;
     private static VanillaAudioPlayer vanillaPlayer;
@@ -320,7 +321,7 @@ public final class MusicBusManager {
 
             boolean vanillaActive =
                     MinecraftReflection.invokeSoundManagerBoolean(
-                            "isActive",
+                            McMethod.SOUND_MANAGER_IS_ACTIVE,
                             instance
                     );
 
@@ -361,7 +362,7 @@ public final class MusicBusManager {
                 baseVolume = BASE_VOLUMES.getOrDefault(instance, 1.0f);
             }
             session.setVolume(
-                    calculateEffectiveMusicVolume(null, baseVolume)
+                    calculateEffectiveMusicVolume(null, instance, baseVolume)
             );
 
             PlaybackSession.Snapshot snapshot =
@@ -722,13 +723,9 @@ public final class MusicBusManager {
             return;
         }
 
-        if (!(soundSource instanceof Enum<?> category)) {
-            return;
-        }
-
-        String categoryName = category.name();
-        if (!"MUSIC".equals(categoryName)
-                && !"MASTER".equals(categoryName)) {
+        McMappings.ensureInitialized(soundSource.getClass().getClassLoader());
+        if (!soundSource.equals(getMusicSoundSource())
+                && !soundSource.equals(getMasterSoundSource())) {
             return;
         }
 
@@ -755,6 +752,7 @@ public final class MusicBusManager {
 
         float effectiveVolume = calculateEffectiveMusicVolume(
                 soundEngine,
+                instance,
                 baseVolume
         );
 
@@ -775,6 +773,7 @@ public final class MusicBusManager {
 
     private static float calculateEffectiveMusicVolume(
             Object soundEngineObj,
+            Object soundInstance,
             float baseVolume
     ) {
 
@@ -790,46 +789,28 @@ public final class MusicBusManager {
                 return clampedBase;
             }
 
-            Method method = calculateVolumeMethod;
-            Object musicSource = musicSoundSource;
+            McMappings.ensureInitialized(soundEngine.getClass().getClassLoader());
 
-            if (method == null || musicSource == null) {
-
-                ClassLoader loader = soundEngine.getClass().getClassLoader();
-                Class<?> soundSourceClass = Class.forName(
-                        "net.minecraft.sounds.SoundSource",
-                        false,
-                        loader
+            Object result;
+            if (McMappings.hasFeature(McFeature.SOUND_ENGINE_CALCULATE_VOLUME_FLOAT_SOURCE)) {
+                result = McMappings.invokeMethod(
+                        McMethod.SOUND_ENGINE_CALCULATE_VOLUME,
+                        soundEngine,
+                        Float.valueOf(clampedBase),
+                        getMusicSoundSource()
                 );
-
-                @SuppressWarnings({"unchecked", "rawtypes"})
-                Object resolvedSource = Enum.valueOf(
-                        (Class<? extends Enum>) soundSourceClass,
-                        "MUSIC"
+            } else if (soundInstance != null) {
+                result = McMappings.invokeMethod(
+                        McMethod.SOUND_ENGINE_CALCULATE_VOLUME,
+                        soundEngine,
+                        soundInstance
                 );
-
-                Method resolvedMethod = soundEngine.getClass().getDeclaredMethod(
-                        "calculateVolume",
-                        float.class,
-                        soundSourceClass
-                );
-                resolvedMethod.setAccessible(true);
-
-                musicSoundSource = resolvedSource;
-                calculateVolumeMethod = resolvedMethod;
-
-                musicSource = resolvedSource;
-                method = resolvedMethod;
+            } else {
+                return clampedBase;
             }
 
-            Object result = method.invoke(
-                    soundEngine,
-                    clampedBase,
-                    musicSource
-            );
-
-            if (result instanceof Number number) {
-                float value = number.floatValue();
+            if (result instanceof Number) {
+                float value = ((Number) result).floatValue();
                 if (Float.isFinite(value)) {
                     return Math.max(0.0f, Math.min(1.0f, value));
                 }
@@ -858,9 +839,9 @@ public final class MusicBusManager {
         }
 
         if (exceptedSources != null) {
+            Object musicSource = getMusicSoundSource();
             for (Object source : exceptedSources) {
-                if (source instanceof Enum<?> category
-                        && "MUSIC".equals(category.name())) {
+                if (source != null && source.equals(musicSource)) {
                     return;
                 }
             }
@@ -957,8 +938,8 @@ public final class MusicBusManager {
         }
 
         if (soundSource != null) {
-            if (!(soundSource instanceof Enum<?> category)
-                    || !"MUSIC".equals(category.name())) {
+            McMappings.ensureInitialized(soundSource.getClass().getClassLoader());
+            if (!soundSource.equals(getMusicSoundSource())) {
                 return;
             }
         }
@@ -1157,9 +1138,11 @@ public final class MusicBusManager {
             Object instance
     ) throws Exception {
 
-        Object identifier = MinecraftReflection.invokeNoArgs(
-                instance,
-                "getIdentifier"
+        McMappings.ensureInitialized(instance.getClass().getClassLoader());
+
+        Object identifier = McMappings.invokeMethod(
+                McMethod.SOUND_INSTANCE_GET_ID,
+                instance
         );
 
         if (identifier == null) {
@@ -1172,19 +1155,19 @@ public final class MusicBusManager {
 
         float baseVolume = MinecraftReflection.readFloat(
                 instance,
-                "getVolume",
+                McMethod.SOUND_INSTANCE_GET_VOLUME,
                 1.0f
         );
 
         float pitch = MinecraftReflection.readFloat(
                 instance,
-                "getPitch",
+                McMethod.SOUND_INSTANCE_GET_PITCH,
                 1.0f
         );
 
         boolean looping = MinecraftReflection.readBoolean(
                 instance,
-                "isLooping",
+                McMethod.SOUND_INSTANCE_IS_LOOPING,
                 false
         );
 
@@ -1193,11 +1176,12 @@ public final class MusicBusManager {
         }
 
         synchronized (STATE_LOCK) {
-            BASE_VOLUMES.put(instance, baseVolume);
+            BASE_VOLUMES.put(instance, Float.valueOf(baseVolume));
         }
 
         float effectiveVolume = calculateEffectiveMusicVolume(
                 null,
+                instance,
                 baseVolume
         );
 
@@ -1304,11 +1288,13 @@ public final class MusicBusManager {
 
         try {
 
+            McMappings.ensureInitialized(instance.getClass().getClassLoader());
+
             if (lockedSound == null) {
 
-                Object resolved = MinecraftReflection.invokeNoArgs(
-                        instance,
-                        "getSound"
+                Object resolved = McMappings.invokeMethod(
+                        McMethod.SOUND_INSTANCE_GET_SOUND,
+                        instance
                 );
 
                 if (resolved == null) {
@@ -1326,13 +1312,17 @@ public final class MusicBusManager {
                 return;
             }
 
-            Object current = MinecraftReflection.invokeNoArgs(
-                    instance,
-                    "getSound"
+            Object current = McMappings.invokeMethod(
+                    McMethod.SOUND_INSTANCE_GET_SOUND,
+                    instance
             );
 
             if (current != lockedSound) {
-                setSoundField(instance, lockedSound);
+                McMappings.setFieldValue(
+                        McField.ABSTRACT_SOUND_INSTANCE_SOUND,
+                        instance,
+                        lockedSound
+                );
                 log("Restored locked sound: "
                         + describeSound(lockedSound));
             }
@@ -1352,9 +1342,11 @@ public final class MusicBusManager {
 
         try {
 
-            Object existing = MinecraftReflection.invokeNoArgs(
-                    instance,
-                    "getSound"
+            McMappings.ensureInitialized(instance.getClass().getClassLoader());
+
+            Object existing = McMappings.invokeMethod(
+                    McMethod.SOUND_INSTANCE_GET_SOUND,
+                    instance
             );
 
             if (existing != null) {
@@ -1366,68 +1358,23 @@ public final class MusicBusManager {
 
             Object soundManager = MinecraftReflection.findObjectByType(
                     minecraft,
-                    "SoundManager"
+                    McClass.SOUND_MANAGER
             );
 
             if (soundManager == null) {
                 return;
             }
 
-            Method resolveMethod = findResolveMethod(
-                    instance.getClass()
+            McMappings.invokeMethod(
+                    McMethod.SOUND_INSTANCE_RESOLVE,
+                    instance,
+                    soundManager
             );
-
-            if (resolveMethod == null) {
-                return;
-            }
-
-            resolveMethod.setAccessible(true);
-            resolveMethod.invoke(instance, soundManager);
 
         } catch (Exception error) {
 
             log("WARNING: Pre-resolve failed: " + error);
         }
-    }
-
-    private static Method findResolveMethod(Class<?> type) {
-
-        Class<?> current = type;
-
-        while (current != null) {
-
-            for (Method method : current.getDeclaredMethods()) {
-
-                if (method.getName().equals("resolve")
-                        && method.getParameterCount() == 1
-                        && method.getParameterTypes()[0]
-                                .getSimpleName().equals("SoundManager")) {
-                    return method;
-                }
-            }
-
-            current = current.getSuperclass();
-        }
-
-        return null;
-    }
-
-    private static void setSoundField(
-            Object instance,
-            Object sound
-    ) throws Exception {
-
-        Field field = MinecraftReflection.findField(
-                instance.getClass(),
-                "sound"
-        );
-
-        if (field == null) {
-            throw new NoSuchFieldException("sound");
-        }
-
-        field.setAccessible(true);
-        field.set(instance, sound);
     }
 
     private static String describeSound(Object sound) {
@@ -1437,9 +1384,9 @@ public final class MusicBusManager {
         }
 
         try {
-            Object location = MinecraftReflection.invokeNoArgs(
-                    sound,
-                    "getLocation"
+            Object location = McMappings.invokeMethod(
+                    McMethod.SOUND_RESOURCE_GET_LOCATION,
+                    sound
             );
             if (location != null) {
                 return location.toString();
@@ -1508,14 +1455,10 @@ public final class MusicBusManager {
 
         try {
 
-            Class<?> audioStreamClass = Class.forName(
-                    "net.minecraft.client.sounds.AudioStream",
-                    false,
-                    stream.getClass().getClassLoader()
-            );
-
-            Method getFormatMethod = audioStreamClass.getMethod("getFormat");
-            Method readMethod = audioStreamClass.getMethod("read", int.class);
+            McMappings.ensureInitialized(stream.getClass().getClassLoader());
+            Class<?> audioStreamClass = McMappings.resolveClass(McClass.AUDIO_STREAM);
+            Method getFormatMethod = McMappings.resolveMethod(McMethod.AUDIO_STREAM_GET_FORMAT);
+            Method readMethod = McMappings.resolveMethod(McMethod.AUDIO_STREAM_READ);
 
             AudioFormat format = (AudioFormat) getFormatMethod.invoke(stream);
 
@@ -1629,20 +1572,25 @@ public final class MusicBusManager {
                     String name = method.getName();
 
                     if (method.getDeclaringClass() == Object.class) {
-                        return switch (name) {
-                            case "equals" -> args != null
-                                    && args.length == 1
-                                    && proxy == args[0];
-                            case "hashCode" -> System.identityHashCode(proxy);
-                            case "toString" -> "SeekingAudioStream[" + delegate + "]";
-                            default -> method.invoke(delegate, args);
-                        };
+                        if ("equals".equals(name)) {
+                            return Boolean.valueOf(
+                                    args != null && args.length == 1 && proxy == args[0]
+                            );
+                        }
+                        if ("hashCode".equals(name)) {
+                            return Integer.valueOf(System.identityHashCode(proxy));
+                        }
+                        if ("toString".equals(name)) {
+                            return "SeekingAudioStream[" + delegate + "]";
+                        }
+                        return method.invoke(delegate, args);
                     }
 
-                    if ("read".equals(name)
+                    if (readMethod.getName().equals(name)
                             && args != null
                             && args.length == 1
-                            && args[0] instanceof Integer requested) {
+                            && args[0] instanceof Integer) {
+                        int requested = ((Integer) args[0]).intValue();
 
                         ByteBuffer pending = pendingRef[0];
                         if (pending != null && pending.hasRemaining()) {
@@ -1722,25 +1670,17 @@ public final class MusicBusManager {
 
         Object musicManager = MinecraftReflection.findObjectByType(
                 minecraft,
-                "MusicManager"
+                McClass.MUSIC_MANAGER
         );
 
         if (musicManager == null) {
             return null;
         }
 
-        Field field = MinecraftReflection.findField(
-                musicManager.getClass(),
-                "currentMusic"
+        return McMappings.getFieldValue(
+                McField.MUSIC_MANAGER_CURRENT_MUSIC,
+                musicManager
         );
-
-        if (field == null) {
-            return null;
-        }
-
-        field.setAccessible(true);
-
-        return field.get(musicManager);
     }
 
     // --------------------------------------------------
@@ -1754,19 +1694,23 @@ public final class MusicBusManager {
         }
 
         try {
-
-            Object source = MinecraftReflection.invokeNoArgs(
-                    instance,
-                    "getSource"
+            McMappings.ensureInitialized(instance.getClass().getClassLoader());
+            Object source = McMappings.invokeMethod(
+                    McMethod.SOUND_INSTANCE_GET_CATEGORY,
+                    instance
             );
-
-            return source instanceof Enum<?> category
-                    && "MUSIC".equals(category.name());
-
+            return source != null && source.equals(getMusicSoundSource());
         } catch (Exception ignored) {
-
             return false;
         }
+    }
+
+    private static Object getMusicSoundSource() {
+        return McMappings.getFieldValue(McField.SOUND_CATEGORY_MUSIC, null);
+    }
+
+    private static Object getMasterSoundSource() {
+        return McMappings.getFieldValue(McField.SOUND_CATEGORY_MASTER, null);
     }
 
     // --------------------------------------------------

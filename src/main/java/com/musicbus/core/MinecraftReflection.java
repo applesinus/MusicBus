@@ -1,5 +1,9 @@
 package com.musicbus.core;
 
+import com.musicbus.mappings.McClass;
+import com.musicbus.mappings.McMappings;
+import com.musicbus.mappings.McMethod;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -8,9 +12,6 @@ import java.lang.reflect.Method;
  * Minecraft client classes without compile-time dependencies.
  */
 public final class MinecraftReflection {
-
-    private static final String MINECRAFT_CLASS =
-            "net.minecraft.client.Minecraft";
 
     private MinecraftReflection() {}
 
@@ -34,16 +35,8 @@ public final class MinecraftReflection {
             loader = MinecraftReflection.class.getClassLoader();
         }
 
-        Class<?> minecraftClass = Class.forName(
-                MINECRAFT_CLASS,
-                false,
-                loader
-        );
-
-        Method method = minecraftClass.getDeclaredMethod("getInstance");
-        method.setAccessible(true);
-
-        return method.invoke(null);
+        McMappings.ensureInitialized(loader);
+        return McMappings.invokeMethod(McMethod.MINECRAFT_GET_INSTANCE, null);
     }
 
     public static Object getSoundManager() throws Exception {
@@ -53,7 +46,7 @@ public final class MinecraftReflection {
             return null;
         }
 
-        return findObjectByType(minecraft, "SoundManager");
+        return findObjectByType(minecraft, McClass.SOUND_MANAGER);
     }
 
     public static Object getSoundEngine() throws Exception {
@@ -63,12 +56,35 @@ public final class MinecraftReflection {
             return null;
         }
 
-        return findObjectByType(soundManager, "SoundEngine");
+        return findObjectByType(soundManager, McClass.SOUND_ENGINE);
     }
 
     // --------------------------------------------------
     // SoundManager invocation helpers
     // --------------------------------------------------
+
+    public static Object invokeSoundManager(
+            McMethod method,
+            Object soundInstance
+    ) throws Exception {
+
+        Object soundManager = getSoundManager();
+        if (soundManager == null) {
+            throw new IllegalStateException("SoundManager not found");
+        }
+
+        return McMappings.invokeMethod(method, soundManager, soundInstance);
+    }
+
+    public static boolean invokeSoundManagerBoolean(
+            McMethod method,
+            Object soundInstance
+    ) throws Exception {
+
+        return Boolean.TRUE.equals(
+                invokeSoundManager(method, soundInstance)
+        );
+    }
 
     public static Object invokeSoundManager(
             String methodName,
@@ -131,6 +147,45 @@ public final class MinecraftReflection {
     // --------------------------------------------------
     // Generic field & method lookup
     // --------------------------------------------------
+
+    public static Object findObjectByType(
+            Object owner,
+            McClass expectedType
+    ) throws IllegalAccessException {
+
+        if (owner == null || expectedType == null || !McMappings.hasClass(expectedType)) {
+            return null;
+        }
+
+        return findObjectByClass(owner, McMappings.resolveClass(expectedType));
+    }
+
+    public static Object findObjectByClass(
+            Object owner,
+            Class<?> expectedClass
+    ) throws IllegalAccessException {
+
+        if (owner == null || expectedClass == null) {
+            return null;
+        }
+
+        Class<?> current = owner.getClass();
+
+        while (current != null) {
+
+            for (Field field : current.getDeclaredFields()) {
+
+                if (expectedClass.isAssignableFrom(field.getType())) {
+                    field.setAccessible(true);
+                    return field.get(owner);
+                }
+            }
+
+            current = current.getSuperclass();
+        }
+
+        return null;
+    }
 
     public static Object findObjectByType(
             Object owner,
@@ -232,6 +287,48 @@ public final class MinecraftReflection {
         }
 
         return null;
+    }
+
+    public static float readFloat(
+            Object target,
+            McMethod method,
+            float fallback
+    ) {
+
+        if (target == null || method == null || !McMappings.hasMethod(method)) {
+            return fallback;
+        }
+
+        try {
+            Object value = McMappings.invokeMethod(method, target);
+            if (value instanceof Number) {
+                return ((Number) value).floatValue();
+            }
+        } catch (Exception ignored) {
+        }
+
+        return fallback;
+    }
+
+    public static boolean readBoolean(
+            Object target,
+            McMethod method,
+            boolean fallback
+    ) {
+
+        if (target == null || method == null || !McMappings.hasMethod(method)) {
+            return fallback;
+        }
+
+        try {
+            Object value = McMappings.invokeMethod(method, target);
+            if (value instanceof Boolean) {
+                return ((Boolean) value).booleanValue();
+            }
+        } catch (Exception ignored) {
+        }
+
+        return fallback;
     }
 
     public static float readFloat(

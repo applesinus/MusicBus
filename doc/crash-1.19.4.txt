@@ -1,0 +1,28 @@
+<...>
+
+Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [musicbus.mixins.json:intermediary.IntermediarySoundEngineMixin from mod musicbus] from phase [DEFAULT] in config [musicbus.mixins.json] FAILED during APPLY
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:638)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:589)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:379)
+	... 13 more
+Caused by: org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException: Unexpecteded IllegalStateException whilst transforming the mixin class: [PostApply Phase -> musicbus.mixins.json:intermediary.IntermediarySoundEngineMixin from mod musicbus -> Plugin Post-Application]
+	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.postApply(MixinTargetContext.java:1286)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:346)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:422)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:403)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:363)
+	... 13 more
+Caused by: java.lang.IllegalStateException: [MusicBus] Failed to transform target class via Fabric Mixin: net.minecraft.class_1140
+	at com.musicbus.fabric.MusicBusMixinPlugin.postApply(MusicBusMixinPlugin.java:176)
+	at org.spongepowered.asm.mixin.transformer.PluginHandle.postApply(PluginHandle.java:189)
+	at org.spongepowered.asm.mixin.transformer.MixinInfo.postApply(MixinInfo.java:1372)
+	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.postApply(MixinTargetContext.java:1275)
+	... 17 more
+
+<...>
+
+	Minecraft Version: 1.19.4
+	Java Version: 17.0.15, Microsoft
+	Launched Version: fabric-loader-0.15.11-1.19.4
+
+<...>

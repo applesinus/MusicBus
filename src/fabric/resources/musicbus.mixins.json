@@ -2,15 +2,9 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.musicbus.fabric.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_17",
   "plugin": "com.musicbus.fabric.MusicBusMixinPlugin",
-  "client": [
-    "AbstractSoundInstanceMixin",
-    "ChannelMixin",
-    "SoundBufferLibraryMixin",
-    "SoundEngineMixin",
-    "SoundOptionsScreenMixin"
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 0
   }
