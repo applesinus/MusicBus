@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.musicbus'
-version = '0.3.4'
+version = '0.3.5'
 def minMcVersion = '1.18.2'
 def maxMcVersion = '26.3'
 
