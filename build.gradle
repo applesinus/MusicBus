@@ -6,6 +6,16 @@ plugins {
 
 group = 'com.musicbus'
 version = '0.3.2'
+def minMcVersion = '1.21'
+def maxMcVersion = '1.21.4'
+
+def configureJarArtifact = { Jar jarTask, String loaderName ->
+    jarTask.archiveFileName = "${project.name}-v${project.version}-mc${minMcVersion}-mc${maxMcVersion}-${loaderName}.jar"
+    jarTask.manifest.attributes(
+        'Implementation-Title': "${project.name}-${loaderName}",
+        'Implementation-Version': project.version.toString()
+    )
+}
 
 repositories {
     mavenCentral()
@@ -177,7 +187,7 @@ tasks.named('processFabricResources', ProcessResources) {
 }
 
 jar {
-    archiveClassifier = ''
+    configureJarArtifact(it, 'profile-installer')
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -192,9 +202,7 @@ jar {
             'Main-Class': 'com.musicbus.installer.MusicBusInstaller',
             'Premain-Class': 'com.musicbus.MusicBusAgent',
             'Can-Redefine-Classes': 'false',
-            'Can-Retransform-Classes': 'false',
-            'Implementation-Title': "${project.name}-profile-installer",
-            'Implementation-Version': project.version.toString()
+            'Can-Retransform-Classes': 'false'
         )
     }
 }
@@ -205,7 +213,7 @@ def fabricJar = tasks.register('fabricJar', Jar) {
 
     dependsOn(tasks.named('classes'), tasks.named('fabricClasses'))
 
-    archiveClassifier = 'fabric'
+    configureJarArtifact(it, 'fabric')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     from(sourceSets.main.output) {
@@ -220,13 +228,6 @@ def fabricJar = tasks.register('fabricJar', Jar) {
         configurations.fabricBundle.collect {
             it.isDirectory() ? it : zipTree(it)
         }
-    }
-
-    manifest {
-        attributes(
-            'Implementation-Title': "${project.name}-fabric",
-            'Implementation-Version': project.version.toString()
-        )
     }
 }
 
