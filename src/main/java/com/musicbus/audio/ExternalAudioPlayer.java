@@ -908,79 +908,73 @@ public final class ExternalAudioPlayer implements BusedAudioPlayer {
     private void handleEvent(Object connectionToken, ExternalPlayerProtocol.Event event) {
         long now = System.nanoTime();
 
-        switch (event) {
-            case ExternalPlayerProtocol.ReadyEvent ready -> {
-                ProcessHandle handle = ProcessHandle.of(ready.pid()).orElse(null);
-                synchronized (processLock) {
-                    if (this.activeConnectionToken == connectionToken) {
-                        this.daemonHandle = handle;
-                        if (this.readyLatch != null) {
-                            this.readyLatch.countDown();
-                        }
+        if (event instanceof ExternalPlayerProtocol.ReadyEvent ready) {
+            ProcessHandle handle = ProcessHandle.of(ready.pid()).orElse(null);
+            synchronized (processLock) {
+                if (this.activeConnectionToken == connectionToken) {
+                    this.daemonHandle = handle;
+                    if (this.readyLatch != null) {
+                        this.readyLatch.countDown();
                     }
                 }
-                if (handle != null) {
-                    handle.onExit().thenRun(() -> onProcessDisconnected(connectionToken, "daemon exited"));
-                }
-                log("External player ready (pid=" + ready.pid()
-                        + ", protocol=" + ready.protocolVersion() + ")");
             }
-            case ExternalPlayerProtocol.StatusEvent status -> {
+            if (handle != null) {
+                handle.onExit().thenRun(() -> onProcessDisconnected(connectionToken, "daemon exited"));
+            }
+            log("External player ready (pid=" + ready.pid()
+                    + ", protocol=" + ready.protocolVersion() + ")");
+        } else if (event instanceof ExternalPlayerProtocol.StatusEvent status) {
+            synchronized (stateLock) {
+                if (trackedSession == null
+                        || !trackedSession.sessionId.equals(status.sessionId())) {
+                    return;
+                }
+
+                PlaybackSession.State reportedState = status.state();
+                if (trackedSession.pendingStateOverride != null) {
+                    if (reportedState == trackedSession.pendingStateOverride
+                            || reportedState == PlaybackSession.State.STOPPED) {
+                        trackedSession.pendingStateOverride = null;
+                    } else if (now < trackedSession.overrideGraceUntilNanos) {
+                        reportedState = trackedSession.state;
+                    } else {
+                        trackedSession.pendingStateOverride = null;
+                    }
+                }
+
+                trackedSession.state = reportedState;
+                trackedSession.positionSeconds = PlaybackMath.normalizePosition(
+                        status.positionSeconds(),
+                        trackedSession.durationSeconds,
+                        trackedSession.looping
+                );
+                trackedSession.anchorNanos = now;
+
+                if (reportedState == PlaybackSession.State.STOPPED) {
+                    trackedSession.snapshot = null;
+                }
+            }
+        } else if (event instanceof ExternalPlayerProtocol.ErrorEvent err) {
+            log("WARNING: External player error [code=" + err.errorCode()
+                    + ", session=" + err.sessionId() + "]: " + err.message());
+
+            if (!ExternalPlayerProtocol.ZERO_UUID.equals(err.sessionId())) {
                 synchronized (stateLock) {
-                    if (trackedSession == null
-                            || !trackedSession.sessionId.equals(status.sessionId())) {
-                        return;
-                    }
-
-                    PlaybackSession.State reportedState = status.state();
-                    if (trackedSession.pendingStateOverride != null) {
-                        if (reportedState == trackedSession.pendingStateOverride
-                                || reportedState == PlaybackSession.State.STOPPED) {
-                            trackedSession.pendingStateOverride = null;
-                        } else if (now < trackedSession.overrideGraceUntilNanos) {
-                            reportedState = trackedSession.state;
-                        } else {
-                            trackedSession.pendingStateOverride = null;
-                        }
-                    }
-
-                    trackedSession.state = reportedState;
-                    trackedSession.positionSeconds = PlaybackMath.normalizePosition(
-                            status.positionSeconds(),
-                            trackedSession.durationSeconds,
-                            trackedSession.looping
-                    );
-                    trackedSession.anchorNanos = now;
-
-                    if (reportedState == PlaybackSession.State.STOPPED) {
+                    if (trackedSession != null
+                            && trackedSession.sessionId.equals(err.sessionId())) {
+                        trackedSession.state = PlaybackSession.State.STOPPED;
                         trackedSession.snapshot = null;
                     }
                 }
             }
-            case ExternalPlayerProtocol.ErrorEvent err -> {
-                log("WARNING: External player error [code=" + err.errorCode()
-                        + ", session=" + err.sessionId() + "]: " + err.message());
-
-                if (!ExternalPlayerProtocol.ZERO_UUID.equals(err.sessionId())) {
-                    synchronized (stateLock) {
-                        if (trackedSession != null
-                                && trackedSession.sessionId.equals(err.sessionId())) {
-                            trackedSession.state = PlaybackSession.State.STOPPED;
-                            trackedSession.snapshot = null;
-                        }
-                    }
-                }
+        } else if (event instanceof ExternalPlayerProtocol.DevicesEvent devices) {
+            this.lastKnownDevices = Collections.unmodifiableList(devices.devices());
+        } else if (event instanceof ExternalPlayerProtocol.LogEvent logEvt) {
+            if (!logEvt.message().isBlank()) {
+                log("[native] " + logEvt.message());
             }
-            case ExternalPlayerProtocol.DevicesEvent devices -> {
-                this.lastKnownDevices = Collections.unmodifiableList(devices.devices());
-            }
-            case ExternalPlayerProtocol.LogEvent logEvt -> {
-                if (!logEvt.message().isBlank()) {
-                    log("[native] " + logEvt.message());
-                }
-            }
-            case ExternalPlayerProtocol.PongEvent ignored -> {
-            }
+        } else if (event instanceof ExternalPlayerProtocol.PongEvent) {
+            // no-op
         }
     }
 

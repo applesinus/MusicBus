@@ -43,7 +43,7 @@ java {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = 21
+    options.release = 17
 }
 
 def zigVersion = '0.17.1'

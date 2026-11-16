@@ -118,7 +118,7 @@ public final class MusicBusInstaller {
                     return 1;
                 }
 
-                MinecraftLocator.BaseVersion target = versions.getFirst();
+                MinecraftLocator.BaseVersion target = versions.get(0);
                 if (requestedVersion != null) {
                     String wanted = requestedVersion;
                     target = versions.stream()
@@ -148,7 +148,7 @@ public final class MusicBusInstaller {
                     return 1;
                 }
 
-                MinecraftLocator.InstalledMusicBusVersion target = installed.getFirst();
+                MinecraftLocator.InstalledMusicBusVersion target = installed.get(0);
                 if (requestedVersion != null) {
                     String wanted = requestedVersion;
                     target = installed.stream()
@@ -415,7 +415,7 @@ public final class MusicBusInstaller {
             } else if (baseVersions.isEmpty()) {
                 statusLabel.setText("No installed base versions found. Launch Minecraft once in the Launcher.");
             } else if (!installedVersions.isEmpty()) {
-                statusLabel.setText("Installed: " + installedVersions.getFirst().id()
+                statusLabel.setText("Installed: " + installedVersions.get(0).id()
                         + (installedVersions.size() > 1 ? " (+" + (installedVersions.size() - 1) + " more)" : ""));
             } else {
                 statusLabel.setText("Ready to install (" + baseVersions.size() + " base version(s) found).");
@@ -511,7 +511,7 @@ public final class MusicBusInstaller {
 
             MinecraftLocator.InstalledMusicBusVersion target;
             if (installedVersions.size() == 1) {
-                target = installedVersions.getFirst();
+                target = installedVersions.get(0);
                 int confirm = JOptionPane.showConfirmDialog(
                         frame,
                         "Remove installed MusicBus version \"" + target.id() + "\"?",
@@ -530,7 +530,7 @@ public final class MusicBusInstaller {
                         JOptionPane.QUESTION_MESSAGE,
                         null,
                         installedVersions.toArray(),
-                        installedVersions.getFirst()
+                        installedVersions.get(0)
                 );
                 if (!(chosen instanceof MinecraftLocator.InstalledMusicBusVersion selected)) {
                     return;

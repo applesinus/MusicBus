@@ -203,7 +203,7 @@ public final class MinecraftLocator {
                 return candidate;
             }
         }
-        return candidates.isEmpty() ? fallback : candidates.getFirst();
+        return candidates.isEmpty() ? fallback : candidates.get(0);
     }
 
     static JsonObject readJsonObject(Path file) {
