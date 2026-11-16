@@ -193,7 +193,7 @@ jar {
             'Premain-Class': 'com.musicbus.MusicBusAgent',
             'Can-Redefine-Classes': 'false',
             'Can-Retransform-Classes': 'false',
-            'Implementation-Title': project.name,
+            'Implementation-Title': "${project.name}-profile-installer",
             'Implementation-Version': project.version.toString()
         )
     }
