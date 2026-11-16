@@ -16,9 +16,13 @@ import com.musicbus.mappings.McMethod;
 
 import javax.sound.sampled.AudioFormat;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -47,6 +51,7 @@ public final class MusicBusManager {
     private static volatile boolean enabled;
     private static volatile boolean initialized;
     private static volatile boolean shutdownHookRegistered;
+    private static volatile OptionsVolumeBridge optionsVolumeBridge;
 
     private static final Object STATE_LOCK = new Object();
     private static final Object TRANSITION_LOCK = new Object();
@@ -809,12 +814,16 @@ public final class MusicBusManager {
                 return clampedBase;
             }
 
+            float effective = clampedBase;
             if (result instanceof Number) {
                 float value = ((Number) result).floatValue();
                 if (Float.isFinite(value)) {
-                    return Math.max(0.0f, Math.min(1.0f, value));
+                    effective = Math.max(0.0f, Math.min(1.0f, value));
                 }
             }
+
+            effective = applyMasterVolumeIfNeeded(soundEngine, effective);
+            return Math.max(0.0f, Math.min(1.0f, effective));
 
         } catch (Exception error) {
 
@@ -823,6 +832,143 @@ public final class MusicBusManager {
         }
 
         return clampedBase;
+    }
+
+    private static float applyMasterVolumeIfNeeded(
+            Object soundEngine,
+            float effective
+    ) {
+        if (McMappings.hasFeature(McFeature.HAS_PLAY_RESULT)) {
+            return effective;
+        }
+        OptionsVolumeBridge bridge = resolveOptionsVolumeBridge(soundEngine);
+        if (bridge == null || bridge.includesMaster) {
+            return effective;
+        }
+        try {
+            Object masterSource = getMasterSoundSource();
+            if (masterSource == null) {
+                return effective;
+            }
+            Object masterVal = bridge.getCategoryVolumeMethod.invoke(
+                    bridge.optionsInstance,
+                    masterSource
+            );
+            if (masterVal instanceof Number) {
+                float master = ((Number) masterVal).floatValue();
+                if (Float.isFinite(master)) {
+                    master = Math.max(0.0f, Math.min(1.0f, master));
+                    return effective * master;
+                }
+            }
+        } catch (Exception error) {
+            log("WARNING: Failed to read MASTER volume from Options: "
+                    + error);
+        }
+        return effective;
+    }
+
+    private static OptionsVolumeBridge resolveOptionsVolumeBridge(
+            Object soundEngine
+    ) {
+        OptionsVolumeBridge cached = optionsVolumeBridge;
+        if (cached != null) {
+            return cached;
+        }
+        Class<?> soundCategoryClass = McMappings.resolveClass(McClass.SOUND_CATEGORY);
+        OptionsVolumeBridge resolved = scanOwnerForOptions(soundEngine, soundCategoryClass);
+        if (resolved == null) {
+            try {
+                Object minecraft = MinecraftReflection.getMinecraftInstance();
+                resolved = scanOwnerForOptions(minecraft, soundCategoryClass);
+            } catch (Exception ignored) {
+            }
+        }
+        if (resolved != null) {
+            optionsVolumeBridge = resolved;
+        }
+        return resolved;
+    }
+
+    private static OptionsVolumeBridge scanOwnerForOptions(
+            Object owner,
+            Class<?> soundCategoryClass
+    ) {
+        if (owner == null) {
+            return null;
+        }
+        Class<?> current = owner.getClass();
+        while (current != null && current != Object.class) {
+            Field[] fields = current.getDeclaredFields();
+            for (int i = 0; i < fields.length; i++) {
+                Field field = fields[i];
+                if (Modifier.isStatic(field.getModifiers())
+                        || field.getType().isPrimitive()) {
+                    continue;
+                }
+                try {
+                    field.setAccessible(true);
+                    Object candidate = field.get(owner);
+                    if (candidate == null) {
+                        continue;
+                    }
+                    OptionsVolumeBridge found = inspectOptionsCandidate(
+                            candidate,
+                            soundCategoryClass
+                    );
+                    if (found != null) {
+                        return found;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            current = current.getSuperclass();
+        }
+        return null;
+    }
+
+    private static OptionsVolumeBridge inspectOptionsCandidate(
+            Object candidate,
+            Class<?> soundCategoryClass
+    ) {
+        Method[] methods = candidate.getClass().getMethods();
+        List<Method> matches = new ArrayList<Method>(2);
+        for (int i = 0; i < methods.length; i++) {
+            Method m = methods[i];
+            if (m.isSynthetic() || m.isBridge()) {
+                continue;
+            }
+            if (m.getParameterCount() == 1
+                    && m.getParameterTypes()[0] == soundCategoryClass
+                    && m.getReturnType() == float.class) {
+                matches.add(m);
+            }
+        }
+        if (matches.isEmpty()) {
+            return null;
+        }
+        Method first = matches.get(0);
+        try {
+            first.setAccessible(true);
+        } catch (Exception ignored) {
+        }
+        return new OptionsVolumeBridge(candidate, first, matches.size() >= 2);
+    }
+
+    private static final class OptionsVolumeBridge {
+        final Object optionsInstance;
+        final Method getCategoryVolumeMethod;
+        final boolean includesMaster;
+
+        OptionsVolumeBridge(
+                Object optionsInstance,
+                Method getCategoryVolumeMethod,
+                boolean includesMaster
+        ) {
+            this.optionsInstance = optionsInstance;
+            this.getCategoryVolumeMethod = getCategoryVolumeMethod;
+            this.includesMaster = includesMaster;
+        }
     }
 
     // --------------------------------------------------
