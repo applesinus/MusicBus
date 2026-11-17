@@ -29,8 +29,11 @@ replay_pid*
 # Ignore Gradle build output directory
 build
 
+# Ignore Gradle bin directory
+bin
+
 # Ignore Kotlin plugin data
 .kotlin
 
-# Ignore Gradle bin directory
-bin/
+# Ignore agents working dir
+agents
