@@ -62,9 +62,11 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '9.9.1'
 
       - name: Build release JARs (profile-installer & fabric)
-        run: .\gradlew.bat assemble --no-daemon
+        run: gradle assemble --no-daemon
 
       - name: Prepare release metadata and description
         id: meta
