@@ -1,0 +1,133 @@
+name: Build & Release new version
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag, or commit SHA to build (leave empty for the latest commit on the selected branch)'
+        required: false
+        type: string
+      tag:
+        description: 'Release tag (e.g. v0.3.5). Leave empty to use v<version> from build.gradle'
+        required: false
+        type: string
+      description:
+        description: 'Release description (if empty, uses the default template from the workflow)'
+        required: false
+        type: string
+      draft:
+        description: 'Create as a draft release (so you can edit the description before publishing)'
+        required: false
+        default: true
+        type: boolean
+      prerelease:
+        description: 'Mark as a pre-release'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release (Windows x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: ${{ inputs.ref != '' && 0 || 1 }}
+
+      - name: Checkout custom ref (if specified)
+        if: ${{ inputs.ref != '' }}
+        shell: pwsh
+        env:
+          TARGET_REF: ${{ inputs.ref }}
+        run: |
+          git checkout "$env:TARGET_REF"
+          if ($LASTEXITCODE -ne 0) {
+              throw "Failed to checkout ref: $env:TARGET_REF"
+          }
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build release JARs (profile-installer & fabric)
+        run: .\gradlew.bat assemble --no-daemon
+
+      - name: Prepare release metadata and description
+        id: meta
+        shell: pwsh
+        env:
+          CUSTOM_DESCRIPTION: ${{ inputs.description }}
+        run: |
+          $commitSha = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($commitSha)) {
+              throw "Failed to resolve checked-out commit SHA"
+          }
+
+          $buildGradle = Get-Content -Raw -Path 'build.gradle' -Encoding UTF8
+          if ($buildGradle -match "(?m)^version\s*=\s*['""]([^'""]+)['""]") {
+              $projectVersion = $Matches[1]
+          } else {
+              throw "Failed to extract version from build.gradle"
+          }
+
+          if ("${{ github.event_name }}" -eq "push") {
+              $tag = "${{ github.ref_name }}"
+              $isDraft = "true"
+          } else {
+              $tag = if ([string]::IsNullOrWhiteSpace("${{ inputs.tag }}")) { "v$projectVersion" } else { "${{ inputs.tag }}".Trim() }
+              $isDraft = if ("${{ inputs.draft }}" -eq "false") { "false" } else { "true" }
+          }
+
+          $customDesc = $env:CUSTOM_DESCRIPTION
+          if ([string]::IsNullOrWhiteSpace($customDesc)) {
+              $customDesc = '<!-- Insert release changelog here -->'
+          }
+
+          $footer = @'
+
+          ---
+
+          ### Which version should I download?
+          Both builds include the native player `musicbus-player.exe` (Windows x64):
+
+          * **`*-fabric.jar`** — mod for **Fabric Loader**. Place this file into `.minecraft/mods/`. Does not include the standalone installer or bundle ASM (uses the one provided by Fabric).
+          * **`*-profile-installer.jar`** — **Standalone version** (profile installer + Java Agent) for running the game without Fabric. Run the `.jar` by double-clicking (or via terminal) — the installer will create a `.minecraft` profile with `-javaagent`.
+          '@
+
+          $releaseBody = $customDesc.TrimEnd() + "`n" + $footer
+
+          $bodyPath = Join-Path $env:RUNNER_TEMP "release-body.md"
+          Set-Content -Path $bodyPath -Value $releaseBody -Encoding UTF8
+
+          "commit_sha=$commitSha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding UTF8
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding UTF8
+          "draft=$isDraft" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding UTF8
+          "body_path=$bodyPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding UTF8
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          target_commitish: ${{ steps.meta.outputs.commit_sha }}
+          name: MusicBus ${{ steps.meta.outputs.tag }}
+          body_path: ${{ steps.meta.outputs.body_path }}
+          draft: ${{ steps.meta.outputs.draft }}
+          prerelease: ${{ inputs.prerelease || false }}
+          fail_on_unmatched_files: true
+          files: |
+            build/libs/*-fabric.jar
+            build/libs/*-profile-installer.jar
